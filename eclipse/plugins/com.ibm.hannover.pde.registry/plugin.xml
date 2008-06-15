@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="hannover.pde.registry">
+            <command
+                  commandId="com.ibm.hannover.command.pderegistry"
+                  icon="icons/registry.gif"
+                  label="PDE Registry"
+                  style="push"
+                  tooltip="PDE Registry">
+            </command>
+         </toolbar>
+      </menuContribution>
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu">
+         <menu
+               label="HannoverTools">
+            <command
+                  commandId="com.ibm.hannover.command.pderegistry"
+                  icon="icons/registry.gif"
+                  label="PDE Registry"
+                  style="push"
+                  tooltip="PDE Registry">
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="com.ibm.hannover.pde.registry.handlers.PDERegistryHandler"
+            id="com.ibm.hannover.command.pderegistry"
+            name="PDE Registry">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="com.ibm.hannover.pde.registry.PerspectiveFactory"
+            fixed="false"
+            icon="icons/registry.gif"
+            id="com.ibm.hannover.pde.registry.perspective"
+            name="PDE Registry">
+      </perspective>
+   </extension>
+
+</plugin>
