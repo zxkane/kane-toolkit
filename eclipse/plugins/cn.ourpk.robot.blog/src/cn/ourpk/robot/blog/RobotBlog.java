@@ -1,6 +1,9 @@
 package cn.ourpk.robot.blog;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.apache.commons.httpclient.HttpException;
 
@@ -33,12 +36,15 @@ public class RobotBlog {
 		}
 	}
 	
-	public void post(String subject, String content){
+	public void post(String subject, String content, Date pubDate){
 		Page[] pages = site.getPages();
 		if(pages.length > 0){
 			try {
+				Calendar cal = GregorianCalendar.getInstance();
+				cal.setTime(pubDate);
+				String date = cal.get(Calendar.YEAR) + "." + cal.get(Calendar.MONTH) + 1 + "." + cal.get(Calendar.DAY_OF_MONTH);
 				pages[0].execute(target_publish, argument, post_viewstate, new String(subject.getBytes("UTF-8"), "ISO-8859-1"), 
-						new String(content.getBytes("UTF-8"), "ISO-8859-1"));
+						new String(content.getBytes("UTF-8"), "ISO-8859-1"), date);
 			} catch (HttpException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
