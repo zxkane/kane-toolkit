@@ -33,6 +33,10 @@ public class Rssloader {
 		return "";
 	}
 	
+	/**
+	 * 
+	 * @return which are sorted by date
+	 */
 	public NewsItem[] getItems(){
 		Hashtable<String, NewsItem> items = channel.getItems();
 		NewsItem[] news = (NewsItem[])items.values().toArray(new NewsItem[0]);
@@ -44,7 +48,7 @@ public class Rssloader {
 				else{
 					Date pub1 = DateParser.getDate(o1.getPubDate());
 					Date pub2 = DateParser.getDate(o2.getPubDate());
-					return pub1.compareTo(pub2);
+					return pub2.compareTo(pub1);
 				}
 			}
 		});

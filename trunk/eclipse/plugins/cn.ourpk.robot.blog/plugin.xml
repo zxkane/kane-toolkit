@@ -47,6 +47,9 @@
             <property
                   name="_ctl0:_ctl0:TaskRegion:Editor1:PostBody:_:Editor">
             </property>
+            <property
+                  name="_ctl0__ctl0_TaskRegion_Editor1_DatePicker_selecteddates">
+            </property>
          </page>
       </site>
    </extension>
