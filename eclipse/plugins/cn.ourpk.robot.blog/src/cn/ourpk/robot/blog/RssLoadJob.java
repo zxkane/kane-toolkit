@@ -34,7 +34,7 @@ public class RssLoadJob extends Job {
 			sb.append("原文作者：" + item.getAuthor());
 			sb.append("<br><br>");
 			sb.append(item.getDescription());
-			blog.post(item.getTitle(), sb.toString(), item.getPubDateParsed());
+			blog.post(item.getTitle(), sb.toString(), new Date());
 		}
 		return new Status(IStatus.OK, Activator.ID, "loading rss successfully.");
 	}

@@ -24,11 +24,11 @@ public class Activator implements BundleActivator {
 	public void start(BundleContext context) throws Exception {
 		this.context = context;
 		robotRef = context.getServiceReference(RobotService.class.getName());
-//		Job job = new RssLoadJob("load rss job");
-//		job.schedule();
-		RobotBlog blog = new RobotBlog();
-		blog.doLogin();
-		blog.post("test", "test publish date", new Date());
+		Job job = new RssLoadJob("load rss job");
+		job.schedule();
+//		RobotBlog blog = new RobotBlog();
+//		blog.doLogin();
+//		blog.post("test213", "test publish date", new Date());
 	}
 
 	public void stop(BundleContext context) throws Exception {
