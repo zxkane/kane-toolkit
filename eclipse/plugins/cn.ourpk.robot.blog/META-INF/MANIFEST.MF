@@ -4,7 +4,7 @@ Bundle-Name: Blog Plug-in
 Bundle-SymbolicName: cn.ourpk.robot.blog;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Require-Bundle: org.eclipse.core.runtime;bundle-version="3.4.0",
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.2.0",
  cn.ourpk.robot.core;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: cn.ourpk.robot.blog.Activator
