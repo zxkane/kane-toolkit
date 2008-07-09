@@ -62,5 +62,29 @@
          </page>
       </site>
    </extension>
+   <extension
+         id="blogApplication"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="cn.ourpk.robot.blog.BlogApplication">
+         </run>
+      </application>
+   </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="cn.ourpk.robot.blog.blogApplication"
+            name="BlogRobot">
+         <property
+               name="appName"
+               value="BlogRobot">
+         </property>
+      </product>
+   </extension>
 
 </plugin>
