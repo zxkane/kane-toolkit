@@ -1,8 +1,8 @@
 package cn.ourpk.robot.blog;
 
-import java.util.Date;
-
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -16,7 +16,8 @@ public class Activator implements BundleActivator {
 	private ServiceReference robotRef;
 	private BundleContext context;
 	private static Activator instance;
-
+	private boolean loaded = false;
+	
 	public Activator() {
 		instance = this;
 	}
@@ -25,10 +26,19 @@ public class Activator implements BundleActivator {
 		this.context = context;
 		robotRef = context.getServiceReference(RobotService.class.getName());
 		Job job = new RssLoadJob("load rss job");
+		job.addJobChangeListener(new JobChangeAdapter(){
+			@Override
+			public void done(IJobChangeEvent event) {
+				super.done(event);
+				loaded = true;
+				System.out.println("Robot program is terminating.");
+			}
+		});
 		job.schedule();
-//		RobotBlog blog = new RobotBlog();
-//		blog.doLogin();
-//		blog.post("test213", "test publish date", new Date());
+	}
+	
+	public boolean isLoadFinished(){
+		return loaded;
 	}
 
 	public void stop(BundleContext context) throws Exception {
