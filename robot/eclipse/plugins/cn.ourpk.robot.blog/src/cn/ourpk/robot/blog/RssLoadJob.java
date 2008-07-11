@@ -45,7 +45,7 @@ public class RssLoadJob extends Job {
 				e.printStackTrace();
 			}
 	}
-
+	
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		System.out.println("Loading rss started.");
@@ -104,6 +104,7 @@ public class RssLoadJob extends Job {
 						else
 							break;
 					}
+					prop.setProperty(rssDescriptor.getUrl(), String.valueOf(System.currentTimeMillis()));
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
