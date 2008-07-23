@@ -16,7 +16,7 @@ import cn.ourpk.bbs.robot.service.RobotService;
 public class Activator implements BundleActivator {
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "cn.ourpk.robot.core";
+	public static final String PLUGIN_ID = "cn.ourpk.robot.blog.core";
 
 	// The shared instance
 	private static Activator plugin;
