@@ -23,6 +23,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.jdom.JDOMException;
 
+import cn.ourpk.robot.PostProvider;
+
 public class RssLoadJob extends Job {
 
 	public static final String CONFIG = ".lastupdated";
@@ -57,22 +59,24 @@ public class RssLoadJob extends Job {
 			prop.load(input);
 			
 			NewsItem[] items = getUnreadItem();
-			RobotBlog blog = new RobotBlog();
-			blog.doLogin();
-			for(NewsItem item : items){
-				StringBuffer sb = new StringBuffer();
-				sb.append("<a href=\"" + item.getLink() + "\">原文链接</a>");
-				sb.append("<br>");
-				sb.append("原文作者：" + item.getAuthor());
-				sb.append("<br><br>");
-				sb.append(item.getDescription());
-				blog.post(item.getTitle(), sb.toString(), item.getPubDateParsed());
+			PostProvider provider = ProviderFactory.getProvider();
+			if(provider != null){
+				provider.doLogin();
+				for(NewsItem item : items){
+					StringBuffer sb = new StringBuffer();
+					sb.append("<a href=\"" + item.getLink() + "\">原文链接</a>");
+					sb.append("<br>");
+					sb.append("原文作者：" + item.getAuthor());
+					sb.append("<br><br>");
+					sb.append(item.getDescription());
+					provider.post(item.getTitle(), sb.toString(), item.getPubDateParsed());
+				}
+				
+				input.close();
+				OutputStream output = new FileOutputStream(configPath);
+				prop.store(output, "");
+				output.close();
 			}
-			
-			input.close();
-			OutputStream output = new FileOutputStream(configPath);
-			prop.store(output, "");
-			output.close();
 			status = Status.OK_STATUS;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
