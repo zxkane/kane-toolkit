@@ -3,9 +3,9 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Robot Provider Interface Plug-in
 Bundle-SymbolicName: cn.ourpk.robot;singleton:=true
 Bundle-Version: 1.0.0
-Bundle-Vendor: cn.ourpk
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Require-Bundle: org.eclipse.core.runtime,
- cn.ourpk.robot.core;bundle-version="1.0.0"
-Bundle-ActivationPolicy: lazy
 Bundle-Activator: cn.ourpk.robot.internal.Activator
+Bundle-Vendor: cn.ourpk
+Require-Bundle: org.eclipse.core.runtime,cn.ourpk.robot.core;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: J2SE-1.4
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
