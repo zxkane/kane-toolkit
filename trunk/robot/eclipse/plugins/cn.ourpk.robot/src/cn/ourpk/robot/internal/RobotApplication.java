@@ -1,10 +1,10 @@
-package cn.ourpk.robot.blog;
+package cn.ourpk.robot.internal;
 
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 
 
-public class BlogApplication implements IApplication {
+public class RobotApplication implements IApplication {
 	
 	public Object start(IApplicationContext context) throws Exception {
 		while(!Activator.getInstance().isLoadFinished()){
