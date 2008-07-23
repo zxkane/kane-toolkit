@@ -1,4 +1,4 @@
-package cn.ourpk.robot.blog;
+package cn.ourpk.robot.internal;
 
 import java.util.ArrayList;
 import java.util.List;

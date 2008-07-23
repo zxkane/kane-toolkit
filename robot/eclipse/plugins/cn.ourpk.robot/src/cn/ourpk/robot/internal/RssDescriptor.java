@@ -1,4 +1,4 @@
-package cn.ourpk.robot.blog;
+package cn.ourpk.robot.internal;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 
