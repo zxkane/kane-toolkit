@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: BBS Robot Post Core Plug-in
-Bundle-SymbolicName: cn.ourpk.robot.core;singleton:=true
+Bundle-SymbolicName: cn.ourpk.robot.blog.core;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: cn.ourpk.bbs.robot.core.Activator
 Bundle-Vendor: Kane Zhu
