@@ -13,7 +13,6 @@ public class Activator implements BundleActivator {
 	private ServiceReference robotRef;
 	private BundleContext context;
 	private static Activator instance;
-	private boolean loaded = false;
 	
 	public Activator() {
 		instance = this;
@@ -22,10 +21,6 @@ public class Activator implements BundleActivator {
 	public void start(BundleContext context) throws Exception {
 		this.context = context;
 		robotRef = context.getServiceReference(RobotService.class.getName());
-	}
-	
-	public boolean isLoadFinished(){
-		return loaded;
 	}
 
 	public void stop(BundleContext context) throws Exception {
