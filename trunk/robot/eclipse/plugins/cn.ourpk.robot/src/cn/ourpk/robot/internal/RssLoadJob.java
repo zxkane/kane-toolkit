@@ -1,4 +1,4 @@
-package cn.ourpk.robot.blog;
+package cn.ourpk.robot.internal;
 
 import java.io.File;
 import java.io.FileInputStream;

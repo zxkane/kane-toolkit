@@ -1,4 +1,4 @@
-package cn.ourpk.robot.blog;
+package cn.ourpk.robot.internal;
 
 import java.io.IOException;
 import java.net.URL;
