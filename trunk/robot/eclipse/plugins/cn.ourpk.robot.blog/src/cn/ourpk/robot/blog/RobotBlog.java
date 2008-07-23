@@ -10,8 +10,9 @@ import org.apache.commons.httpclient.HttpException;
 import cn.ourpk.bbs.robot.service.Page;
 import cn.ourpk.bbs.robot.service.RobotService;
 import cn.ourpk.bbs.robot.service.Site;
+import cn.ourpk.robot.PostProvider;
 
-public class RobotBlog {
+public class RobotBlog implements PostProvider{
 
 	private static final String username = "robot";
 	private static final String password = "Passw0rd";
