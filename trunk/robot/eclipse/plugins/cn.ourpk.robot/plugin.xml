@@ -15,13 +15,4 @@
          </run>
       </application>
    </extension>
-   <extension
-         id="robot"
-         point="org.eclipse.core.runtime.products">
-      <product
-            application="robot.application"
-            name="Robot Application">
-      </product>
-   </extension>
-
 </plugin>

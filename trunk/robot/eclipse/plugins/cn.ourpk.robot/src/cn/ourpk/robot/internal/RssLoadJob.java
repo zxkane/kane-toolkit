@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,6 +23,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.jdom.JDOMException;
 
 import cn.ourpk.robot.PostProvider;
@@ -74,7 +78,7 @@ public class RssLoadJob extends Job {
 				
 				input.close();
 				OutputStream output = new FileOutputStream(configPath);
-				prop.store(output, "");
+				prop.store(output, "Updated at " + (new Date()).toString());
 				output.close();
 			}
 			status = Status.OK_STATUS;
@@ -94,27 +98,43 @@ public class RssLoadJob extends Job {
 		RssDescriptor[] descs = RssFactory.getInstance().getRssItems();
 		for (RssDescriptor rssDescriptor : descs) {
 			Rssloader loader = new Rssloader(rssDescriptor.getUrl());
-			try {				
-				long lastUpdated = Long.valueOf(prop.getProperty(rssDescriptor.getUrl(), "0")).longValue();
-				if(lastUpdated == 0){
-					prop.setProperty(rssDescriptor.getUrl(), String.valueOf(System.currentTimeMillis()));
-				}else{
-					Date last = new Date(lastUpdated);
-					loader.load();
-					NewsItem[] newsItems = loader.getItems();
-					for(int i = 0; i < newsItems.length; i++){
-						if(isUnread(last, newsItems[i]))
-							items.add(newsItems[i]);
-						else
-							break;
-					}
-					prop.setProperty(rssDescriptor.getUrl(), String.valueOf(System.currentTimeMillis()));
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			try {
+				Date last = null;
+				try{
+					last = formatter.parse(prop.getProperty(rssDescriptor.getUrl(), "0"));
+				}catch(ParseException e){
+					String initialDate = Platform.getPreferencesService().getString(
+							Activator.ID, "initialDate", formatter.format(new Date()), new IScopeContext[]{new DefaultScope()});
+					last = formatter.parse(initialDate);
 				}
+				if(last == null)
+					throw new IllegalArgumentException("Invalid initial date.");
+				prop.setProperty(rssDescriptor.getUrl(), formatter.format(last.getTime()));
+				loader.load();
+				NewsItem[] newsItems = loader.getItems();
+				Date unread = null;
+				for(int i = 0; i < newsItems.length; i++){
+					if(isUnread(last, newsItems[i])){
+						items.add(newsItems[i]);
+						if(unread == null)
+							unread = newsItems[i].getPubDateParsed();
+						else if(unread.compareTo(newsItems[i].getPubDateParsed()) < 0)
+							unread = newsItems[i].getPubDateParsed();
+					}
+					else
+						break;
+				}
+				//record that latest item which are sorted by publish date
+				if(unread != null)
+					prop.setProperty(rssDescriptor.getUrl(), formatter.format(unread));
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (JDOMException e) {
 				e.printStackTrace();
 			} catch (NewsfeedFactoryException e) {
+				e.printStackTrace();
+			} catch (ParseException e) {
 				e.printStackTrace();
 			}
 		}		
