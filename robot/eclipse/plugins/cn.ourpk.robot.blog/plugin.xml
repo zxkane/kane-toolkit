@@ -5,12 +5,16 @@
          id="blog"
          point="org.eclipse.core.runtime.products">
       <product
-            application="robot.application"
+            application="cn.ourpk.robot.blog.blogApplication"
             description="Post blog to ourpk.cn by robot"
-            name="Blog Robot Application">
+            name="BlogRobot">
          <property
                name="preferenceCustomization"
                value="plugin_customization.ini">
+         </property>
+         <property
+               name="appName"
+               value="BlogRobot">
          </property>
       </product>
    </extension>
