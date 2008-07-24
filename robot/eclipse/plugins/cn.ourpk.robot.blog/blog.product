@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.4"?>
 
-<product name="BlogRobot" id="cn.ourpk.robot.blog.blog" application="cn.ourpk.robot.blog.blogApplication" version="1.0.0" useFeatures="false">
+<product name="BlogRobot" id="cn.ourpk.robot.blog.blog" application="robot.application" version="1.0.0" useFeatures="false">
 
    <configIni use="default">
    </configIni>

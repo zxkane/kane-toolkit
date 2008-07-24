@@ -5,7 +5,7 @@
          id="blog"
          point="org.eclipse.core.runtime.products">
       <product
-            application="cn.ourpk.robot.blog.blogApplication"
+            application="robot.application"
             description="Post blog to ourpk.cn by robot"
             name="BlogRobot">
          <property
