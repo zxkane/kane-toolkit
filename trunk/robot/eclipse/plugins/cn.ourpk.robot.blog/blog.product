@@ -25,6 +25,7 @@
       <plugin id="cn.ourpk.robot.blog"/>
       <plugin id="cn.ourpk.robot.blog.core"/>
       <plugin id="cn.ourpk.robot.dependency"/>
+      <plugin id="cn.ourpk.rss.classmate"/>
       <plugin id="org.eclipse.core.contenttype"/>
       <plugin id="org.eclipse.core.jobs"/>
       <plugin id="org.eclipse.core.runtime"/>
