@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.internal.launching.EEVMInstall;
+import org.eclipse.jdt.internal.launching.EEVMType;
 import org.eclipse.jdt.internal.launching.VMDefinitionsContainer;
 import org.eclipse.jdt.launching.AbstractVMInstallType;
 import org.eclipse.jdt.launching.IVMInstall;
@@ -21,23 +23,42 @@ import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.VMStandin;
 import org.eclipse.osgi.service.environment.Constants;
 
-public class VMConfiguration implements IConfigure{
+public class VMConfiguration implements IConfigure {
 
 	private static String CLAZZ = VMConfiguration.class.getName();
 	private static Logger logger = Logger.getLogger(CLAZZ);
 	private static final String StandardVM = "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType";
+	private static final String EEVM = "org.eclipse.jdt.launching.EEVMType";
 	private String jrePath;
 	private String vmArgs;
-	private static int number = 1;
 	private IVMInstallType fSelectedVMType;
 	private IVMInstall newVM = null;
-	private boolean isDefault = true; 
+	private boolean isDefault = true;
+
+	/**
+	 * Add by Tang Qiao, 2008-09-18
+	 */
+	private boolean isNotesVM = true;
+
+	/**
+	 * Add by Tang Qiao, 2008-09-18
+	 * 
+	 * @param isNotesVM
+	 */
+	public void setNotesVM(boolean isNotesVM) {
+		this.isNotesVM = isNotesVM;
+		if (!isNotesVM)
+			fSelectedVMType = JavaRuntime.getVMInstallType(EEVM);
+		else
+			fSelectedVMType = JavaRuntime.getVMInstallType(StandardVM);
+	}
+
 	/**
 	 * VMs being displayed
 	 */
-	private Map fVMs = new HashMap(2);
-	
-	public VMConfiguration(String path, boolean isDefault){
+	private Map<IVMInstall, String> fVMs = new HashMap<IVMInstall, String>(2);
+
+	public VMConfiguration(String path, boolean isDefault) {
 		initialize(path);
 		this.isDefault = isDefault;
 	}
@@ -50,12 +71,26 @@ public class VMConfiguration implements IConfigure{
 	public void configure(){
 		String method = "configure";
 		logger.entering(CLAZZ, method);
-		if(!fVMs.containsValue(jrePath)){
-			logger.logp(Level.FINE, CLAZZ, method, "Create new vm.");
-			newVM = new VMStandin(fSelectedVMType, createUniqueId(fSelectedVMType));
-			setFieldValuesToVM(newVM);
-			fVMs.put(newVM, newVM.getInstallLocation().getAbsolutePath());
-			save();
+		if (isNotesVM) {
+			if (!fVMs.containsValue(jrePath)) {
+				logger.logp(Level.FINE, CLAZZ, method, "Create new vm.");
+				newVM = new VMStandin(fSelectedVMType,
+						createUniqueId(fSelectedVMType));
+				setFieldValuesToVM(newVM);
+				fVMs.put(newVM, newVM.getInstallLocation().getAbsolutePath());
+				save();
+			}
+		} else {
+			String dir = jrePath + File.separatorChar + "jre";
+			if (!fVMs.containsValue(dir)) {
+				logger.logp(Level.FINE, CLAZZ, method, "Create new vm.");
+
+				newVM = new VMStandin(fSelectedVMType,
+						createUniqueId(fSelectedVMType));
+				setFieldValueToDEEVM(newVM);
+				fVMs.put(newVM, newVM.getInstallLocation().getAbsolutePath());
+				save();
+			}
 		}
 		logger.exiting(CLAZZ, method);
 	}
@@ -63,6 +98,7 @@ public class VMConfiguration implements IConfigure{
 	private void initialize(String path) {
 		this.jrePath = path;
 
+		// put standard vm
 		fSelectedVMType = JavaRuntime.getVMInstallType(StandardVM);
 		IVMInstallType[] fVMTypes = JavaRuntime.getVMInstallTypes();
 		for (int i = 0; i < fVMTypes.length; i++) {
@@ -75,12 +111,14 @@ public class VMConfiguration implements IConfigure{
 			}
 		}
 	}
-	
+
 	private IVMInstall getCurrentDefaultVM() {
-		if(isDefault)
-			return newVM;
-		else
-			return JavaRuntime.getDefaultVMInstall();
+		// modified by Tang Qiao, 2008-09-27
+		// do not change the default VM
+		if (isDefault)
+			return newVM;		
+	
+		return JavaRuntime.getDefaultVMInstall();
 	}
 	
 	private void save(){
@@ -89,10 +127,10 @@ public class VMConfiguration implements IConfigure{
 		IVMInstall defaultVM = getCurrentDefaultVM();
 		IVMInstall[] vms = (IVMInstall[]) fVMs.keySet().toArray(
 				new IVMInstall[fVMs.size()]);
-//		JREsUpdater updater = new JREsUpdater();
-//		if (!updater.updateJRESettings(vms, defaultVM))
-//			
-		try{
+		// JREsUpdater updater = new JREsUpdater();
+		// if (!updater.updateJRESettings(vms, defaultVM))
+		//			
+		try {
 			// Create a VM definition container
 			VMDefinitionsContainer vmContainer = new VMDefinitionsContainer();
 			// Set the default VM Id on the container
@@ -102,9 +140,11 @@ public class VMConfiguration implements IConfigure{
 			for (int i = 0; i < vms.length; i++) {
 				vmContainer.addVM(vms[i]);
 			}
-			// Generate XML for the VM defs and save it as the new value of the VM preference
+			// Generate XML for the VM defs and save it as the new value of the
+			// VM preference
 			String vmDefXML = vmContainer.getAsXML();
-			JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_VM_XML, vmDefXML);
+			JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_VM_XML,
+					vmDefXML);
 			JavaRuntime.savePreferences();
 		}catch (CoreException e) {
 			log(method, e);
@@ -119,7 +159,9 @@ public class VMConfiguration implements IConfigure{
 	
 	/**
 	 * Creates a unique name for the VMInstallType
-	 * @param vmType the vm install type
+	 * 
+	 * @param vmType
+	 *            the vm install type
 	 * @return a unique name
 	 */
 	private String createUniqueId(IVMInstallType vmType) {
@@ -129,10 +171,52 @@ public class VMConfiguration implements IConfigure{
 		} while (vmType.findVMInstall(id) != null);
 		return id;
 	}
-	
+
+	protected void setFieldValueToDEEVM(IVMInstall vm) {
+		File dir = new File(jrePath + File.separatorChar + "jre"
+				+ File.separatorChar + "default.ee");
+		try {
+			vm.setInstallLocation(dir.getCanonicalFile());
+		} catch (IOException e) {
+			vm.setInstallLocation(dir.getAbsoluteFile());
+		}
+		vm.setName("AutoGeneratedDEE");
+		vm.setJavadocLocation(detectJavadocLocation());
+		try {
+			vm = JavaRuntime.createVMFromDefinitionFile(dir, newVM.getName(),
+					newVM.getId());
+
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+		// set properties
+		VMStandin vv = (VMStandin) vm;
+		File eeFile = dir;
+		File home = null;
+		if (eeFile != null) {
+			vv.setAttribute(EEVMInstall.ATTR_DEFINITION_FILE, eeFile.getPath());
+			String homePath = EEVMType.getProperty(EEVMType.PROP_JAVA_HOME,
+					eeFile);
+			if (homePath != null) {
+				home = new File(homePath);
+				try {
+					home = home.getCanonicalFile();
+				} catch (IOException e) {
+				}
+			}
+		}
+		vv.setInstallLocation(home);
+		vv.setName(newVM.getName());
+//		vm.setLibraryLocations(null);
+		newVM = vm;
+
+	}
+
 	/**
 	 * init fields to the specified VM
-	 * @param vm the VM to init from
+	 * 
+	 * @param vm
+	 *            the VM to init from
 	 */
 	protected void setFieldValuesToVM(IVMInstall vm) {
 		File dir = new File(jrePath);
@@ -142,16 +226,15 @@ public class VMConfiguration implements IConfigure{
 		catch (IOException e) {
 			vm.setInstallLocation(dir.getAbsoluteFile());
 		}
-		vm.setName("AutoGeneratedJRE" + number++);
+		vm.setName("AutoGeneratedJ2SE");
 		vm.setJavadocLocation(detectJavadocLocation());
 		
 		String argString = vmArgs;
 		if (vm instanceof IVMInstall2) {
 			IVMInstall2 vm2 = (IVMInstall2) vm;
 			if (argString != null && argString.length() > 0) {
-				vm2.setVMArgs(argString);			
-			} 
-			else {
+				vm2.setVMArgs(argString);
+			} else {
 				vm2.setVMArgs(null);
 			}
 		} 

@@ -1,11 +1,13 @@
 package com.ibm.hannover.development.tools.configurations;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -36,8 +38,34 @@ public class TargetPlatformConfiguration implements IConfigure{
 			this.location = platformPath;
 		}
 		
+		/**
+		 * the PluginPathFinder.getPluginPaths function will read the link file to 
+		 * find plug-ins in other directories.
+		 * Sometimes the link file will be lost, and the other directories are known for us.
+		 * So we add them directly.
+		 * location:
+		 * C:\Program Files\IBM\Lotus\Symphony\framework\eclipse
+		 * rcp:
+		 * C:\Program Files\IBM\Lotus\Symphony\framework\rcp\eclipse
+		 * shared:
+		 * C:\Program Files\IBM\Lotus\Symphony\framework\shared\eclipse
+		 */
 		private URL[] computePluginURLs() {
-			URL[] base  = PluginPathFinder.getPluginPaths(location);		
+			URL[] base  = PluginPathFinder.getPluginPaths(location);
+			// add by Tang Qiao at 2008-09-17
+			String baseDir = location.substring(0, location.lastIndexOf("framework")+"framework".length());			
+			URL[] rcpPlugins = PluginPathFinder.getPluginPaths(baseDir+File.separatorChar+"rcp"+File.separatorChar+"eclipse");
+			URL[] sharedPlugins = PluginPathFinder.getPluginPaths(baseDir+File.separatorChar+"shared"+File.separatorChar+"eclipse");
+			// merge URLs
+			Set<URL> allPlugins = new HashSet<URL>(base.length+rcpPlugins.length+sharedPlugins.length);
+			for (int i=0; i<base.length; ++i)
+				allPlugins.add(base[i]);
+			for (int i=0; i<rcpPlugins.length; ++i)
+				allPlugins.add(rcpPlugins[i]);
+			for (int i=0; i<sharedPlugins.length; ++i)
+				allPlugins.add(sharedPlugins[i]);
+			base = allPlugins.toArray(base);
+			// end of add by Tang Qiao at 2008-09-17
 			return base;
 		}
 			
