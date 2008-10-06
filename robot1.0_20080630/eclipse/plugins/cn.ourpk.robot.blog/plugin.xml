@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension-point id="rss" name="RSS URL" schema="schema/rss.exsd"/>
+   <extension
+         point="cn.ourpk.robot.core.sites">
+      <site
+            description="Robot&apos;s Blog on Ourpk.cn"
+            id="ourpk"
+            name="Ourpk Blog"
+            port="80"
+            site="116.70.0.52">
+         <session
+               url="/CCS/login.aspx">
+            <property
+                  name="__EVENTTARGET">
+            </property>
+            <property
+                  name="__EVENTARGUMENT">
+            </property>
+            <property
+                  name="__VIEWSTATE">
+            </property>
+            <property
+                  name="_ctl0:bcr:Login1:_:username">
+            </property>
+            <property
+                  name="_ctl0:bcr:Login1:_:password">
+            </property>
+         </session>
+         <page
+         	   id="robot"
+               action="post"
+               url="/CCS/ControlPanel/Blogs/posteditor.aspx?SelectedNavItem=NewPost&amp;sectionid=24">
+            <property
+                  name="__EVENTTARGET">
+            </property>
+            <property
+                  name="__EVENTARGUMENT">
+            </property>
+            <property
+                  name="__VIEWSTATE">
+            </property>
+            <property
+                  name="_ctl0:_ctl0:TaskRegion:Editor1:PostSubject">
+            </property>
+            <property
+                  name="_ctl0:_ctl0:TaskRegion:Editor1:PostBody:_:Editor">
+            </property>
+            <property
+                  name="_ctl0__ctl0_TaskRegion_Editor1_DatePicker_picker">
+            </property>
+            <property
+                  name="_ctl0:_ctl0:TaskRegion:Editor1:HourPicker">
+            </property>
+            <property
+                  name="_ctl0:_ctl0:TaskRegion:Editor1:MinutePicker">
+            </property>
+            <property
+                  name="_ctl0:_ctl0:TaskRegion:Editor1:AMPM">
+            </property>
+         </page>
+      </site>
+   </extension>
+
+</plugin>
