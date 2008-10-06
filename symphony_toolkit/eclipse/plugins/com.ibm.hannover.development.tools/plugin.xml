@@ -69,5 +69,19 @@
             name="Reset">
       </command>
    </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.ibm.hannover.development.tools.preferences.VMPreferencePage"
+            id="com.ibm.hannover.development.tools.preferences.VMPreferencePage"
+            name="Symphony Dev Tools">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.ibm.hannover.development.tools.preferences.VMPreferenceInitializer">
+      </initializer>
+   </extension>
 
 </plugin>
