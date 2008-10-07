@@ -1,6 +1,10 @@
 package com.ibm.hannover.development.tools.configurations;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.PlatformUI;
+
+import com.ibm.hannover.development.tools.Activator;
+import com.ibm.hannover.development.tools.preferences.VMPreferencePage;
 
 public class NotesPolicy {
 	
@@ -19,11 +23,13 @@ public class NotesPolicy {
 		job.setLaunchFile(launchFile);
 		job.setVariableFile(variableFile);
 		job.setInstallPath(installedPath);
-		job.setVMRootPath(installedPath);
 		job.setUser(true);
-		// add by Tang Qiao, 2008-09-18
-		job.setNotesVM(true);
-		// end of add
+		IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
+		int select = st.getInt(VMPreferencePage.PREFERENCE_KEY);
+		if(select != 1){
+			job.setVMRootPath(FinderUtility.findStandardVMPath(installedPath));  
+			job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration");
+		}
 		PlatformUI.getWorkbench().getProgressService().showInDialog(
 						PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), job);
 		job.schedule();

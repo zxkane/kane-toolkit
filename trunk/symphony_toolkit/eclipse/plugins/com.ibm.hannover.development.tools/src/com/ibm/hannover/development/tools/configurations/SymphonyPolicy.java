@@ -39,17 +39,18 @@ public class SymphonyPolicy {
 		job.setInstallPath(installedPath);
 		
 		// add by Tang Qiao, 2008-09-18
+		// vm configuration
 		IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
 		int select = st.getInt(VMPreferencePage.PREFERENCE_KEY);
 		if (select == 2) {
-			job.setNotesVM(false);
-			job.setVMRootPath(installedPath); // new code
+			job.setVMProvider("com.ibm.hannover.development.tools.configurations.EEVMConfiguration");
+			job.setVMRootPath(FinderUtility.findDEEVMPath(installedPath)); // new code
 		}
-		else {
+		else if(select == 3){
 			// find notes location
 			notesPath = FinderUtility.findNotesInstalledLocation();
-			job.setVMRootPath(notesPath);  
-			job.setNotesVM(true);
+			job.setVMRootPath(FinderUtility.findStandardVMPath(notesPath));  
+			job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration");
 		}
 		// end of add
 		

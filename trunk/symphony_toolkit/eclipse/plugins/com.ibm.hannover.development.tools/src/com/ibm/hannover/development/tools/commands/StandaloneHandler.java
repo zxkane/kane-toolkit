@@ -11,7 +11,6 @@ import com.ibm.hannover.development.tools.configurations.NotesPolicy;
 public class StandaloneHandler extends AbstractHandler implements
 		IHandler {
 
-	@Override
 	public Object execute(ExecutionEvent arg0) throws ExecutionException {
 		String launcher = "config/standalone/${os}/launcher.properties";
 		launcher = launcher.replace("${os}", Platform.getOS());
