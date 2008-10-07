@@ -1,6 +1,7 @@
 package com.ibm.hannover.development.tools.configurations;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,7 +9,9 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 
@@ -24,6 +27,8 @@ public class FinderUtility {
 	private static final boolean isWindows = System.getProperty("os.name").
 		toLowerCase().startsWith("windows");
 	private static final String RCPLAUNCHER = "rcplauncher";
+	private static final String J2SE_PLUGIN = "com.ibm.rcp.j2se";
+	private static final String DEE_PLUGIN = "com.ibm.rcp.dee";
 	
 	public static String findNotesInstalledLocation(){
 		String method = "findInstalledLocation";
@@ -96,5 +101,78 @@ public class FinderUtility {
 					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Fail to get Lotus Symphony installation location.", e));
 		}
 		return symphonyPath;
+	}
+	
+	public static String findStandardVMPath(String vmRootPath){
+		String jrePath = null;
+		IPath pluginPath = new Path(vmRootPath + "/rcp/eclipse/plugins");
+		File plugins = new File(pluginPath.toOSString());
+		if(plugins.exists() && plugins.isDirectory()){
+			File[] entries = plugins.listFiles(new FileFilter(){
+				public boolean accept(File pathname) {
+					if(pathname.isDirectory() &&
+							pathname.getPath().indexOf(J2SE_PLUGIN) > -1)
+						return true;
+					return false;
+				}
+			});
+			if (entries != null) {
+				try {
+					/**
+					 * get the highest version JVM location. store it to jrePath
+					 * variable.
+					 */
+					for (int i = 0; i < entries.length; i++) {
+						if (jrePath == null)
+							jrePath = entries[i].getCanonicalPath();
+						else if(entries[i].getCanonicalPath().compareToIgnoreCase(
+								jrePath) > 0)
+							jrePath = entries[i].getCanonicalPath();
+					}
+				}catch(IOException e){
+					logger.logp(Level.WARNING, CLAZZ, "findVMPath", "Fail to get jre path.", e);
+				}
+			}
+		}
+		return jrePath;
+	}
+	
+	/** 
+	 * add by Tang Qiao, 2008-09-18
+	 * Find symphony own JVM instead of notes JVM 
+	 */
+	public static String findDEEVMPath(String vmRootPath) {
+		String jrePath = null;
+		IPath pluginPath = new Path(vmRootPath + "/rcp/eclipse/plugins");
+		File plugins = new File(pluginPath.toOSString());
+		if (plugins.exists() && plugins.isDirectory()) {
+			File[] entries = plugins.listFiles(new FileFilter() {
+				public boolean accept(File pathname) {
+					if (pathname.isDirectory()
+							&& pathname.getPath().indexOf(DEE_PLUGIN) > -1)
+						return true;
+					return false;
+				}
+			});
+			if (entries != null) {
+				try {
+					/**
+					 * get the highest version JVM location. store it to jrePath
+					 * variable.
+					 */
+					for (int i = 0; i < entries.length; i++) {
+						if (jrePath == null)
+							jrePath = entries[i].getCanonicalPath();
+						else if (entries[i].getCanonicalPath()
+								.compareToIgnoreCase(jrePath) > 0)
+							jrePath = entries[i].getCanonicalPath();
+					}
+				} catch (IOException e) {
+					logger.logp(Level.WARNING, CLAZZ, "findVMPath",
+							"Fail to get jre path.", e);
+				}
+			}
+		}
+		return jrePath;
 	}
 }
