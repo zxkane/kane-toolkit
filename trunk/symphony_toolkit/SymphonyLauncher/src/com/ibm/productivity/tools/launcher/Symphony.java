@@ -18,29 +18,53 @@ public class Symphony {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {		
+	public static void main(String[] args) {
+		String symphonyPath = null;
+		if(args != null && args.length >= 1){
+			symphonyPath = args[0];
+		}else{
+			symphonyPath = System.getProperty("symphony.home");
+		}
+		if(symphonyPath == null){
+			System.out.println("Symphony launcher 1.0. Usage:");
+			System.out.println("java -Xbootclasspath/a:\"<symphony_home>/framework/rcp/eclipse/plugins/com.ibm.rcp.base_<version>/rcpbootcp.jar\" -jar launcher.jar <symphony_home>");
+			System.out.println("java -Xbootclasspath/a:\"<symphony_home>/framework/rcp/eclipse/plugins/com.ibm.rcp.base_<version>/rcpbootcp.jar\" -jar launcher.jar -Dsymphony.home=<symphony_home>");
+			System.out.println();
+			return;
+		}else{
+			File root = new File(symphonyPath);
+			if(!root.exists() || !root.isDirectory()){
+				System.out.print("Symphony home is invalid.");
+				System.out.println();
+				return;
+			}
+		}
+		
+		if(symphonyPath.endsWith(File.separator))
+			symphonyPath += "framework";
+		else
+			symphonyPath += File.separator + "framework";
 		try {
-			Symphony launcher = new Symphony("/opt/ibm/lotus/Symphony/framework");
+			Symphony launcher = new Symphony(symphonyPath);
 			Object result = launcher.run();
 			if (result instanceof Integer)
 				System.exit(((Integer) result).intValue());
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
-			e.printStackTrace();
 		}		
 	}
 
 
 	private static final String BASE = "com.ibm.rcp.base";
 	private static final String OSGI = "org.eclipse.osgi";
-	private static final String[] LAUNCHERARUGMENTS = new String[]{"-homepage", "-console", "-personality", "com.ibm.productivity.tools.standalone.personality", 
+	private static final String[] LAUNCHERARUGMENTS = new String[]{"-homepage", "-personality", "com.ibm.productivity.tools.standalone.personality", 
 		"-product", "com.ibm.productivity.tools.standalone.branding.productivitytools"};
 	private File data;
 	private String rcphome;
 	private URL framework;
 	private File basefolder;
 	
-	public Symphony(String rcpHome) throws Exception {
+	public Symphony(String rcpHome) throws Exception {	
 		this.rcphome = rcpHome;
 		File installArea = new File(rcpHome + SEPARATOR + "rcp" + SEPARATOR + "eclipse");
 		File plugins = new File(installArea.getAbsoluteFile() + SEPARATOR + "plugins");
