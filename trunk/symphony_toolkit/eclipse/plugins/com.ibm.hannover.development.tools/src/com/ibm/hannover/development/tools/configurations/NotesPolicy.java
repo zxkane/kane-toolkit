@@ -1,5 +1,6 @@
 package com.ibm.hannover.development.tools.configurations;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.PlatformUI;
 
@@ -24,11 +25,13 @@ public class NotesPolicy {
 		job.setVariableFile(variableFile);
 		job.setInstallPath(installedPath);
 		job.setUser(true);
-		IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
-		int select = st.getInt(VMPreferencePage.PREFERENCE_KEY);
-		if(select != 1){
-			job.setVMRootPath(FinderUtility.findStandardVMPath(installedPath));  
-			job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration");
+		if(!Platform.OS_MACOSX.equals(Platform.getOS())){
+			IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
+			int select = st.getInt(VMPreferencePage.PREFERENCE_KEY);
+			if(select != 1){
+				job.setVMRootPath(FinderUtility.findStandardVMPath(installedPath));  
+				job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration");
+			}
 		}
 		PlatformUI.getWorkbench().getProgressService().showInDialog(
 						PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), job);

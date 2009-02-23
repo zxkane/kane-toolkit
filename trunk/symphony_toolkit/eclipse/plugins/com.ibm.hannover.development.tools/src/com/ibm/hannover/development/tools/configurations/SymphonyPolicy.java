@@ -37,20 +37,22 @@ public class SymphonyPolicy {
 		job.setLaunchFile(launchFile);
 		job.setVariableFile(variableFile);
 		job.setInstallPath(installedPath);
-		
-		// add by Tang Qiao, 2008-09-18
-		// vm configuration
-		IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
-		int select = st.getInt(VMPreferencePage.PREFERENCE_KEY);
-		if (select == 2) {
-			job.setVMProvider("com.ibm.hannover.development.tools.configurations.EEVMConfiguration");
-			job.setVMRootPath(FinderUtility.findDEEVMPath(installedPath)); // new code
-		}
-		else if(select == 3){
-			// find notes location
-			notesPath = FinderUtility.findNotesInstalledLocation();
-			job.setVMRootPath(FinderUtility.findStandardVMPath(notesPath));  
-			job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration");
+		// macosx use the default vm provided by System
+		if(!Platform.OS_MACOSX.equals(Platform.getOS())){		
+			// add by Tang Qiao, 2008-09-18
+			// vm configuration
+			IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
+			int select = st.getInt(VMPreferencePage.PREFERENCE_KEY);
+			if (select == 2) {
+				job.setVMProvider("com.ibm.hannover.development.tools.configurations.EEVMConfiguration");
+				job.setVMRootPath(FinderUtility.findDEEVMPath(installedPath)); // new code
+			}
+			else if(select == 3){
+				// find notes location
+				notesPath = FinderUtility.findNotesInstalledLocation();
+				job.setVMRootPath(FinderUtility.findStandardVMPath(notesPath));  
+				job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration");
+			}
 		}
 		// end of add
 		
