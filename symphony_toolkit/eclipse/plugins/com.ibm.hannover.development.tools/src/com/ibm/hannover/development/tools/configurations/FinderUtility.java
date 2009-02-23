@@ -24,8 +24,6 @@ public class FinderUtility {
 	
 	private static final String CLAZZ = FinderUtility.class.getName();
 	private static final Logger logger = Logger.getLogger(CLAZZ);
-	private static final boolean isWindows = System.getProperty("os.name").
-		toLowerCase().startsWith("windows");
 	private static final String RCPLAUNCHER = "rcplauncher";
 	private static final String J2SE_PLUGIN = "com.ibm.rcp.j2se";
 	private static final String DEE_PLUGIN = "com.ibm.rcp.dee";
@@ -34,7 +32,8 @@ public class FinderUtility {
 		String method = "findInstalledLocation";
 		String notesPath = null;
 		try{
-			if(isWindows){
+			final String os = Platform.getOS();
+			if(Platform.OS_WIN32.equals(os)){
 //				installedPath = RegistryHelper.queryValue(RegistryHelper.HKEY_LOCAL_MACHINE, 
 //						"SOFTWARE\\IBM\\Lotus\\Expeditor\\{D8641E4B-77AF-4EAC-9137-8D4DCB1478E2}", 
 //						"xpdInstallLocation");				
@@ -42,12 +41,14 @@ public class FinderUtility {
 						"SOFTWARE\\IBM\\Lotus\\Expeditor\\Notes", 
 						"launcher");
 				notesPath = notesPath.substring(0, notesPath.indexOf("framework")+"framework".length());
-			}else{
+			}else if(Platform.OS_LINUX.equals(os)){
 				Properties src = new Properties();
 				InputStream in = new FileInputStream(new File("/etc/lotus/notes/notesrc"));
 				src.load(in);
 				notesPath = src.getProperty("RCPHOME");
 				in.close();
+			}else if(Platform.OS_MACOSX.equals(os)){
+				notesPath = "/Applications/Notes.app/";
 			}
 			if(notesPath == null || notesPath.trim().length() == 0)
 				notesPath = null;
@@ -66,20 +67,23 @@ public class FinderUtility {
 		String method = "findInstalledLocation";
 		String symphonyPath = null;
 		try{
+			final String os = Platform.getOS();
 			/* initiate installedPath
 			 * In windows, use JNI to call local API to get the installed path.
 			 * In Linux, read the property file to get the installed path. 
-			 */
-			if(isWindows){
+			 */			
+			if(Platform.OS_WIN32.equals(os)){
 				symphonyPath = RegistryHelper.queryValue(RegistryHelper.HKEY_LOCAL_MACHINE, 
 						"SOFTWARE\\Lotus\\Symphony", 
 						"launcher");
-			}else{
+			}else if(Platform.OS_LINUX.equals(os)){
 				Properties src = new Properties();
 				InputStream in = new FileInputStream(new File("/etc/lotus/Symphony/Symphonyrc"));
 				src.load(in);
 				symphonyPath = src.getProperty("RCPHOME");
 				in.close();
+			}else if(Platform.OS_MACOSX.equals(os)){
+				symphonyPath = "/Applications/Symphony.app";
 			}
 			if(symphonyPath == null || symphonyPath.trim().length() == 0)
 				symphonyPath = null;
