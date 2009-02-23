@@ -54,16 +54,22 @@ public class TargetPlatformConfiguration implements IConfigure{
 			URL[] base  = PluginPathFinder.getPluginPaths(location);
 			// add by Tang Qiao at 2008-09-17
 			String baseDir = location.substring(0, location.lastIndexOf("framework")+"framework".length());			
-			URL[] rcpPlugins = PluginPathFinder.getPluginPaths(baseDir+File.separatorChar+"rcp"+File.separatorChar+"eclipse");
-			URL[] sharedPlugins = PluginPathFinder.getPluginPaths(baseDir+File.separatorChar+"shared"+File.separatorChar+"eclipse");
+			String targetRCP = baseDir+File.separatorChar+"rcp"+File.separatorChar+"eclipse";
+			URL[] rcpPlugins = PluginPathFinder.getPluginPaths(targetRCP);
+			String targetShared = baseDir+File.separatorChar+"shared"+File.separatorChar+"eclipse";
+			URL[] sharedPlugins = PluginPathFinder.getPluginPaths(targetShared);
 			// merge URLs
 			Set<URL> allPlugins = new HashSet<URL>(base.length+rcpPlugins.length+sharedPlugins.length);
 			for (int i=0; i<base.length; ++i)
 				allPlugins.add(base[i]);
-			for (int i=0; i<rcpPlugins.length; ++i)
+			for (int i=0; i<rcpPlugins.length; ++i){
 				allPlugins.add(rcpPlugins[i]);
-			for (int i=0; i<sharedPlugins.length; ++i)
+				fAdditionalLocations.add(targetRCP);
+			}
+			for (int i=0; i<sharedPlugins.length; ++i){
 				allPlugins.add(sharedPlugins[i]);
+				fAdditionalLocations.add(targetShared);
+			}
 			base = allPlugins.toArray(base);
 			// end of add by Tang Qiao at 2008-09-17
 			return base;
@@ -94,8 +100,9 @@ public class TargetPlatformConfiguration implements IConfigure{
 	
 	private String targetPlatform;
 	private PDEState fCurrentState;
-	private Map fCurrentFeatures;
-	private HashSet fChangedModels = new HashSet();
+	private Map<String, IFeatureModel> fCurrentFeatures;
+	private HashSet<IPluginModelBase> fChangedModels = new HashSet<IPluginModelBase>();
+	private Set<String> fAdditionalLocations = new HashSet<String>(1);
 	
 	public TargetPlatformConfiguration(String targetPlatform){
 		this.targetPlatform = targetPlatform;
@@ -123,7 +130,13 @@ public class TargetPlatformConfiguration implements IConfigure{
 		preferences.setValue(ICoreConstants.PLATFORM_PATH, targetPlatform);
 		preferences.setValue(ICoreConstants.CHECKED_PLUGINS, ICoreConstants.VALUE_SAVED_ALL);		
 		preferences.setValue(ICoreConstants.GROUP_PLUGINS_VIEW, false);		
+		// for additional location
 		StringBuffer buffer = new StringBuffer();
+		for (Iterator<String> iter = fAdditionalLocations.iterator(); iter.hasNext();) {
+			if (buffer.length() > 0)
+				buffer.append(","); //$NON-NLS-1$
+			buffer.append(iter.next());
+		}
 		preferences.setValue(ICoreConstants.ADDITIONAL_LOCATIONS, buffer.toString());
 		PDECore.getDefault().savePluginPreferences();
 	}
@@ -164,9 +177,9 @@ public class TargetPlatformConfiguration implements IConfigure{
 	}
 	
 	private void updateModels() {
-		Iterator iter = fChangedModels.iterator();
+		Iterator<IPluginModelBase> iter = fChangedModels.iterator();
 		while (iter.hasNext()) {
-			IPluginModelBase model = (IPluginModelBase) iter.next();
+			IPluginModelBase model = iter.next();
 			model.setEnabled(true);
 		}
 	}
