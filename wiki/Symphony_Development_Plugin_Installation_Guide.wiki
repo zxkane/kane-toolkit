@@ -1,11 +1,11 @@
 #labels Symphony,Development,Plugin
-#The installation guide of Symphony development plugin.
+=The installation guide of Symphony development plugin.=
 
-= Introduction =
+== Introduction ==
 
 Requirement Environment: Eclipse3.4+, Java5+, Symphony1+
 
-= Details =
+== Details ==
 
-1. download com.ibm.hannover.tools_xxx.jar from Downloads page;
-2. put the jar under your plugin folder of eclipse, or p2 folder
+  #. download com.ibm.hannover.tools_xxx.jar from Downloads page;
+  #. put the jar under your plugin folder of eclipse, or p2 folder
