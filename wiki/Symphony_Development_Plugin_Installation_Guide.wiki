@@ -1,4 +1,4 @@
-#labels Symphony,Development,Plugin
+#labels Symphony,Development,Plugin,Featured
 =The installation guide of Symphony development plugin.=
 
 == Introduction ==
