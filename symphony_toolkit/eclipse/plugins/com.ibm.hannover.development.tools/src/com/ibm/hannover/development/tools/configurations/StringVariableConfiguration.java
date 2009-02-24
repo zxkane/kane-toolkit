@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.variables.IStringVariableManager;
 import org.eclipse.core.variables.IValueVariable;
 import org.eclipse.core.variables.VariablesPlugin;
@@ -25,7 +26,7 @@ public class StringVariableConfiguration implements IConfigure{
 	private final String RCP_VERSION = "${rcp_version}";
 	private final String SYMPHONY_VERSION = "${symphony_version}";
 	private final String RCP_BASE = "com.ibm.rcp.base_";
-	private final String SYMPHONY_SYSTEM_LINUX = "com.ibm.productivity.tools.base.system.linux_";
+	private final String SYMPHONY_SYSTEM_PLUGIN = "com.ibm.productivity.tools.base.system." + Platform.getOS() + "_";
 	private String rcpHome;
 	private String config;
 	
@@ -83,7 +84,7 @@ public class StringVariableConfiguration implements IConfigure{
 			File[] entries = plugins.listFiles(new FileFilter(){
 				public boolean accept(File pathname) {
 					if(pathname.isDirectory() &&
-							pathname.getPath().indexOf(SYMPHONY_SYSTEM_LINUX) > -1)
+							pathname.getPath().indexOf(SYMPHONY_SYSTEM_PLUGIN) > -1)
 						return true;
 					return false;
 				}
@@ -92,7 +93,7 @@ public class StringVariableConfiguration implements IConfigure{
 				try{
 					for(int i = 0; i < entries.length; i++){
 						String fullpath = entries[i].getCanonicalPath();
-						String version = fullpath.substring(fullpath.indexOf(SYMPHONY_SYSTEM_LINUX) + SYMPHONY_SYSTEM_LINUX.length());
+						String version = fullpath.substring(fullpath.indexOf(SYMPHONY_SYSTEM_PLUGIN) + SYMPHONY_SYSTEM_PLUGIN.length());
 						if(systemlinux == null)
 							systemlinux = version;
 						else if(version.compareToIgnoreCase(
