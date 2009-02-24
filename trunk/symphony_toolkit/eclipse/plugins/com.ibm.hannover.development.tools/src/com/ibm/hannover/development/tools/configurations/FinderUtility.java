@@ -48,7 +48,7 @@ public class FinderUtility {
 				notesPath = src.getProperty("RCPHOME");
 				in.close();
 			}else if(Platform.OS_MACOSX.equals(os)){
-				notesPath = "/Applications/Notes.app/";
+				notesPath = "/Applications/Notes.app//Contents/MacOS/";
 			}
 			if(notesPath == null || notesPath.trim().length() == 0)
 				notesPath = null;
@@ -83,7 +83,7 @@ public class FinderUtility {
 				symphonyPath = src.getProperty("RCPHOME");
 				in.close();
 			}else if(Platform.OS_MACOSX.equals(os)){
-				symphonyPath = "/Applications/Symphony.app";
+				symphonyPath = "/Applications/Symphony.app/Contents/MacOS/";
 			}
 			if(symphonyPath == null || symphonyPath.trim().length() == 0)
 				symphonyPath = null;
