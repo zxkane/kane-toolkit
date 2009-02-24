@@ -1,4 +1,4 @@
-#labels Symphony,Development,Plugin,Featured
+#labels Symphony,Development,EclipsePlug-in,Featured
 =The installation guide of Symphony development plugin.=
 
 == Introduction ==
@@ -7,5 +7,5 @@ Requirement Environment: Eclipse3.4+, Java5+, Symphony1+
 
 == Details ==
 
-  #. download com.ibm.hannover.tools_xxx.jar from Downloads page;
+  #. download com.ibm.hannover.tools_xxx.jar from [http://code.google.com/p/kane-toolkit/downloads/list?can=3&q=&colspec=Filename+Summary+Uploaded+Size+DownloadCount Downloads] page;
   #. put the jar under your plugin folder of eclipse, or p2 folder
