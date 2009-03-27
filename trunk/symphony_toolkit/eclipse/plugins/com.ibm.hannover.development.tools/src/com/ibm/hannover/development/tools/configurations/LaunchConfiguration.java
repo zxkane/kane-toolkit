@@ -31,10 +31,6 @@ public class LaunchConfiguration implements IConfigure{
 	private PropertiesUtils properties;
 	private String vmName;
 	
-	public LaunchConfiguration(PropertiesUtils properties){
-		this(properties, null);
-	}
-	
 	public LaunchConfiguration(PropertiesUtils properties, String vmName){
 		this.properties = properties;
 		this.vmName = vmName;
@@ -93,6 +89,10 @@ public class LaunchConfiguration implements IConfigure{
 	private void setConfiguration(ILaunchConfigurationWorkingCopy config) {
 		config.setAttribute(IPDELauncherConstants.CONFIG_CLEAR_AREA, 
 				Boolean.valueOf((properties.getProperty(IPDELauncherConstants.CONFIG_CLEAR_AREA))).booleanValue());
+		String templateLocation = properties.getProperty("CONFIG_TEMPLATE_LOCATION");		
+		config.setAttribute(IPDELauncherConstants.CONFIG_GENERATE_DEFAULT, templateLocation == null ? true : false);
+		if(templateLocation != null)
+			config.setAttribute(IPDELauncherConstants.CONFIG_TEMPLATE_LOCATION, templateLocation);
 	}
 
 	private void setWorkingDirectory(ILaunchConfigurationWorkingCopy config) {
