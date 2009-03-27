@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: IBM Lotus Symphony Development Tools Plug-in
 Bundle-SymbolicName: com.ibm.hannover.development.tools;singleton:=true
-Bundle-Version: 2.3.0.qualifier
+Bundle-Version: 2.3.1.qualifier
 Bundle-Activator: com.ibm.hannover.development.tools.Activator
 Bundle-Vendor: IBM Symphony Java Team
 Require-Bundle: org.eclipse.core.runtime,
