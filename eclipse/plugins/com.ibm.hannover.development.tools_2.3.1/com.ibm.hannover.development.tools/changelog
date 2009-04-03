@@ -1,0 +1,49 @@
+ver 2.3.1 xxx
+Specify configuration file
+
+ver 2.3.0 xxx
+Support Mac OSX
+Fix not remember additional location in target platform
+
+ver 2.2.0 xxx
+Support Symphony 1.2 with Expeditor 6.2
+Refactor vm configuration
+Add preference page to configure vm
+
+ver 2.0.0 xxx
+revise vm arguments of launch configuration to increase thread stack memory
+add an action to reset target platform
+
+ver 1.9.5 xxx
+use 'org.eclipse.ui.menus' extension points instead of 'org.eclipse.ui.actionSet'
+remove menu items
+fix incorrect target platform sometimes when basing on XPD 6.2
+
+ver 1.9.0 xxx
+support the folder structure of XPD6.2
+remove conflict shortcut for actions, contribute those actions to tool bar
+log error occurred on key path into 'Error log' view
+
+ver 1.8.1 xxx
+add path '/usr/lib/firefox' to environment variable 'LD_LIBRARY_PATH' to resolve browser issue
+
+ver 1.8.0 xxxx
+add the path of plug-in 'base.system.linux' into LD_LIBRARY_PATH for linux configuration,
+known issue: if we append some values into LD_LIBRARY_PATH, the swt failed to load its library for Mozilla
+
+ver 1.6.0 xxxx
+fix that fail to configure ibm jre
+fix that the path of configuration file
+
+ver 1.5.5 xxxx
+revise the launcher argument for supporting both windows and linux platforms
+
+ver 1.5.1 xxxx
+revise launcher argument, make sure existing vm argument 'rcp.home' for provisioning
+
+ver 1.5.0.xxxx
+add symphony configuration
+optimize the structure of configuration
+add shortcut for actions
+add qualifier version for bundle
+revise the windows registry path to get install location
