@@ -49,25 +49,34 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
+            categoryId="com.ibm.symphony.development.tools.category"
             defaultHandler="com.ibm.hannover.development.tools.commands.SymphonyHandler"
             id="com.ibm.hannover.development.command.symphony"
             name="Symphony Configuration">
       </command>
       <command
+            categoryId="com.ibm.symphony.development.tools.category"
             defaultHandler="com.ibm.hannover.development.tools.commands.HannoverHandler"
             id="com.ibm.hannover.development.command.hannover"
             name="Hannover Configuration">
       </command>
       <command
+            categoryId="com.ibm.symphony.development.tools.category"
             defaultHandler="com.ibm.hannover.development.tools.commands.StandaloneHandler"
             id="com.ibm.hannover.development.command.standalone"
             name="Standalone Configuration">
       </command>
       <command
+            categoryId="com.ibm.symphony.development.tools.category"
             defaultHandler="com.ibm.hannover.development.tools.commands.ResetCommand"
             id="com.ibm.hannover.development.command.reset"
             name="Reset">
       </command>
+      <category
+            description="The category of Lotus Symphony Developement"
+            id="com.ibm.symphony.development.tools.category"
+            name="Lotus Symphony Developement">
+      </category>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
