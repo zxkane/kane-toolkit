@@ -20,9 +20,9 @@ import org.eclipse.ui.progress.UIJob;
 import com.ibm.hannover.development.tools.Activator;
 
 public class AutoConfigureJob extends UIJob{
-	private static final String ECLIPSE_HOME_612 = "/eclipse";
-	private static final String PLUGINS = "/plugins";
-	private static final String ECLIPSE_HOME_62 = "/rcp/eclipse";
+	private static final String ECLIPSE_HOME_612 = "/eclipse"; //$NON-NLS-1$
+	private static final String PLUGINS = "/plugins"; //$NON-NLS-1$
+	private static final String ECLIPSE_HOME_62 = "/rcp/eclipse"; //$NON-NLS-1$
 	public static final String CLAZZ = AutoConfigureJob.class.getName();
 	private static final Logger logger = Logger.getLogger(CLAZZ);
 	
@@ -52,7 +52,7 @@ public class AutoConfigureJob extends UIJob{
 	}
 	
 	public void setInstallPath(String path){
-		String err = "Can't locate the target platform.";
+		String err = "Can't locate the target platform."; //$NON-NLS-1$
 		if(path == null || path.length() == 0){			
 			logger.severe(err);
 			Platform.getLog(Activator.getDefault().getBundle()).log(
@@ -118,8 +118,8 @@ public class AutoConfigureJob extends UIJob{
 			PropertiesUtils properties = new PropertiesUtils(launchFile);
 			tasks.add(new LaunchConfiguration(properties, vmconf != null ? vmconf.getGeneratedVMName() : null));
 		}catch(IOException e){
-			String err = String.format("Fail to load {0}.", new Object[]{launchFile});
-			logger.logp(Level.SEVERE, CLAZZ, "AutoConfigureJob", 
+			String err = String.format("Fail to load {0}.", new Object[]{launchFile}); //$NON-NLS-1$
+			logger.logp(Level.SEVERE, CLAZZ, "AutoConfigureJob",  //$NON-NLS-1$
 					err, e);
 			Platform.getLog(Activator.getDefault().getBundle()).log(
 					new Status(IStatus.ERROR, Activator.PLUGIN_ID, 

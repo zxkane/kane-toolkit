@@ -1,3 +1,9 @@
+ver 2.4.0 xxx
+Remove 'Notes VM' option from Preference page
+Use the J2SE JRE of Symphony as default JRE
+Revise default vm argument for Symphony 2
+Fix generating multiple JRE configurations with same name
+
 ver 2.3.1 xxx
 Specify configuration file
 

@@ -20,12 +20,11 @@ public class VMPreferencePage extends PreferencePage implements
 IWorkbenchPreferencePage {
 
 	// need to save state
-	Button [] buttons = new Button[3];
+	Button [] buttons = new Button[2];
 	
-	private static final String BUTTON_CONTENT_0= "Do not set runtime JRE.";
-	private static final String BUTTON_CONTENT_1= "Set product JRE as its runtime JRE.";
-	private static final String BUTTON_CONTENT_2= "Set Notes JRE as its runtime JRE.";
-	public static final String PREFERENCE_KEY = "Symphony Runtime JRE Setting";
+	private static final String BUTTON_CONTENT_0= Messages.VMPreferencePage_BUTTON0TEXT; 
+	private static final String BUTTON_CONTENT_1= Messages.VMPreferencePage_BUTTON1TEXT;
+	public static final String PREFERENCE_KEY = "VMSetting";  //$NON-NLS-1$
 	
 	protected Control createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
@@ -34,7 +33,7 @@ IWorkbenchPreferencePage {
 		composite.setLayout(layout);
 
 		Group group1 = new Group(composite, SWT.NONE);
-		group1.setText("Config Runtime JRE");
+		group1.setText(Messages.VMPreferencePage_NAME); 
 		group1.setLayout(new GridLayout(1, true));
 		
 		GridData gridData = new GridData();
@@ -42,41 +41,35 @@ IWorkbenchPreferencePage {
 		buttons[0] = new Button(group1, SWT.RADIO);
 		buttons[0].setLayoutData(gridData);
 		buttons[1] = new Button(group1, SWT.RADIO);
-		buttons[2] = new Button(group1, SWT.RADIO);
 		
 		buttons[0].setText(BUTTON_CONTENT_0);
 		buttons[1].setText(BUTTON_CONTENT_1);
-		buttons[2].setText(BUTTON_CONTENT_2);
 	
 		IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
 		int select = st.getInt(PREFERENCE_KEY);
-		if (select == 0)
-			select = 3;
-		select --;
-		if (buttons[select]!=null)
+		if (buttons[select] != null)
 			buttons[select].setSelection(true);
 		return composite;
 	}
 
 	public String getDescription() {
-		return "The setting of JRE of auto generated launch configuration.\n\n";
+		return Messages.VMPreferencePage_DESCRIPTION; 
 	}
 	
 	protected void performDefaults() {
-		if (buttons[2]!=null)
-			buttons[2].setSelection(true);		
+		if (buttons[1] != null)
+			buttons[1].setSelection(true);		
 	}
 	
 	protected void performApply() {
 		// get choice number
 		int i;
-		for (i=0; i<3; ++i)
+		for (i=0; i<2; ++i)
 			if (buttons[i].getSelection())
 				break;
-		if (i==3) i=2;
 		// save it		
 		IPreferenceStore st = Activator.getDefault().getPreferenceStore();
-		st.setValue(PREFERENCE_KEY, i+1);
+		st.setValue(PREFERENCE_KEY, i);
 	}
 
 	public boolean performOk() {

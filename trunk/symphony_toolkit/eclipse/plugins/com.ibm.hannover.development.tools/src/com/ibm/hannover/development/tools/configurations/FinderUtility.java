@@ -3,6 +3,7 @@ package com.ibm.hannover.development.tools.configurations;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -24,12 +25,12 @@ public class FinderUtility {
 	
 	private static final String CLAZZ = FinderUtility.class.getName();
 	private static final Logger logger = Logger.getLogger(CLAZZ);
-	private static final String RCPLAUNCHER = "rcplauncher";
-	private static final String J2SE_PLUGIN = "com.ibm.rcp.j2se";
-	private static final String DEE_PLUGIN = "com.ibm.rcp.dee";
+	private static final String RCPLAUNCHER = "rcplauncher"; //$NON-NLS-1$
+	private static final String J2SE_PLUGIN = "com.ibm.rcp.j2se"; //$NON-NLS-1$
+	private static final String DEE_PLUGIN = "com.ibm.rcp.dee"; //$NON-NLS-1$
 	
 	public static String findNotesInstalledLocation(){
-		String method = "findInstalledLocation";
+		String method = "findInstalledLocation"; //$NON-NLS-1$
 		String notesPath = null;
 		try{
 			final String os = Platform.getOS();
@@ -38,17 +39,17 @@ public class FinderUtility {
 //						"SOFTWARE\\IBM\\Lotus\\Expeditor\\{D8641E4B-77AF-4EAC-9137-8D4DCB1478E2}", 
 //						"xpdInstallLocation");				
 				notesPath = RegistryHelper.queryValue(RegistryHelper.HKEY_LOCAL_MACHINE, 
-						"SOFTWARE\\IBM\\Lotus\\Expeditor\\Notes", 
-						"launcher");
-				notesPath = notesPath.substring(0, notesPath.indexOf("framework")+"framework".length());
+						"SOFTWARE\\IBM\\Lotus\\Expeditor\\Notes",  //$NON-NLS-1$
+						"launcher"); //$NON-NLS-1$
+				notesPath = notesPath.substring(0, notesPath.indexOf("framework")+"framework".length()); //$NON-NLS-1$ //$NON-NLS-2$
 			}else if(Platform.OS_LINUX.equals(os)){
 				Properties src = new Properties();
-				InputStream in = new FileInputStream(new File("/etc/lotus/notes/notesrc"));
+				InputStream in = new FileInputStream(new File("/etc/lotus/notes/notesrc")); //$NON-NLS-1$
 				src.load(in);
-				notesPath = src.getProperty("RCPHOME");
+				notesPath = src.getProperty("RCPHOME"); //$NON-NLS-1$
 				in.close();
 			}else if(Platform.OS_MACOSX.equals(os)){
-				notesPath = "/Applications/Notes.app//Contents/MacOS/";
+				notesPath = "/Applications/Notes.app//Contents/MacOS/"; //$NON-NLS-1$
 			}
 			if(notesPath == null || notesPath.trim().length() == 0)
 				notesPath = null;
@@ -56,15 +57,14 @@ public class FinderUtility {
 				notesPath = notesPath.substring(0, notesPath.length()-1);
 		}catch(IOException e){
 			logger.logp(Level.SEVERE, CLAZZ, method, 
-					"Fail to get Hannover installation location.", e);
+					"Fail to get Hannover installation location.", e); //$NON-NLS-1$
 			Platform.getLog(Activator.getDefault().getBundle()).log(
-					new Status(IStatus.WARNING, Activator.PLUGIN_ID, "Fail to get Hannover installation location. It might affect vm configuration.", e));
+					new Status(IStatus.WARNING, Activator.PLUGIN_ID, "Fail to get Hannover installation location. It might affect vm configuration.", e)); //$NON-NLS-1$
 		}
 		return notesPath;
 	}
 	
-	public static String findSymphonyInstalledLocation(){
-		String method = "findInstalledLocation";
+	public static String findSymphonyInstalledLocation() throws FileNotFoundException{
 		String symphonyPath = null;
 		try{
 			final String os = Platform.getOS();
@@ -74,42 +74,48 @@ public class FinderUtility {
 			 */			
 			if(Platform.OS_WIN32.equals(os)){
 				symphonyPath = RegistryHelper.queryValue(RegistryHelper.HKEY_LOCAL_MACHINE, 
-						"SOFTWARE\\Lotus\\Symphony", 
-						"launcher");
+						"SOFTWARE\\Lotus\\Symphony",  //$NON-NLS-1$
+						"launcher"); //$NON-NLS-1$
+				if(symphonyPath != null){
+					File f = new File(symphonyPath);
+					if(!f.exists()){
+						symphonyPath = RegistryHelper.queryValue(RegistryHelper.HKEY_LOCAL_MACHINE, 
+						"SOFTWARE\\Lotus\\Symphony", "Path"); //$NON-NLS-1$ //$NON-NLS-2$
+						IPath symPath = new Path(symphonyPath);
+						symphonyPath = symPath.append("rcp").toOSString(); //$NON-NLS-1$
+					}
+				}					
 			}else if(Platform.OS_LINUX.equals(os)){
 				Properties src = new Properties();
-				InputStream in = new FileInputStream(new File("/etc/lotus/Symphony/Symphonyrc"));
+				InputStream in = new FileInputStream(new File("/etc/lotus/Symphony/Symphonyrc")); //$NON-NLS-1$
 				src.load(in);
-				symphonyPath = src.getProperty("RCPHOME");
+				symphonyPath = src.getProperty("RCPHOME"); //$NON-NLS-1$
 				in.close();
 			}else if(Platform.OS_MACOSX.equals(os)){
-				symphonyPath = "/Applications/Symphony.app/Contents/MacOS/";
+				symphonyPath = "/Applications/Symphony.app/Contents/MacOS/"; //$NON-NLS-1$
 			}
-			if(symphonyPath == null || symphonyPath.trim().length() == 0)
-				symphonyPath = null;
-			else{
-				// remove last 2 directories from the installPath if it contain RCPLAUNCHER
-				if(symphonyPath.contains(RCPLAUNCHER)){
-					symphonyPath = symphonyPath.substring(0, symphonyPath.lastIndexOf(File.separatorChar));
-					symphonyPath = symphonyPath.substring(0, symphonyPath.lastIndexOf(File.separatorChar));
-				}
-				// remove last character if it is a File.separator
-				if(symphonyPath.endsWith(File.separator))
-					symphonyPath = symphonyPath.substring(0, symphonyPath.length()-1);
+			if(symphonyPath == null)
+				throw new FileNotFoundException();
+			File f = new File(symphonyPath);
+			if(!f.exists())
+				throw new FileNotFoundException();
+			// remove last 2 directories from the installPath if it contain RCPLAUNCHER
+			if(symphonyPath.contains(RCPLAUNCHER)){
+				symphonyPath = symphonyPath.substring(0, symphonyPath.lastIndexOf(File.separatorChar));
+				symphonyPath = symphonyPath.substring(0, symphonyPath.lastIndexOf(File.separatorChar));
 			}
+			// remove last character if it is a File.separator
+			if(symphonyPath.endsWith(File.separator))
+				symphonyPath = symphonyPath.substring(0, symphonyPath.length()-1);
 		}catch(IOException e){
-			symphonyPath = null;
-			logger.logp(Level.SEVERE, CLAZZ, method, 
-					"Fail to get Lotus Symphony installation location.", e);
-			Platform.getLog(Activator.getDefault().getBundle()).log(
-					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Fail to get Lotus Symphony installation location.", e));
+			throw new FileNotFoundException();
 		}
 		return symphonyPath;
 	}
 	
 	public static String findStandardVMPath(String vmRootPath){
 		String jrePath = null;
-		IPath pluginPath = new Path(vmRootPath + "/rcp/eclipse/plugins");
+		IPath pluginPath = new Path(vmRootPath + "/rcp/eclipse/plugins"); //$NON-NLS-1$
 		File plugins = new File(pluginPath.toOSString());
 		if(plugins.exists() && plugins.isDirectory()){
 			File[] entries = plugins.listFiles(new FileFilter(){
@@ -134,7 +140,7 @@ public class FinderUtility {
 							jrePath = entries[i].getCanonicalPath();
 					}
 				}catch(IOException e){
-					logger.logp(Level.WARNING, CLAZZ, "findVMPath", "Fail to get jre path.", e);
+					logger.logp(Level.WARNING, CLAZZ, "findVMPath", "Fail to get jre path.", e); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		}
@@ -147,7 +153,7 @@ public class FinderUtility {
 	 */
 	public static String findDEEVMPath(String vmRootPath) {
 		String jrePath = null;
-		IPath pluginPath = new Path(vmRootPath + "/rcp/eclipse/plugins");
+		IPath pluginPath = new Path(vmRootPath + "/rcp/eclipse/plugins"); //$NON-NLS-1$
 		File plugins = new File(pluginPath.toOSString());
 		if (plugins.exists() && plugins.isDirectory()) {
 			File[] entries = plugins.listFiles(new FileFilter() {
@@ -172,8 +178,8 @@ public class FinderUtility {
 							jrePath = entries[i].getCanonicalPath();
 					}
 				} catch (IOException e) {
-					logger.logp(Level.WARNING, CLAZZ, "findVMPath",
-							"Fail to get jre path.", e);
+					logger.logp(Level.WARNING, CLAZZ, "findVMPath", //$NON-NLS-1$
+							"Fail to get jre path.", e); //$NON-NLS-1$
 				}
 			}
 		}
