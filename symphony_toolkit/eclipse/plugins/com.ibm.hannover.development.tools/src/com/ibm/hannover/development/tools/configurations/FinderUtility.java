@@ -81,8 +81,6 @@ public class FinderUtility {
 					if(!f.exists()){
 						symphonyPath = RegistryHelper.queryValue(RegistryHelper.HKEY_LOCAL_MACHINE, 
 						"SOFTWARE\\Lotus\\Symphony", "Path"); //$NON-NLS-1$ //$NON-NLS-2$
-						IPath symPath = new Path(symphonyPath);
-						symphonyPath = symPath.append("rcp").toOSString(); //$NON-NLS-1$
 					}
 				}					
 			}else if(Platform.OS_LINUX.equals(os)){
