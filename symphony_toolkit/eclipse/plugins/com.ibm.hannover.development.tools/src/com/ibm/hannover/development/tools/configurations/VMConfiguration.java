@@ -48,13 +48,19 @@ public abstract class VMConfiguration implements IConfigure {
 	}
 	
 	public void configure(){
-		String method = "configure";
+		String method = "configure"; //$NON-NLS-1$
 		logger.entering(CLAZZ, method);
 		if (!fVMs.containsValue(jrePath)) {
-			logger.logp(Level.FINE, CLAZZ, method, "Create new vm.");
+			logger.logp(Level.FINE, CLAZZ, method, "Create new vm."); //$NON-NLS-1$
 			newVM = new VMStandin(fSelectedVMType,
 					createUniqueId(fSelectedVMType));
 			fillVMFields(newVM);
+			// remove previous vm configuration by the same name
+			IVMInstall[] installeds = fVMs.keySet().toArray(new IVMInstall[0]);
+			for(int i = 0; i < installeds.length; i++){
+				if(newVM.getName().equals(installeds[i].getName()))
+					fVMs.remove(installeds[i]);
+			}
 			fVMs.put(newVM, newVM.getInstallLocation().getAbsolutePath());
 			save();
 		}
@@ -94,7 +100,7 @@ public abstract class VMConfiguration implements IConfigure {
 	}
 	
 	private void save(){
-		final String method = "save";
+		final String method = "save"; //$NON-NLS-1$
 		logger.entering(CLAZZ, method);
 		IVMInstall defaultVM = getCurrentDefaultVM();
 		IVMInstall[] vms = (IVMInstall[]) fVMs.keySet().toArray(
@@ -126,7 +132,7 @@ public abstract class VMConfiguration implements IConfigure {
 	
 	private void log(String method, Exception e){
 		logger.logp(Level.SEVERE, CLAZZ, method,
-				"SEVERE: Fail to save jre configuration.", e);
+				"SEVERE: Fail to save jre configuration.", e); //$NON-NLS-1$
 	}
 	
 	/**
@@ -170,7 +176,7 @@ public abstract class VMConfiguration implements IConfigure {
 		}
 		
 		public String[] parseArguments() {
-			List v= new ArrayList();
+			List<String> v= new ArrayList<String>();
 			
 			ch= getNext();
 			while (ch > 0) {
@@ -285,6 +291,6 @@ public abstract class VMConfiguration implements IConfigure {
 	}
 
 	public String getName() {
-		return "Configure vm";
+		return "Configure vm"; //$NON-NLS-1$
 	}	
 }

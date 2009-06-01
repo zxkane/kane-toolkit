@@ -20,7 +20,7 @@ public class NotesPolicy {
 	
 	public void configure(){
 		installedPath = FinderUtility.findNotesInstalledLocation();
-		AutoConfigureJob job = new AutoConfigureJob("AutoConfigure");
+		AutoConfigureJob job = new AutoConfigureJob("AutoConfigure"); //$NON-NLS-1$
 		job.setLaunchFile(launchFile);
 		job.setVariableFile(variableFile);
 		job.setInstallPath(installedPath);
@@ -28,9 +28,9 @@ public class NotesPolicy {
 		if(!Platform.OS_MACOSX.equals(Platform.getOS())){
 			IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
 			int select = st.getInt(VMPreferencePage.PREFERENCE_KEY);
-			if(select != 1){
+			if(select == 1){
 				job.setVMRootPath(FinderUtility.findStandardVMPath(installedPath));  
-				job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration");
+				job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration"); //$NON-NLS-1$
 			}
 		}
 		PlatformUI.getWorkbench().getProgressService().showInDialog(

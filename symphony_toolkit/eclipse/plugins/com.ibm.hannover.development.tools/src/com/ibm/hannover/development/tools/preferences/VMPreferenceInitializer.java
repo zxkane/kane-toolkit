@@ -10,6 +10,6 @@ public class VMPreferenceInitializer extends AbstractPreferenceInitializer{
 		@Override
 		public void initializeDefaultPreferences() {
 			IPreferenceStore st = Activator.getDefault().getPreferenceStore();
-			st.setDefault(VMPreferencePage.PREFERENCE_KEY, 3);			
+			st.setDefault(VMPreferencePage.PREFERENCE_KEY, 1);			
 		}	
 }

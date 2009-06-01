@@ -1,5 +1,6 @@
 package com.ibm.hannover.development.tools.configurations;
 
+import java.io.FileNotFoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,34 +28,31 @@ public class SymphonyPolicy {
 	
 	public void configure(){
 		// find symphony installed location. Return directly if it fails.
-		if((installedPath = FinderUtility.findSymphonyInstalledLocation()) == null){
-			logger.log(Level.SEVERE, "Can't find installed symphony.");
+		try {
+			installedPath = FinderUtility.findSymphonyInstalledLocation();
+		} catch (FileNotFoundException e) {
+			logger.log(Level.SEVERE, "Can't find installed symphony."); //$NON-NLS-1$
 			Platform.getLog(Activator.getDefault().getBundle()).log(
 					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Can't find installed symphony.", null));
 			return;
 		}
-		AutoConfigureJob job = new AutoConfigureJob("AutoConfigure");
+		AutoConfigureJob job = new AutoConfigureJob("AutoConfigure"); //$NON-NLS-1$
 		job.setLaunchFile(launchFile);
 		job.setVariableFile(variableFile);
 		job.setInstallPath(installedPath);
 		// macosx use the default vm provided by System
 		if(!Platform.OS_MACOSX.equals(Platform.getOS())){		
-			// add by Tang Qiao, 2008-09-18
 			// vm configuration
 			IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
 			int select = st.getInt(VMPreferencePage.PREFERENCE_KEY);
-			if (select == 2) {
-				job.setVMProvider("com.ibm.hannover.development.tools.configurations.EEVMConfiguration");
-				job.setVMRootPath(FinderUtility.findDEEVMPath(installedPath)); // new code
-			}
-			else if(select == 3){
-				// find notes location
-				notesPath = FinderUtility.findNotesInstalledLocation();
-				job.setVMRootPath(FinderUtility.findStandardVMPath(notesPath));  
-				job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration");
+			if (select == 1) {
+//				job.setVMProvider("com.ibm.hannover.development.tools.configurations.EEVMConfiguration");
+//				job.setVMRootPath(FinderUtility.findDEEVMPath(installedPath)); // new code
+				// Use J2SE vm since Symphony 2.0
+				job.setVMProvider("com.ibm.hannover.development.tools.configurations.StardVMConfiguration"); //$NON-NLS-1$
+				job.setVMRootPath(FinderUtility.findStandardVMPath(installedPath));  
 			}
 		}
-		// end of add
 		
 		job.setUser(true);
 		PlatformUI.getWorkbench().getProgressService().showInDialog(
