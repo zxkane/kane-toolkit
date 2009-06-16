@@ -1,3 +1,6 @@
+ver 2.4.1 xxx
+Support Sym2.0 milestone 1 that renamed features/plugins to 'com.ibm.symphony'
+
 ver 2.4.0 xxx
 Remove 'Notes VM' option from Preference page
 Use the J2SE JRE of Symphony as default JRE
