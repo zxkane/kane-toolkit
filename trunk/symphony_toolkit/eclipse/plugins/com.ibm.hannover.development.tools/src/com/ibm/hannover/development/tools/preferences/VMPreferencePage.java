@@ -3,9 +3,6 @@ package com.ibm.hannover.development.tools.preferences;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -47,13 +44,6 @@ IWorkbenchPreferencePage {
 		
 		buttons[0].setText(BUTTON_CONTENT_0);
 		buttons[1].setText(BUTTON_CONTENT_1);
-		SelectionListener listener = new SelectionAdapter(){
-			public void widgetSelected(SelectionEvent e) {
-				setValid(true);
-			}
-		};
-		buttons[0].addSelectionListener(listener);
-		buttons[1].addSelectionListener(listener);
 	
 		IPreferenceStore st =  Activator.getDefault().getPreferenceStore();
 		int select = st.getInt(PREFERENCE_KEY);
@@ -70,7 +60,6 @@ IWorkbenchPreferencePage {
 		if(buttons[0].getSelection()){
 			buttons[0].setSelection(false);
 			buttons[1].setSelection(true);
-			setValid(true);
 		}
 	}
 	
@@ -83,15 +72,13 @@ IWorkbenchPreferencePage {
 		// save it		
 		IPreferenceStore st = Activator.getDefault().getPreferenceStore();
 		st.setValue(PREFERENCE_KEY, i);
-		setValid(false);
 	}
 
 	public boolean performOk() {
 		performApply();
 		return true;
 	}
-	
+
 	public void init(IWorkbench workbench) {
-		setValid(false);
 	}
 }
