@@ -1,3 +1,7 @@
+ver 2.4.2 xxx
+Fix 'Can't select other preference pages if don't modify the values in dev preference page'
+Fix 'MacOSX can't load document'
+
 ver 2.4.1 xxx
 Support Sym2.0 milestone 1 that renamed features/plugins to 'com.ibm.symphony'
 
