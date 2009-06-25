@@ -26,7 +26,7 @@ public class StringVariableConfiguration implements IConfigure{
 	private final String RCP_VERSION = "${rcp_version}";
 	private final String SYMPHONY_VERSION = "${symphony_version}";
 	private final String RCP_BASE = "com.ibm.rcp.base_";
-	private final String SYMPHONY_SYSTEM_PLUGIN = "com.ibm.productivity.tools.base.system." + Platform.getOS() + "_";
+	private final String SYMPHONY_SYSTEM_PLUGIN = "com.ibm.symphony.base.app." + Platform.getOS() + "_";
 	private String rcpHome;
 	private String config;
 	
