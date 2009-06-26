@@ -11,6 +11,7 @@ import org.eclipse.jdt.internal.launching.EEVMType;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.VMStandin;
+import org.eclipse.jdt.launching.environments.ExecutionEnvironmentDescription;
 
 public class EEVMConfiguration extends VMConfiguration {
 
@@ -44,8 +45,8 @@ public class EEVMConfiguration extends VMConfiguration {
 			File home = null;
 			if (eeFile != null) {
 				vv.setAttribute(EEVMInstall.ATTR_DEFINITION_FILE, eeFile.getPath());
-				String homePath = EEVMType.getProperty(EEVMType.PROP_JAVA_HOME,
-						eeFile);
+				ExecutionEnvironmentDescription description = new ExecutionEnvironmentDescription(eeFile);
+				String homePath = description.getProperty(ExecutionEnvironmentDescription.JAVA_HOME);
 				if (homePath != null) {
 					home = new File(homePath);
 					try {
