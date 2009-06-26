@@ -25,48 +25,54 @@ import org.eclipse.pde.internal.core.PluginPathFinder;
 import org.eclipse.pde.internal.core.TargetPlatformResetJob;
 import org.eclipse.pde.internal.core.ifeature.IFeatureModel;
 import org.eclipse.pde.internal.ui.PDEPluginImages;
-import org.eclipse.pde.internal.ui.PDEUIMessages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressConstants;
 
-public class TargetPlatformConfiguration implements IConfigure{
-	
+/**
+ * @deprecated
+ * @author kane
+ * 
+ */
+public class TargetPlatformConfiguration implements IConfigure {
+
 	class ReloadOperation implements IRunnableWithProgress {
 		private String location;
-		
+
 		public ReloadOperation(String platformPath) {
 			this.location = platformPath;
 		}
-		
+
 		/**
-		 * the PluginPathFinder.getPluginPaths function will read the link file to 
-		 * find plug-ins in other directories.
-		 * Sometimes the link file will be lost, and the other directories are known for us.
-		 * So we add them directly.
-		 * location:
-		 * C:\Program Files\IBM\Lotus\Symphony\framework\eclipse
-		 * rcp:
-		 * C:\Program Files\IBM\Lotus\Symphony\framework\rcp\eclipse
-		 * shared:
-		 * C:\Program Files\IBM\Lotus\Symphony\framework\shared\eclipse
+		 * the PluginPathFinder.getPluginPaths function will read the link file
+		 * to find plug-ins in other directories. Sometimes the link file will
+		 * be lost, and the other directories are known for us. So we add them
+		 * directly. location: C:\Program
+		 * Files\IBM\Lotus\Symphony\framework\eclipse rcp: C:\Program
+		 * Files\IBM\Lotus\Symphony\framework\rcp\eclipse shared: C:\Program
+		 * Files\IBM\Lotus\Symphony\framework\shared\eclipse
 		 */
 		private URL[] computePluginURLs() {
-			URL[] base  = PluginPathFinder.getPluginPaths(location);
+			URL[] base = PluginPathFinder.getPluginPaths(location);
 			// add by Tang Qiao at 2008-09-17
-			String baseDir = location.substring(0, location.lastIndexOf("framework")+"framework".length());			
-			String targetRCP = baseDir+File.separatorChar+"rcp"+File.separatorChar+"eclipse";
+			String baseDir = location.substring(0, location
+					.lastIndexOf("framework")
+					+ "framework".length());
+			String targetRCP = baseDir + File.separatorChar + "rcp"
+					+ File.separatorChar + "eclipse";
 			URL[] rcpPlugins = PluginPathFinder.getPluginPaths(targetRCP);
-			String targetShared = baseDir+File.separatorChar+"shared"+File.separatorChar+"eclipse";
+			String targetShared = baseDir + File.separatorChar + "shared"
+					+ File.separatorChar + "eclipse";
 			URL[] sharedPlugins = PluginPathFinder.getPluginPaths(targetShared);
 			// merge URLs
-			Set<URL> allPlugins = new HashSet<URL>(base.length+rcpPlugins.length+sharedPlugins.length);
-			for (int i=0; i<base.length; ++i)
+			Set<URL> allPlugins = new HashSet<URL>(base.length
+					+ rcpPlugins.length + sharedPlugins.length);
+			for (int i = 0; i < base.length; ++i)
 				allPlugins.add(base[i]);
-			for (int i=0; i<rcpPlugins.length; ++i){
+			for (int i = 0; i < rcpPlugins.length; ++i) {
 				allPlugins.add(rcpPlugins[i]);
 				fAdditionalLocations.add(targetRCP);
 			}
-			for (int i=0; i<sharedPlugins.length; ++i){
+			for (int i = 0; i < sharedPlugins.length; ++i) {
 				allPlugins.add(sharedPlugins[i]);
 				fAdditionalLocations.add(targetShared);
 			}
@@ -74,20 +80,23 @@ public class TargetPlatformConfiguration implements IConfigure{
 			// end of add by Tang Qiao at 2008-09-17
 			return base;
 		}
-			
+
 		public void run(IProgressMonitor monitor)
-			throws InvocationTargetException, InterruptedException {	
-			monitor.beginTask(PDEUIMessages.TargetPluginsTab_readingPlatform, 10);
-			SubProgressMonitor parsePluginMonitor = new SubProgressMonitor(monitor, 9);
-			fCurrentState = new PDEState(computePluginURLs(), true, parsePluginMonitor);
+				throws InvocationTargetException, InterruptedException {
+			monitor.beginTask("Loading target platform", 10); //$NON-NLS-1$
+			SubProgressMonitor parsePluginMonitor = new SubProgressMonitor(
+					monitor, 9);
+			fCurrentState = new PDEState(computePluginURLs(), true,
+					parsePluginMonitor);
 			loadFeatures(new SubProgressMonitor(monitor, 1));
 			monitor.done();
 		}
-		
+
 		private void loadFeatures(IProgressMonitor monitor) {
-			IFeatureModel[] workspaceModels = PDECore.getDefault().getFeatureModelManager().getWorkspaceModels();
+			IFeatureModel[] workspaceModels = PDECore.getDefault()
+					.getFeatureModelManager().getWorkspaceModels();
 			int numFeatures = workspaceModels.length;
-			fCurrentFeatures = new HashMap((4/3) * (numFeatures) + 1);
+			fCurrentFeatures = new HashMap((4 / 3) * (numFeatures) + 1);
 			for (int i = 0; i < workspaceModels.length; i++) {
 				String id = workspaceModels[i].getFeature().getId();
 				if (id != null)
@@ -95,87 +104,91 @@ public class TargetPlatformConfiguration implements IConfigure{
 			}
 			monitor.done();
 		}
-		
+
 	}
-	
+
 	private String targetPlatform;
 	private PDEState fCurrentState;
 	private Map<String, IFeatureModel> fCurrentFeatures;
 	private HashSet<IPluginModelBase> fChangedModels = new HashSet<IPluginModelBase>();
 	private Set<String> fAdditionalLocations = new HashSet<String>(1);
-	
-	public TargetPlatformConfiguration(String targetPlatform){
+
+	public TargetPlatformConfiguration(String targetPlatform) {
 		this.targetPlatform = targetPlatform;
 	}
-	
-	public void configure(){
+
+	public void configure() {
 		handleReload();
 		savePreferences();
 		updateModels();
 		Job job = new TargetPlatformResetJob(fCurrentState);
 		job.schedule();
-		job.setProperty(IProgressConstants.ICON_PROPERTY, PDEPluginImages.DESC_PLUGIN_OBJ);
+		job.setProperty(IProgressConstants.ICON_PROPERTY,
+				PDEPluginImages.DESC_PLUGIN_OBJ);
 	}
 
 	private void savePreferences() {
 		Preferences preferences = PDECore.getDefault().getPluginPreferences();
 		IPath newPath = new Path(targetPlatform);
 		URL installURL = Platform.getInstallLocation().getURL();
-		IPath defaultPath = new Path(installURL.getFile()).removeTrailingSeparator();
-		String mode =
-			newPath.equals(defaultPath)
-				? ICoreConstants.VALUE_USE_THIS
-				: ICoreConstants.VALUE_USE_OTHER;
+		IPath defaultPath = new Path(installURL.getFile())
+				.removeTrailingSeparator();
+		String mode = newPath.equals(defaultPath) ? ICoreConstants.VALUE_USE_THIS : ICoreConstants.VALUE_USE_OTHER;
 		preferences.setValue(ICoreConstants.TARGET_MODE, mode);
 		preferences.setValue(ICoreConstants.PLATFORM_PATH, targetPlatform);
-		preferences.setValue(ICoreConstants.CHECKED_PLUGINS, ICoreConstants.VALUE_SAVED_ALL);		
-		preferences.setValue(ICoreConstants.GROUP_PLUGINS_VIEW, false);		
+		preferences.setValue(ICoreConstants.CHECKED_PLUGINS,
+				ICoreConstants.VALUE_SAVED_ALL);
+		preferences.setValue(ICoreConstants.GROUP_PLUGINS_VIEW, false);
 		// for additional location
 		StringBuffer buffer = new StringBuffer();
-		for (Iterator<String> iter = fAdditionalLocations.iterator(); iter.hasNext();) {
+		for (Iterator<String> iter = fAdditionalLocations.iterator(); iter
+				.hasNext();) {
 			if (buffer.length() > 0)
 				buffer.append(","); //$NON-NLS-1$
 			buffer.append(iter.next());
 		}
-		preferences.setValue(ICoreConstants.ADDITIONAL_LOCATIONS, buffer.toString());
+		preferences.setValue(ICoreConstants.ADDITIONAL_LOCATIONS, buffer
+				.toString());
 		PDECore.getDefault().savePluginPreferences();
 	}
 
 	public String getName() {
-		return "Configure target platform";
+		return "Configure target platform"; //$NON-NLS-1$
 	}
-	
+
 	protected void handleReload() {
 		if (targetPlatform != null && targetPlatform.length() > 0) {
 			ReloadOperation op = new ReloadOperation(targetPlatform);
 			try {
-				PlatformUI.getWorkbench().getProgressService().run(true, false, op);
+				PlatformUI.getWorkbench().getProgressService().run(true, false,
+						op);
 			} catch (InvocationTargetException e) {
 			} catch (InterruptedException e) {
 			}
 			fChangedModels.clear();
 			handleSelectAll(true);
 		}
-	}	
-	
+	}
+
 	public void handleSelectAll(boolean selected) {
 		IPluginModelBase[] allModels = getCurrentModels();
 		for (int i = 0; i < allModels.length; i++) {
 			IPluginModelBase model = allModels[i];
 			if (model.isEnabled() != selected) {
 				fChangedModels.add(model);
-			} else if (fChangedModels.contains(model) && model.isEnabled() == selected) {
+			} else if (fChangedModels.contains(model)
+					&& model.isEnabled() == selected) {
 				fChangedModels.remove(model);
 			}
 		}
 	}
-	
+
 	protected IPluginModelBase[] getCurrentModels() {
 		if (fCurrentState != null)
 			return fCurrentState.getTargetModels();
 		return PDECore.getDefault().getModelManager().getExternalModels();
 	}
-	
+
 	private void updateModels() {
 		Iterator<IPluginModelBase> iter = fChangedModels.iterator();
 		while (iter.hasNext()) {
