@@ -16,7 +16,7 @@ import com.ibm.hannover.development.tools.preferences.VMPreferencePage;
 public class SymphonyPolicy {
 	public static final String CLAZZ = NotesPolicy.class.getName();
 	private static final Logger logger = Logger.getLogger(CLAZZ);
-	private String installedPath, notesPath;
+	private String installedPath;
 	private String launchFile, variableFile;
 
 	public SymphonyPolicy(String launchFile, String variableFile) {

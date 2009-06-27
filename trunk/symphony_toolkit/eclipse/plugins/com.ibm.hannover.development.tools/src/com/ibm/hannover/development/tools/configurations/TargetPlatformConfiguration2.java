@@ -8,14 +8,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.pde.internal.core.PDECore;
 import org.eclipse.pde.internal.core.target.DirectoryBundleContainer;
+import org.eclipse.pde.internal.core.target.TargetDefinition;
 import org.eclipse.pde.internal.core.target.provisional.IBundleContainer;
 import org.eclipse.pde.internal.core.target.provisional.ITargetDefinition;
+import org.eclipse.pde.internal.core.target.provisional.ITargetHandle;
 import org.eclipse.pde.internal.core.target.provisional.ITargetPlatformService;
+import org.eclipse.pde.internal.core.target.provisional.LoadTargetDefinitionJob;
 import org.eclipse.pde.internal.ui.shared.target.Messages;
 
 import com.ibm.hannover.development.tools.Activator;
@@ -41,15 +45,15 @@ public class TargetPlatformConfiguration2 implements IConfigure {
 
 	private static ITargetPlatformService fTargetService = null;
 	protected IBundleContainer fContainer;
-	private String targetPlatform;
-	private String name;
+	private String targetPath;
+	private String targetName;
 
 	/**
 	 * 
 	 */
 	public TargetPlatformConfiguration2(String targetPlatform, String name) {
-		this.targetPlatform = targetPlatform;
-		this.name = name;
+		this.targetPath = targetPlatform;
+		this.targetName = name;
 	}
 
 	/**
@@ -138,7 +142,7 @@ public class TargetPlatformConfiguration2 implements IConfigure {
 		ITargetPlatformService service = getTargetPlatformService();
 		if (service != null) {
 			ITargetDefinition definition = service.newTarget();
-			definition.setName(this.name);
+			definition.setName(this.targetName);
 			return definition;
 		}
 		return null;
@@ -153,7 +157,7 @@ public class TargetPlatformConfiguration2 implements IConfigure {
 	 * C:\Program Files\IBM\Lotus\Symphony\framework\shared\eclipse
 	 */
 	private String[] computeTargets() {
-		String baseDir = targetPlatform.substring(0, targetPlatform
+		String baseDir = targetPath.substring(0, targetPath
 				.lastIndexOf("framework") //$NON-NLS-1$
 				+ "framework".length()); //$NON-NLS-1$
 		String targetRCP = baseDir + File.separatorChar + "rcp" //$NON-NLS-1$
@@ -169,8 +173,32 @@ public class TargetPlatformConfiguration2 implements IConfigure {
 	 * @see
 	 * com.ibm.hannover.development.tools.configurations.IConfigure#configure()
 	 */
-	public void configure() throws CoreException {
-		createNewTargetDefinition();
+	public void configure(IProgressMonitor monitor) throws CoreException {
+		final ITargetPlatformService targetService = getTargetPlatformService();
+		ITargetHandle[] handles = targetService.getTargets(monitor);
+		ITargetDefinition fTarget = null;
+		for (int i = 0; i < handles.length; i++) {
+			ITargetDefinition definition = handles[i].getTargetDefinition();
+			if (definition.getName().equals(this.targetName)) {
+				fTarget = definition;
+				break;
+			}
+		}
+		if (fTarget == null) {
+			fTarget = createNewTargetDefinition();
+			monitor.worked(10);
+			targetService.saveTargetDefinition(fTarget);
+			monitor.worked(10);
+		}
+		// set it as active
+		ITargetHandle activeHandle = targetService.getWorkspaceTargetHandle();
+		if (activeHandle == null
+				|| !activeHandle.equals(fTarget.getHandle())
+				|| !((TargetDefinition) activeHandle.getTargetDefinition())
+						.isContentEquivalent(fTarget)) {
+			LoadTargetDefinitionJob.load(fTarget);
+			monitor.worked(30);
+		}
 	}
 
 	private ITargetDefinition createNewTargetDefinition() throws CoreException {
