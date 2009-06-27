@@ -117,7 +117,7 @@ public class TargetPlatformConfiguration implements IConfigure {
 		this.targetPlatform = targetPlatform;
 	}
 
-	public void configure() {
+	public void configure(IProgressMonitor monitor) {
 		handleReload();
 		savePreferences();
 		updateModels();
@@ -133,7 +133,8 @@ public class TargetPlatformConfiguration implements IConfigure {
 		URL installURL = Platform.getInstallLocation().getURL();
 		IPath defaultPath = new Path(installURL.getFile())
 				.removeTrailingSeparator();
-		String mode = newPath.equals(defaultPath) ? ICoreConstants.VALUE_USE_THIS : ICoreConstants.VALUE_USE_OTHER;
+		String mode = newPath.equals(defaultPath) ? ICoreConstants.VALUE_USE_THIS
+				: ICoreConstants.VALUE_USE_OTHER;
 		preferences.setValue(ICoreConstants.TARGET_MODE, mode);
 		preferences.setValue(ICoreConstants.PLATFORM_PATH, targetPlatform);
 		preferences.setValue(ICoreConstants.CHECKED_PLUGINS,

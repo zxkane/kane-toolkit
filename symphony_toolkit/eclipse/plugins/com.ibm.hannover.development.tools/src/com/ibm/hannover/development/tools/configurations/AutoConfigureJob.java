@@ -144,8 +144,8 @@ public class AutoConfigureJob extends UIJob {
 			while (iter.hasNext()) {
 				IConfigure configuration = (IConfigure) iter.next();
 				monitor.subTask(configuration.getName());
-				configuration.configure();
-				monitor.worked(80 / tasks.size());
+				configuration.configure(monitor);
+				// monitor.worked(80 / tasks.size());
 			}
 		} catch (CoreException e) {
 			String err = "Fail to configurate development environment."; //$NON-NLS-1$
