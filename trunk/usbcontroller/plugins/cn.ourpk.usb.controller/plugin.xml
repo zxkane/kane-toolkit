@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="application"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            icon="icon/usb.png"
+            thread="main"
+            visible="true">
+         <run
+               class="cn.ourpk.usb.controller.application.UsbControllerApplication">
+         </run>
+      </application>
+   </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="cn.ourpk.usb.controller.application"
+            name="%product.name">
+      </product>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="cn.ourpk.usb.controller.application.PerspectiveFactory"
+            icon="icon/small_1223709303775.jpg"
+            id="cn.ourpk.usb.controller.usbperspective"
+            name="%perspective.name">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            class="cn.ourpk.usb.controller.application.USBViewPart"
+            icon="icon/usb.png"
+            id="cn.ourpk.usb.controller.usbview"
+            name="%view.name"
+            restorable="true">
+      </view>
+   </extension>
+
+</plugin>
