@@ -33,7 +33,7 @@ import com.ice.jni.registry.RegistryValue;
 
 public class USBViewPart extends org.eclipse.ui.part.ViewPart {
 	
-	private static final RegistryKey GLOBAL = Registry.HKEY_CURRENT_USER;
+	private static final RegistryKey GLOBAL = Registry.HKEY_LOCAL_MACHINE;
 	private static final String KEY_NAME = "Password"; //$NON-NLS-1$
 	private static final String SUB_KEY = "SOFTWARE\\USBController"; //$NON-NLS-1$
 	private static String USB_KEY_PATH = "SYSTEM\\CurrentControlSet\\Services\\UsbStor"; //$NON-NLS-1$
@@ -47,7 +47,6 @@ public class USBViewPart extends org.eclipse.ui.part.ViewPart {
 			des = new Des("USB Controller"); //$NON-NLS-1$
 		} catch (Exception e) {
 		}
-		USB_KEY_PATH = SUB_KEY;
 	}
 	
 	@Override
@@ -136,7 +135,7 @@ public class USBViewPart extends org.eclipse.ui.part.ViewPart {
 		enable.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				setUSBKeyValue(parent, 0x04);
+				setUSBKeyValue(parent, 0x03);
 			}
 		});
 		final Button disable = new Button(composite, SWT.BORDER);
@@ -146,7 +145,7 @@ public class USBViewPart extends org.eclipse.ui.part.ViewPart {
 		disable.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				setUSBKeyValue(parent, 0x03);
+				setUSBKeyValue(parent, 0x04);
 			}
 		});
 		buttonPassword.addSelectionListener(new SelectionAdapter() {
