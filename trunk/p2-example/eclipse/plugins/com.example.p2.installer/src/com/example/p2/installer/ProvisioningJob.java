@@ -1,6 +1,7 @@
 package com.example.p2.installer;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +14,6 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.p2.core.helpers.ServiceHelper;
 import org.eclipse.equinox.internal.p2.engine.SimpleProfileRegistry;
@@ -34,7 +34,7 @@ import org.eclipse.equinox.internal.provisional.p2.metadata.repository.IMetadata
 import org.eclipse.equinox.internal.provisional.p2.metadata.repository.IMetadataRepositoryManager;
 import org.eclipse.equinox.internal.provisional.p2.query.Collector;
 import org.eclipse.equinox.internal.provisional.p2.query.ContextQuery;
-import org.eclipse.ui.progress.UIJob;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
@@ -42,7 +42,7 @@ import org.osgi.framework.ServiceRegistration;
 
 
 @SuppressWarnings("restriction")
-public class ProvisioningJob extends UIJob {
+public class ProvisioningJob implements IRunnableWithProgress{
 
 	private class LatestNoninstalledIUCollector extends Collector {
 		/** Remember the profile this collector is operating on */
@@ -101,8 +101,7 @@ public class ProvisioningJob extends UIJob {
 	private ServiceRegistration profileRegistryRegistration = null;
 	
 	
-	public ProvisioningJob(String name, URI repository, File location) {
-		super(name);
+	public ProvisioningJob(URI repository, File location) {
 		installLocation = location;
 		uris = new URI[] {repository};
 	}
@@ -119,11 +118,11 @@ public class ProvisioningJob extends UIJob {
 		profileRegistryRegistration = Activator.getDefault().getBundle().getBundleContext().registerService(IProfileRegistry.class.getName(), profileRegistry, props);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public IStatus runInUIThread(IProgressMonitor monitor) {
+	public void run(IProgressMonitor monitor) throws InvocationTargetException,
+			InterruptedException {
 		IStatus result = null;
-		IProgressMonitor progress = SubMonitor.convert(monitor, "Installation", 1000);
+		SubMonitor progress = SubMonitor.convert(monitor, "Installation", 1000);
 		try{
 			registerProfileRegistry();
 			IProfileRegistry registry = 
@@ -149,24 +148,24 @@ public class ProvisioningJob extends UIJob {
 					profileProperties.put(IProfile.PROP_CACHE, installLocation.getAbsolutePath());
 					currentProfile = registry.addProfile(PROFILE_ID, profileProperties);
 				} catch (ProvisionException e) {
-					return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to create profile.");
+					throw new InterruptedException("Failed to create profile.");
 				}
 			}
-			progress.worked(2);
+			progress.worked(50);
 
 			ArrayList<IInstallableUnit> ius = new ArrayList<IInstallableUnit>();
 			IMetadataRepositoryManager repositoryManager = (IMetadataRepositoryManager) ServiceHelper.getService(Activator.getDefault().getBundle().getBundleContext(),
 					IMetadataRepositoryManager.class.getName()); 
 			if (repositoryManager == null) 
-				return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to get IMetadataRepositoryManager.");    
+				throw new InternalError("Failed to get IMetadataRepositoryManager.");
 			try {
 				for (URI uri : uris) {
-					IMetadataRepository metaRepo = repositoryManager.loadRepository(uri, progress);
+					IMetadataRepository metaRepo = repositoryManager.loadRepository(uri, progress.newChild(100));
 					Collector collector = metaRepo.query(new AccpetQuery(), new LatestNoninstalledIUCollector(currentProfile), null);
 					ius.addAll(collector.toCollection());
 				}
 			} catch (ProvisionException e) {
-				return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to get IMetadataRepository.");
+				throw new InterruptedException("Failed to get IMetadataRepository.");
 			}
 			ProfileChangeRequest request = ProfileChangeRequest.createByProfileId(currentProfile.getProfileId());  
 			request.addInstallableUnits(ius.toArray(new IInstallableUnit[ius.size()]));
@@ -174,14 +173,14 @@ public class ProvisioningJob extends UIJob {
 					IPlanner.class.getName());
 			ProvisioningContext context = new ProvisioningContext(uris);
 			context.setArtifactRepositories(uris);
-			ProvisioningPlan plan = planner.getProvisioningPlan(request, context, progress);
+			ProvisioningPlan plan = planner.getProvisioningPlan(request, context, progress.newChild(100));
 			result = plan.getStatus();
 			if(!result.isOK())
-				return result;
+				throw new InterruptedException(result.getMessage());
 
 			IEngine engine = (IEngine) ServiceHelper.getService(Activator.getDefault().getBundle().getBundleContext(), 
 					IEngine.SERVICE_NAME);
-			result = engine.perform(currentProfile, new DefaultPhaseSet(), plan.getOperands(), context, progress);
+			result = engine.perform(currentProfile, new DefaultPhaseSet(), plan.getOperands(), context, progress.newChild(750));
 		}finally{
 			if(profileRegistryRegistration != null){
 				profileRegistryRegistration.unregister();
@@ -189,7 +188,6 @@ public class ProvisioningJob extends UIJob {
 			}
 			progress.done();
 		}
-		return result;
 	}
 
 }
