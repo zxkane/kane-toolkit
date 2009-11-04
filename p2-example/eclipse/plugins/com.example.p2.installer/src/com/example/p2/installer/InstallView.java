@@ -4,8 +4,8 @@ package com.example.p2.installer;
 import java.io.File;
 import java.net.URI;
 
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -83,25 +83,26 @@ public class InstallView extends ViewPart {
 				widgetDefaultSelected(e);
 			}
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(SelectionEvent event) {
 				String repository = text.getText();
 				String location = text2.getText();
 				String error = "Invalid repository or install location.";
-				try{
-					if(repository == null || location == null || "".equals(repository.trim())
-							|| "".equals(location.trim())) {
-						popMessage(error);
-						return;
-					} else {
+				
+				if(repository == null || location == null || "".equals(repository.trim())
+						|| "".equals(location.trim())) {
+					popMessage(error);
+					return;
+				}
+				try {
 						File f = new File(location);
 						URI repositoryURI = new File(repository).toURI();
-
-						Job job = new ProvisioningJob("Install...", repositoryURI, f);
-						job.setUser(true);
-						PlatformUI.getWorkbench().getProgressService().showInDialog(InstallView.this.getViewSite().getShell(), job);
-						job.schedule();
-					}
-				}catch(Exception excption) {
+						try {
+							IRunnableWithProgress job = new ProvisioningJob(repositoryURI, f);
+							PlatformUI.getWorkbench().getProgressService().run(true, false, job);
+						} catch (InterruptedException e) {
+							popMessage(e.getMessage());
+						}
+				} catch(Exception excption) {
 					popMessage(error);
 				}
 			}
