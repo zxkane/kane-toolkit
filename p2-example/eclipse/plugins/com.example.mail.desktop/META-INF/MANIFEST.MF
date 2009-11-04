@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Desktop
+Bundle-SymbolicName: com.example.mail.desktop
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: EXAMPLE
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
