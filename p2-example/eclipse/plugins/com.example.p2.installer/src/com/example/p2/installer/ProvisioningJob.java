@@ -177,24 +177,13 @@ public class ProvisioningJob implements IRunnableWithProgress{
 			ProvisioningPlan plan = planner.getProvisioningPlan(request, context, progress.newChild(100));
 			result = plan.getStatus();
 			if(!result.isOK())
-				throw new InterruptedException(result.getMessage());
+				throw new InterruptedException(getMultiMessage(result));
 
 			IEngine engine = (IEngine) ServiceHelper.getService(Activator.getDefault().getBundle().getBundleContext(), 
 					IEngine.SERVICE_NAME);
 			result = engine.perform(currentProfile, new DefaultPhaseSet(), plan.getOperands(), context, progress.newChild(750));
-			if(!result.isOK()) {
-				StringBuilder message = new StringBuilder();
-				message.append(result.getMessage());
-				if(result.isMultiStatus()) {
-					IStatus[] errors = ((MultiStatus)result).getChildren();
-					for(IStatus error : errors) {
-						message.append("\n");
-						message.append(error.getMessage());
-					}
-				}
-					
-				throw new InterruptedException(message.toString());
-			}
+			if(!result.isOK()) 
+				throw new InterruptedException(getMultiMessage(result));
 		}finally{
 			if(profileRegistryRegistration != null){
 				profileRegistryRegistration.unregister();
@@ -204,4 +193,17 @@ public class ProvisioningJob implements IRunnableWithProgress{
 		}
 	}
 
+	
+	private String getMultiMessage(IStatus result) {
+		StringBuilder message = new StringBuilder();
+		message.append(result.getMessage());
+		if(result.isMultiStatus()) {
+			IStatus[] errors = ((MultiStatus)result).getChildren();
+			for(IStatus error : errors) {
+				message.append("\n");
+				message.append(getMultiMessage(error));
+			}
+		}
+		return message.toString();
+	}
 }
