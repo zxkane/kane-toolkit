@@ -21,11 +21,15 @@ import org.eclipse.equinox.p2.publisher.IPublisherInfo;
 import org.eclipse.equinox.p2.publisher.Publisher;
 import org.eclipse.equinox.p2.publisher.PublisherInfo;
 import org.eclipse.equinox.p2.publisher.eclipse.BundlesAction;
+import org.eclipse.equinox.p2.publisher.eclipse.FeaturesAction;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 
 @SuppressWarnings("restriction")
 public class Generator implements IApplication {
 
+	private static final String SOURCE = "-source";
+	private static final String REPOSITORY = "-repository";
+	private static final String HELP = "-help";
 	private URI repositoryURI;
 	private File source;
 	
@@ -34,7 +38,7 @@ public class Generator implements IApplication {
 		try{
 			parse((String[])context.getArguments().get("application.args"));
 		} catch (Exception e) {
-			System.out.println("Invalid arguments");
+			showUsage();
 			return null;
 		}
 		IPublisherInfo info = createPublisherInfo();
@@ -43,13 +47,28 @@ public class Generator implements IApplication {
 		publisher.publish(actions, new NullProgressMonitor());
 		return IApplication.EXIT_OK;
 	}
+	
+	private void showUsage() {
+		System.out.println("-----------------------------------------------------"); //$NON-NLS-1$
+		System.out.println("-	              		Usage			            -"); //$NON-NLS-1$
+		System.out.println("-----------------------------------------------------"); //$NON-NLS-1$
+		System.out.println(HELP + "          print this help                    -"); //$NON-NLS-1$
+		System.out.println(REPOSITORY + "      the location of outputing repository             -"); //$NON-NLS-1$
+		System.out.println(SOURCE + "      the location of generating features and plugins      -"); //$NON-NLS-1$		
+		System.out.println("-----------------------------------------------------"); //$NON-NLS-1$
+	}
  
 	private void parse(String[] args) {
 		for(int i = 0; i < args.length; i++) {
-			if(args[i].equals("-repository"))
+			if(args[i].equalsIgnoreCase(HELP)) {
+				throw new IllegalArgumentException();
+			}else if(args[i].equalsIgnoreCase(REPOSITORY))
 				repositoryURI = new File(args[++i]).toURI();
-			else if(args[i].equals("-source"))
+			else if(args[i].equalsIgnoreCase(SOURCE)) {
 				source = new File(args[++i]);
+				if(!source.isDirectory())
+					throw new IllegalArgumentException();
+			}
 		}
 		if(source == null || repositoryURI == null)
 			throw new IllegalArgumentException();
@@ -75,16 +94,39 @@ public class Generator implements IApplication {
 		result.setArtifactRepository(artifactRepository);
 		result.setArtifactOptions(IPublisherInfo.A_PUBLISH | IPublisherInfo.A_INDEX);
 		result.addAdvice(new NativeLauncherTouchPoint());
+		result.addAdvice(new PropertyAdvise());
 		return result;
 	}
  
  
 	public IPublisherAction[] createActions() {
-		IPublisherAction[] result = new IPublisherAction[1];
-		BundleDescription[] bundleDescriptions = new BundleDescription[1];
-		bundleDescriptions[0] =  BundlesAction.createBundleDescription(source);
-		BundlesAction bundlesAction = new BundlesAction(bundleDescriptions);
-		result[0] = bundlesAction;
+		IPublisherAction[] result = new IPublisherAction[0];
+		File plugin = new File(source, "plugins");
+		if(plugin.exists() && plugin.isDirectory()) {
+			File[] plugins = plugin.listFiles();
+			BundleDescription[] bundleDescriptions = new BundleDescription[plugins.length];
+			for(int i = 0; i < plugins.length; i++) {
+				bundleDescriptions[i] =  BundlesAction.createBundleDescription(plugins[i]);
+			}
+			BundlesAction bundlesAction = new BundlesAction(bundleDescriptions);
+			result = mergeActions(result, bundlesAction);
+		}
+		File feature = new File(source, "features");
+		if(feature.exists() && feature.isDirectory()) {
+			File[] features = feature.listFiles();
+			FeaturesAction featuresAction = new FeaturesAction(features);
+			result = mergeActions(result, featuresAction);
+		}
+		
+		return result;
+	}
+
+	private IPublisherAction[] mergeActions(IPublisherAction[] result,
+			IPublisherAction action) {
+		IPublisherAction[] tmp = new IPublisherAction[result.length + 1];
+		tmp[0] = action;
+		System.arraycopy(result, 0, tmp, 1, result.length);
+		result = tmp;
 		return result;
 	}
 }
