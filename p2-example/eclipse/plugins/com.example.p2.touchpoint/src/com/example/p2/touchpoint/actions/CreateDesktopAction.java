@@ -8,22 +8,16 @@ import java.util.Map;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.equinox.internal.p2.engine.ParameterizedProvisioningAction;
 import org.eclipse.equinox.internal.provisional.p2.engine.ProvisioningAction;
 
 @SuppressWarnings("restriction")
-public class CreateDesktopAction extends ParameterizedProvisioningAction {
+public class CreateDesktopAction extends ProvisioningAction {
 	
 	public static final String NAME = "createDesktop";
 	public static final String KEY_NAME = "name";
 	public static final String KEY_DISPLAY_NAME = "displayName";
 	public static final String KEY_ICON = "icon";
 	public static final String KEY_PATH = "path";
-
-	public CreateDesktopAction(ProvisioningAction action, Map actionParameters,
-			String actionText) {
-		super(action, actionParameters, actionText);
-	}
 
 	@Override
 	public IStatus execute(Map parameters) {
@@ -32,6 +26,7 @@ public class CreateDesktopAction extends ParameterizedProvisioningAction {
 					"[Desktop Entry]", //$NON-NLS-1$
 					"Name=" + parameters.get(KEY_DISPLAY_NAME), //$NON-NLS-1$
 					"Encoding=UTF-8", //$NON-NLS-1$
+					"Terminal=false", //$NON-NLS-1$
 					"Exec=" + parameters.get(KEY_PATH), //$NON-NLS-1$
 					"Type=Application", //$NON-NLS-1$
 					"Icon=" + parameters.get(KEY_ICON)}; //$NON-NLS-1$
@@ -57,5 +52,11 @@ public class CreateDesktopAction extends ParameterizedProvisioningAction {
 			System.out.println("Not implement yet.");
 		}
 		return Status.OK_STATUS;
+	}
+
+	@Override
+	public IStatus undo(Map parameters) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

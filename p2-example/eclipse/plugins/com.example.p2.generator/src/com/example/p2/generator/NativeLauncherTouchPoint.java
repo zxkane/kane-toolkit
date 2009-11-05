@@ -10,6 +10,7 @@ import org.eclipse.equinox.internal.provisional.p2.metadata.ITouchpointInstructi
 import org.eclipse.equinox.internal.provisional.p2.metadata.MetadataFactory;
 import org.eclipse.equinox.p2.publisher.AbstractAdvice;
 import org.eclipse.equinox.p2.publisher.actions.ITouchpointAdvice;
+import org.eclipse.equinox.spi.p2.publisher.PublisherHelper;
 
 import com.example.p2.touchpoint.actions.CreateDesktopAction;
 import com.example.p2.touchpoint.actions.DeleteDesktopAction;
@@ -22,9 +23,9 @@ public class NativeLauncherTouchPoint extends AbstractAdvice implements
 
 
 	public NativeLauncherTouchPoint() {
-		touchpointInstructions.put("configure", MetadataFactory.createTouchpointInstruction(getConfigureBody(), null)); //$NON-NLS-1$
+		touchpointInstructions.put("configure", MetadataFactory.createTouchpointInstruction(getConfigureBody(), PublisherHelper.TOUCHPOINT_OSGI.getId())); //$NON-NLS-1$
 		/** For now, set the same data for the unconfigure phase */
-		touchpointInstructions.put("unconfigure", MetadataFactory.createTouchpointInstruction(getUnConfigureBody(), null)); //$NON-NLS-1$
+		touchpointInstructions.put("unconfigure", MetadataFactory.createTouchpointInstruction(getUnConfigureBody(), PublisherHelper.TOUCHPOINT_OSGI.getId())); //$NON-NLS-1$
 	}
 	
 	protected String getConfigureBody(){

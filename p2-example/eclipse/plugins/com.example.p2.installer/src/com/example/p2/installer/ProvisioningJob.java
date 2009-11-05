@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.p2.core.helpers.ServiceHelper;
@@ -181,6 +182,19 @@ public class ProvisioningJob implements IRunnableWithProgress{
 			IEngine engine = (IEngine) ServiceHelper.getService(Activator.getDefault().getBundle().getBundleContext(), 
 					IEngine.SERVICE_NAME);
 			result = engine.perform(currentProfile, new DefaultPhaseSet(), plan.getOperands(), context, progress.newChild(750));
+			if(!result.isOK()) {
+				StringBuilder message = new StringBuilder();
+				message.append(result.getMessage());
+				if(result.isMultiStatus()) {
+					IStatus[] errors = ((MultiStatus)result).getChildren();
+					for(IStatus error : errors) {
+						message.append("\n");
+						message.append(error.getMessage());
+					}
+				}
+					
+				throw new InterruptedException(message.toString());
+			}
 		}finally{
 			if(profileRegistryRegistration != null){
 				profileRegistryRegistration.unregister();

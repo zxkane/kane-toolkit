@@ -6,19 +6,13 @@ import java.util.Map;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.equinox.internal.p2.engine.ParameterizedProvisioningAction;
 import org.eclipse.equinox.internal.provisional.p2.engine.ProvisioningAction;
 
 @SuppressWarnings("restriction")
-public class DeleteDesktopAction extends ParameterizedProvisioningAction {
+public class DeleteDesktopAction extends ProvisioningAction {
 	
 	public static final String NAME = "deleteDesktop";
 	public static final String KEY_NAME = "name";
-
-	public DeleteDesktopAction(ProvisioningAction action, Map actionParameters,
-			String actionText) {
-		super(action, actionParameters, actionText);
-	}
 
 	@Override
 	public IStatus execute(Map parameters) {
@@ -31,5 +25,11 @@ public class DeleteDesktopAction extends ParameterizedProvisioningAction {
 			System.out.println("Not implement yet.");
 		}
 		return Status.OK_STATUS;
+	}
+
+	@Override
+	public IStatus undo(Map parameters) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
