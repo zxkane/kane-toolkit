@@ -2,6 +2,7 @@ package com.example.p2.installer;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,17 +11,20 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.equinox.internal.p2.core.BasicLocation;
 import org.eclipse.equinox.internal.p2.core.helpers.ServiceHelper;
 import org.eclipse.equinox.internal.p2.engine.SimpleProfileRegistry;
 import org.eclipse.equinox.internal.p2.engine.SurrogateProfileHandler;
 import org.eclipse.equinox.internal.provisional.p2.core.ProvisionException;
 import org.eclipse.equinox.internal.provisional.p2.core.VersionRange;
+import org.eclipse.equinox.internal.provisional.p2.core.location.AgentLocation;
 import org.eclipse.equinox.internal.provisional.p2.director.IPlanner;
 import org.eclipse.equinox.internal.provisional.p2.director.ProfileChangeRequest;
 import org.eclipse.equinox.internal.provisional.p2.director.ProvisioningPlan;
@@ -100,6 +104,7 @@ public class ProvisioningJob implements IRunnableWithProgress{
 	private static final String PROFILE_ID = "installedrcp";
 	private final URI[] uris;
 	private ServiceRegistration profileRegistryRegistration = null;
+	private ServiceRegistration locationRegistration = null;
 	
 	
 	public ProvisioningJob(URI repository, File location) {
@@ -107,8 +112,9 @@ public class ProvisioningJob implements IRunnableWithProgress{
 		uris = new URI[] {repository};
 	}
 		
+	// locate it in the location recognized by default profile registry
 	private void registerProfileRegistry(){
-		File loc = new File(installLocation, "p2");
+		File loc = new File(installLocation, "p2/org.eclipse.equinox.p2.engine/profileRegistry");
 		if(!loc.exists())
 			loc.mkdirs();
 		/** The surrogate handler will take of moving the installer profile for us here */
@@ -118,6 +124,17 @@ public class ProvisioningJob implements IRunnableWithProgress{
 		props.put(Constants.SERVICE_RANKING, new Integer(Integer.MAX_VALUE));
 		profileRegistryRegistration = Activator.getDefault().getBundle().getBundleContext().registerService(IProfileRegistry.class.getName(), profileRegistry, props);
 	}
+	
+	private void registerAgentLocation() {
+		File f = new File(installLocation, "p2");
+		try {
+			AgentLocation location = new BasicLocation(null, f.toURI().toURL(), false);
+			Dictionary prop = new Properties();
+			prop.put(Constants.SERVICE_RANKING, Integer.MAX_VALUE);
+			locationRegistration = Activator.getDefault().getBundle().getBundleContext().registerService(AgentLocation.class.getName(), location, prop);
+		} catch (MalformedURLException e) {
+		}
+	}
 
 	@Override
 	public void run(IProgressMonitor monitor) throws InvocationTargetException,
@@ -125,6 +142,7 @@ public class ProvisioningJob implements IRunnableWithProgress{
 		IStatus result = null;
 		SubMonitor progress = SubMonitor.convert(monitor, "Installation", 1000);
 		try{
+			registerAgentLocation();
 			registerProfileRegistry();
 			IProfileRegistry registry = 
 				(IProfileRegistry) ServiceHelper.getService(Activator.getDefault().getBundle().getBundleContext(), IProfileRegistry.class.getName());
@@ -184,10 +202,14 @@ public class ProvisioningJob implements IRunnableWithProgress{
 			result = engine.perform(currentProfile, new DefaultPhaseSet(), plan.getOperands(), context, progress.newChild(750));
 			if(!result.isOK()) 
 				throw new InterruptedException(getMultiMessage(result));
-		}finally{
+		} finally {
 			if(profileRegistryRegistration != null){
 				profileRegistryRegistration.unregister();
 				profileRegistryRegistration = null;
+			}
+			if(locationRegistration != null){
+				locationRegistration.unregister();
+				locationRegistration = null;
 			}
 			progress.done();
 		}

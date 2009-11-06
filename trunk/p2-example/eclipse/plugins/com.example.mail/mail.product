@@ -71,6 +71,7 @@
       <feature id="org.eclipse.equinox.compendium.sdk" version="3.5.1.R35x_v20090811-7V7JFUNFLSgAa7PdUp1C-p4"/>
       <feature id="org.eclipse.help" version="1.1.1.R35x_v20090811-7e7eFAnFEx2XZoYz0uPgIfwD"/>
       <feature id="org.eclipse.platform" version="3.5.1.R35x_v20090910-9gEeG1_FthkNDSP2odXdThaOu9GFDPn83DGB7"/>
+      <feature id="com.example.p2.feature" version="1.0.0.qualifier"/>
    </features>
 
 
