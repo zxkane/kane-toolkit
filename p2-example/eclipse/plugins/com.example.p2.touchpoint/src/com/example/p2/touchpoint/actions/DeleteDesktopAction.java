@@ -18,7 +18,7 @@ public class DeleteDesktopAction extends ProvisioningAction {
 	public IStatus execute(Map parameters) {
 		if(Platform.OS_LINUX.equals(Platform.getOS()) || Platform.OS_SOLARIS.equals(Platform.getOS())) {
 			String name = (String) parameters.get(KEY_NAME);
-			File desktop = new File(System.getProperty("user.home"), name);
+			File desktop = new File(System.getProperty("user.home"), "Desktop/" + name);
 			desktop.delete();
 		} else if(Platform.OS_WIN32.equals(Platform.getOS())) {
 			// TODO implement it

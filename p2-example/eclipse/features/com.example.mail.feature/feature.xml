@@ -6,15 +6,15 @@
       provider-name="EXAMPLE">
 
    <description url="http://www.example.com/description">
-      [Enter Feature Description here.]
+      Mail application feature
    </description>
 
    <copyright url="http://www.example.com/copyright">
-      [Enter Copyright Description here.]
+      (c) Copyright 2009.  All rights reserved.
    </copyright>
 
    <license url="http://www.example.com/license">
-      [Enter License Description here.]
+      (c) Copyright 2009.  All rights reserved.
    </license>
 
    <plugin
