@@ -114,7 +114,7 @@ public class ProvisioningJob implements IRunnableWithProgress{
 		
 	// locate it in the location recognized by default profile registry
 	private void registerProfileRegistry(){
-		File loc = new File(installLocation, "p2/org.eclipse.equinox.p2.engine/profileRegistry");
+		File loc = new File(installLocation, "p2/org.eclipse.equinox.p2.engine/profileRegistry/");
 		if(!loc.exists())
 			loc.mkdirs();
 		/** The surrogate handler will take of moving the installer profile for us here */
@@ -126,7 +126,8 @@ public class ProvisioningJob implements IRunnableWithProgress{
 	}
 	
 	private void registerAgentLocation() {
-		File f = new File(installLocation, "p2");
+		File f = new File(installLocation, "p2/");
+		f.mkdirs();
 		try {
 			AgentLocation location = new BasicLocation(null, f.toURI().toURL(), false);
 			Dictionary prop = new Properties();
@@ -176,11 +177,12 @@ public class ProvisioningJob implements IRunnableWithProgress{
 			IMetadataRepositoryManager repositoryManager = (IMetadataRepositoryManager) ServiceHelper.getService(Activator.getDefault().getBundle().getBundleContext(),
 					IMetadataRepositoryManager.class.getName()); 
 			if (repositoryManager == null) 
-				throw new InternalError("Failed to get IMetadataRepositoryManager.");
+				throw new InterruptedException("Failed to get IMetadataRepositoryManager.");
 			try {
+				// here totally cost 100 progress
 				for (URI uri : uris) {
-					IMetadataRepository metaRepo = repositoryManager.loadRepository(uri, progress.newChild(100));
-					Collector collector = metaRepo.query(new AccpetQuery(), new LatestNoninstalledIUCollector(currentProfile), null);
+					IMetadataRepository metaRepo = repositoryManager.loadRepository(uri, progress.newChild(50/uris.length));
+					Collector collector = metaRepo.query(new AccpetQuery(), new LatestNoninstalledIUCollector(currentProfile), progress.newChild(50/uris.length));
 					ius.addAll(collector.toCollection());
 				}
 			} catch (ProvisionException e) {
