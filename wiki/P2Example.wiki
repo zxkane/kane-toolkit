@@ -1,0 +1,13 @@
+#labels eclipse,p2,provisioning
+#P2 Example.
+
+= Introduction =
+
+They're example projects to demonstrate how to use Eclipse p2 API, they demonstrate below p2 features:
+  * Install an application into empty folder
+  * Install additional features into the existing application
+  * Publish the repository with special requirements
+  * Install the application from customized repository
+
+= Details =
+
