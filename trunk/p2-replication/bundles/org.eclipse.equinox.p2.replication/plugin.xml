@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.exportWizards">
+      <category
+            id="com.windriver.equinox.p2.category"
+            name="%category.name">
+      </category>
+      <wizard
+            category="com.windriver.equinox.p2.category"
+            class="org.eclipse.equinox.p2.replication.internal.wizard.ExportWizard"
+            icon="icons/ico_import_export.gif"
+            id="com.windriver.equinox.p2.replication.export"
+            name="%export.name">
+      </wizard>
+   </extension>
+
+</plugin>
