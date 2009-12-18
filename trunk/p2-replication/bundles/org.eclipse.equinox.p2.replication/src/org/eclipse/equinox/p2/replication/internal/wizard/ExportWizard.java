@@ -5,14 +5,13 @@ import org.eclipse.equinox.p2.replication.Constants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
-import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
 
 
 public class ExportWizard extends Wizard implements IExportWizard {
 
-	private WizardPage mainPage = null;
+	private ExportPage mainPage = null;
 
 	public ExportWizard() {
 	}
@@ -26,7 +25,8 @@ public class ExportWizard extends Wizard implements IExportWizard {
 
 	@Override
 	public boolean performFinish() {
-		return false;
+		mainPage.doFinish();
+		return true;
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
