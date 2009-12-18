@@ -1,6 +1,11 @@
 package org.eclipse.equinox.p2.replication.internal;
 
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.provisional.p2.engine.IProfile;
 import org.eclipse.equinox.internal.provisional.p2.engine.IProfileRegistry;
 import org.eclipse.equinox.internal.provisional.p2.engine.IUProfilePropertyQuery;
@@ -39,6 +44,27 @@ public class Replicator implements P2Replicator {
 
 	public IProfile getSelfProfile() {
 		return selfProfile;
+	}
+
+	public void save(OutputStream output, IInstallableUnit[] ius, IProgressMonitor monitor) {
+		SubMonitor subMonitor = SubMonitor.convert(monitor, "Save p2 installation", 1000); //$NON-NLS-1$
+		try {
+			P2FWriter writer = new P2FWriter(output, null);
+			writer.start(P2FWriter.P2F_ELEMENT);
+
+			int percent = 1000/ius.length;
+			for(IInstallableUnit unit : ius) { 
+				writer.writeIU(unit);
+				subMonitor.worked(percent);
+			}
+
+			writer.end(P2FWriter.P2F_ELEMENT);
+			writer.flush();
+		} catch (UnsupportedEncodingException e) {
+			// should not happen
+		} finally {
+			subMonitor.done();
+		}
 	}
 
 }
