@@ -4,15 +4,29 @@
    <extension
          point="org.eclipse.ui.exportWizards">
       <category
-            id="com.windriver.equinox.p2.category"
+            id="org.eclipse.equinox.p2.category"
             name="%category.name">
       </category>
       <wizard
-            category="com.windriver.equinox.p2.category"
+            category="org.eclipse.equinox.p2.category"
             class="org.eclipse.equinox.p2.replication.internal.wizard.ExportWizard"
             icon="icons/ico_import_export.gif"
-            id="com.windriver.equinox.p2.replication.export"
+            id="org.eclipse.equinox.p2.replication.export"
             name="%export.name">
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <category
+            id="org.eclipse.equinox.p2.category"
+            name="%category.name">
+      </category>
+      <wizard
+            category="org.eclipse.equinox.p2.category"
+            class="org.eclipse.equinox.p2.replication.internal.wizard.ImportWizard"
+            icon="icons/ico_import_export.gif"
+            id="org.eclipse.equinox.p2.replication.export"
+            name="%import.name">
       </wizard>
    </extension>
 
