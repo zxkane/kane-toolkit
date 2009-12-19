@@ -6,9 +6,7 @@ import java.io.UnsupportedEncodingException;
 import org.eclipse.equinox.internal.p2.metadata.repository.io.MetadataWriter;
 import org.eclipse.equinox.internal.provisional.p2.metadata.IInstallableUnit;
 @SuppressWarnings("restriction")
-public class P2FWriter extends MetadataWriter {
-
-	public static final String P2F_ELEMENT = "p2f"; //$NON-NLS-1$
+public class P2FWriter extends MetadataWriter implements P2FConstants {
 
 	public P2FWriter(OutputStream output, ProcessingInstruction[] piElements)
 	throws UnsupportedEncodingException {
