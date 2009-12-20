@@ -23,4 +23,6 @@ public interface P2Replicator {
 	void save(OutputStream output, IInstallableUnit[] ius, IProgressMonitor monitor) throws ProvisionException;
 
 	InstallationConfiguration load(InputStream input) throws IOException;
+
+	void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor);
 }

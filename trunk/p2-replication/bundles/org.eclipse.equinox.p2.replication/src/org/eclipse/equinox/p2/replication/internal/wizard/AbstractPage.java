@@ -12,6 +12,7 @@ import org.eclipse.equinox.p2.replication.P2Replicator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -44,7 +45,7 @@ import org.osgi.util.tracker.ServiceTracker;
 @SuppressWarnings("restriction")
 public abstract class AbstractPage extends WizardPage implements Listener {
 
-	private class InstallationContentProvider implements IStructuredContentProvider {
+	protected class InstallationContentProvider implements IStructuredContentProvider {
 
 		public void dispose() {
 		}
@@ -165,7 +166,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		createColumns(viewer);
 		viewer.getControl().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		viewer.getControl().setSize(300, 200);
-		viewer.setContentProvider(new InstallationContentProvider());
+		viewer.setContentProvider(getContentProvider());
 		viewer.setLabelProvider(new InstallationLabelProvider());
 		parent.addControlListener(new ControlAdapter() {
 			private final int[] columnRate = new int[]{4, 2, 4};
@@ -215,6 +216,10 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		viewer.setInput(sortByName(getInput()));
 	}
 
+	protected IContentProvider getContentProvider() {
+		return new InstallationContentProvider();
+	}
+
 	protected boolean determinePageCompletion() {
 		// validate groups in order of priority so error message is the most important one
 		boolean complete = validateDestinationGroup() && validateOptionsGroup();
@@ -229,6 +234,8 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 
 		return complete;
 	}
+
+	protected abstract void doFinish();
 
 	protected abstract int getBrowseDialogStyle();
 
@@ -249,7 +256,11 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 
 	protected abstract String getInvalidDestinationMessage();
 
+	protected String getNoOptionsMessage() {
+		return Message.PAGE_NOINSTALLTION_ERROR;
+	}
 	protected abstract void giveFocusToDestination();
+
 	/**
 	 * Open an appropriate destination browser so that the user can specify a
 	 * source to import from
@@ -340,9 +351,5 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	protected boolean validDestination() {
 		File file = new File(getDestinationValue());
 		return !(file.getPath().length() <= 0 || file.isDirectory());
-	}
-
-	protected String getNoOptionsMessage() {
-		return Message.PAGE_NOINSTALLTION_ERROR;
 	}
 }

@@ -11,14 +11,22 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.metadata.repository.io.XMLConstants;
 import org.eclipse.equinox.internal.provisional.p2.core.ProvisionException;
+import org.eclipse.equinox.internal.provisional.p2.director.IPlanner;
+import org.eclipse.equinox.internal.provisional.p2.director.ProfileChangeRequest;
+import org.eclipse.equinox.internal.provisional.p2.director.ProvisioningPlan;
+import org.eclipse.equinox.internal.provisional.p2.engine.DefaultPhaseSet;
+import org.eclipse.equinox.internal.provisional.p2.engine.IEngine;
 import org.eclipse.equinox.internal.provisional.p2.engine.IProfile;
 import org.eclipse.equinox.internal.provisional.p2.engine.IProfileRegistry;
 import org.eclipse.equinox.internal.provisional.p2.engine.IUProfilePropertyQuery;
+import org.eclipse.equinox.internal.provisional.p2.engine.ProvisioningContext;
 import org.eclipse.equinox.internal.provisional.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.internal.provisional.p2.metadata.query.InstallableUnitQuery;
 import org.eclipse.equinox.internal.provisional.p2.metadata.repository.IMetadataRepository;
@@ -31,6 +39,41 @@ import org.osgi.util.tracker.ServiceTracker;
 
 @SuppressWarnings("restriction")
 public class Replicator implements P2Replicator { 
+
+	private class ReplicateJob extends Job {
+
+		private final IInstallableUnit[] toBeInstalled;
+		private final URI[] uris;
+
+		public ReplicateJob(String name, URI[] uris, IInstallableUnit[] units) {
+			super(name);
+			this.uris = uris;
+			toBeInstalled = units;
+		}
+
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			SubMonitor progress = SubMonitor.convert(monitor, 
+					"P2 installation replication", 1000); //$NON-NLS-1$
+			try {
+				ProfileChangeRequest request = ProfileChangeRequest.createByProfileId(getSelfProfile().getProfileId());  
+				request.addInstallableUnits(toBeInstalled);
+				IPlanner planner = getService(IPlanner.class);
+				ProvisioningContext context = new ProvisioningContext(uris);
+				context.setArtifactRepositories(uris);
+				ProvisioningPlan plan = planner.getProvisioningPlan(request, context, progress.newChild(100));
+				IStatus result = plan.getStatus();
+				if(!result.isOK())
+					return result;
+				IEngine engine = getService(IEngine.class);
+				result = engine.perform(getSelfProfile(), new DefaultPhaseSet(), plan.getOperands(), context, progress.newChild(900));
+				return result;
+			} finally {
+				progress.done();
+			}
+		}
+
+	}
 
 	private final class Configuriation implements InstallationConfiguration{
 		String[] repoStrings;
@@ -140,5 +183,28 @@ public class Replicator implements P2Replicator {
 		conf.ius = parser.getIUs();
 		conf.repoStrings = parser.getRepositories();
 		return conf;
+	}
+
+	public void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) {
+		SubMonitor subMonitor = SubMonitor.convert(monitor, "Import p2 installation", 1000); //$NON-NLS-1$
+
+		try{
+			List<URI> uris = new ArrayList<URI>(repositories.length);
+			for(String repository : repositories) {
+				URI uri = URI.create(repository);
+				IMetadataRepositoryManager repoManager = getService(IMetadataRepositoryManager.class);
+				if(!repoManager.contains(uri)) {
+					repoManager.addRepository(uri);
+				}
+				uris.add(uri);
+				subMonitor.worked(900/repositories.length);
+			}
+			subMonitor.setWorkRemaining(100);
+			ReplicateJob job = new ReplicateJob("Install", uris.toArray(new URI[uris.size()]), rootIUs); //$NON-NLS-1$
+			job.belongsTo(this);
+			job.schedule();
+		} finally {
+			subMonitor.done();
+		}
 	}
 }
