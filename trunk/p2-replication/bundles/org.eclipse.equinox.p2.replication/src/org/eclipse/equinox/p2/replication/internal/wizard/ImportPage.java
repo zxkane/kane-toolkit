@@ -20,6 +20,7 @@ import org.eclipse.equinox.p2.replication.P2Replicator.InstallationConfiguration
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 
 @SuppressWarnings("restriction")
 public class ImportPage extends AbstractPage {
@@ -94,6 +95,13 @@ public class ImportPage extends AbstractPage {
 	}
 
 	@Override
+	public void handleEvent(Event event) {
+		super.handleEvent(event);
+		if(event.widget == viewer.getControl())
+			updatePageCompletion();
+	}
+
+	@Override
 	protected void setDestinationValue(String selectedFileName) {		
 		super.setDestinationValue(selectedFileName);
 		if(validateDestinationGroup()) {
@@ -102,7 +110,7 @@ public class ImportPage extends AbstractPage {
 				input = new BufferedInputStream(new FileInputStream(getDestinationValue()));
 				InstallationConfiguration conf = replicator.load(input);
 				viewer.setInput(conf.getRootIUs());
-				//				disableInstalled();
+				disableInstalled();
 				viewer.refresh();
 				repositories = conf.getRepositories();
 			} catch(IOException e) {
@@ -116,6 +124,21 @@ public class ImportPage extends AbstractPage {
 	protected boolean validDestination() {
 		File target = new File(getDestinationValue());
 		return super.validDestination() && target.exists() && target.canRead();
+	}
+
+	@Override
+	protected boolean validateOptionsGroup() {
+		Object[] checked = viewer.getCheckedElements();
+		boolean checkGrayed = false;
+		for(Object obj : checked) {
+			if(viewer.getGrayed(obj)) {
+				viewer.setChecked(obj, false);
+				checkGrayed = true;
+			}
+		}
+		if(checkGrayed)
+			return false;
+		return super.validateOptionsGroup();
 	}
 
 	@Override

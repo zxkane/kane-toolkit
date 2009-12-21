@@ -287,8 +287,6 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		if (source == destinationBrowseButton) {
 			handleDestinationBrowseButtonPressed();
 		}
-
-		updatePageCompletion();
 	}
 
 	protected void initializeReplicator() {
