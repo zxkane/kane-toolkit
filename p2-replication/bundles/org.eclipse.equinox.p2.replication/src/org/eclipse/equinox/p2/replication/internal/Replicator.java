@@ -56,8 +56,10 @@ public class Replicator implements P2Replicator {
 			SubMonitor progress = SubMonitor.convert(monitor, 
 					"P2 installation replication", 1000); //$NON-NLS-1$
 			try {
-				ProfileChangeRequest request = ProfileChangeRequest.createByProfileId(getSelfProfile().getProfileId());  
+				ProfileChangeRequest request = ProfileChangeRequest.createByProfileId(getSelfProfile().getProfileId());
 				request.addInstallableUnits(toBeInstalled);
+				for(IInstallableUnit unit : toBeInstalled)
+					request.setInstallableUnitProfileProperty(unit, "org.eclipse.equinox.p2.type.root", "true"); //$NON-NLS-1$ //$NON-NLS-2$
 				IPlanner planner = getService(IPlanner.class);
 				ProvisioningContext context = new ProvisioningContext(uris);
 				context.setArtifactRepositories(uris);

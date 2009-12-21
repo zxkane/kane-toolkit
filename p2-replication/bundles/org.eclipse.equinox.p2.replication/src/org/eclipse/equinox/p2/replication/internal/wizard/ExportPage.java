@@ -15,6 +15,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 @SuppressWarnings("restriction")
 public class ExportPage extends AbstractPage {
@@ -39,6 +40,7 @@ public class ExportPage extends AbstractPage {
 		}
 	}
 
+	@Override
 	public void doFinish() {
 		final Object[] checked = viewer.getCheckedElements();
 		OutputStream stream = null;
@@ -114,5 +116,12 @@ public class ExportPage extends AbstractPage {
 	@Override
 	protected int getBrowseDialogStyle() {
 		return SWT.SAVE;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		super.handleEvent(event);
+
+		updatePageCompletion();
 	}
 }
