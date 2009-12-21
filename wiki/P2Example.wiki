@@ -1,4 +1,4 @@
-#labels eclipse,p2,provisioning
+#labels eclipse,p2,provisioning,Featured,Phase-Deploy
 = Introduction =
 
 They're example projects to demonstrate how to use Eclipse p2 API, they demonstrate below p2 features:
