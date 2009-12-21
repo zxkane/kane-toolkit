@@ -21,3 +21,6 @@ Project 'com.example.p2.installer' also is a standalone RCP that has capability 
 Project 'com.example.p2.generator' is headless application to generate the special repository for feature 'com.example.mail.desktop.feature'. The repository uses the customized touchpoint type and actions.
 
 Project 'com.example.p2.touchpoint' implements itself touchpoint and actions.
+
+= More= 
+[http://docs.google.com/View?id=ddqccrw2_576xpnxdfhq P2 example tutorial(in Chinese)]
