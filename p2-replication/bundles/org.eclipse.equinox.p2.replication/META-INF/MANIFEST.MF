@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Eclipse Environment Replication
+Bundle-Name: Eclipse P2 Installation Replication
 Bundle-SymbolicName: org.eclipse.equinox.p2.replication;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: kane.zhu@windriver.com
