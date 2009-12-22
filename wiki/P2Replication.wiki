@@ -11,7 +11,20 @@ This tool helps simplify the process, just export/import the configuration file 
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+== How to install ==
+
+- install it from online repository(recommended)
+
+- download the featured version, then copy it into dropin folder of your Eclipse
+
+== Usage ==
+
+*export*
+
+Choose ‘File' - 'Export'- 'P2' - 'P2 Installation' to export your p2 installation configuration to file.
+
+*import*
+
+Choose 'File' - 'Import' - 'P2' - 'P2 Installation' to import p2 installation from the configuration file. 
+
+Notes: the already installed features can't be installed again.
