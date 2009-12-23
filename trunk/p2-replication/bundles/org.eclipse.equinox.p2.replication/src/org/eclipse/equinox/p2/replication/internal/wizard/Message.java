@@ -11,6 +11,7 @@ public class Message extends NLS {
 	public static String EXPORTPage_LABEL;
 	public static String ExportPage_DEST_ERRORMESSAGE;
 	public static String ExportPage_ERROR_CONFIG;
+	public static String ExportPage_EXPORT_WARNING;
 	public static String ExportPage_FILEDIALOG_TITLE;
 	public static String EXTENSION_ALL;
 	public static String EXTENSION_ALL_NAME;
@@ -22,6 +23,7 @@ public class Message extends NLS {
 	public static String ImportPage_DEST_ERROR;
 	public static String ImportPage_DESTINATION_LABEL;
 	public static String ImportPage_FILEDIALOG_TITLE;
+	public static String ImportPage_IMPORT_NOTIFICATION;
 	public static String ImportPage_TITLE;
 	public static String ImportWizard_WINDOWTITLE;
 	public static String Page_BUTTON_BROWSER;

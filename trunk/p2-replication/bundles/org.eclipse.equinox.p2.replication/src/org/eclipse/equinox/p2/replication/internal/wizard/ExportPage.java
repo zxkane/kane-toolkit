@@ -2,7 +2,6 @@ package org.eclipse.equinox.p2.replication.internal.wizard;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -17,6 +16,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.MessageBox;
 @SuppressWarnings("restriction")
 public class ExportPage extends AbstractPage {
 
@@ -41,7 +41,8 @@ public class ExportPage extends AbstractPage {
 	}
 
 	@Override
-	public void doFinish() {
+	public void doFinish() throws Exception {
+		finishException = null;
 		final Object[] checked = viewer.getCheckedElements();
 		OutputStream stream = null;
 		try {
@@ -58,32 +59,33 @@ public class ExportPage extends AbstractPage {
 					for(int i = 0; i < units.length; i++)
 						units[i] = (IInstallableUnit)checked[i];
 					try {
-						replicator.save(out, units, monitor);
+						IInstallableUnit[] missingRepoIUs = replicator.save(out, units, monitor);
+						if(missingRepoIUs.length > 0) {
+							StringBuilder sb = new StringBuilder();
+							sb.append(Message.ExportPage_EXPORT_WARNING);
+							for(IInstallableUnit unit : missingRepoIUs) {
+								sb.append(unit.getId());
+								sb.append("\n"); //$NON-NLS-1$
+							}
+							MessageBox messageBox = new MessageBox(getShell(), SWT.ICON_WARNING);
+							messageBox.setMessage(sb.toString());
+							messageBox.open();
+						}
 					} catch (ProvisionException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						finishException = e;
 					}
 				}
 			});
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} finally {
-			if(stream != null)
+			if(stream != null) {
 				try {
 					stream.close();
 				} catch (IOException e) {
 					// do nothing
 				}
+			}
+			if(finishException != null)
+				throw finishException;
 		}
 	}
 

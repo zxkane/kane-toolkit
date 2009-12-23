@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.equinox.internal.provisional.p2.core.ProvisionException;
 import org.eclipse.equinox.internal.provisional.p2.engine.IProfile;
 import org.eclipse.equinox.internal.provisional.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.internal.provisional.p2.metadata.query.InstallableUnitQuery;
@@ -21,6 +22,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.MessageBox;
 
 @SuppressWarnings("restriction")
 public class ImportPage extends AbstractPage {
@@ -142,26 +144,28 @@ public class ImportPage extends AbstractPage {
 	}
 
 	@Override
-	protected void doFinish() {
-		try {
-			Object[] checked = viewer.getCheckedElements();
-			final IInstallableUnit[] units = new IInstallableUnit[checked.length];
-			for(int i = 0; i < checked.length; i++)
-				units[i] = (IInstallableUnit) checked[i];
-			getContainer().run(true, false, new IRunnableWithProgress() {
+	protected void doFinish() throws Exception{
+		finishException = null;
+		Object[] checked = viewer.getCheckedElements();
+		final IInstallableUnit[] units = new IInstallableUnit[checked.length];
+		for(int i = 0; i < checked.length; i++)
+			units[i] = (IInstallableUnit) checked[i];
+		getContainer().run(true, false, new IRunnableWithProgress() {
 
-				public void run(IProgressMonitor monitor) throws InvocationTargetException,
-				InterruptedException {
-					replicator.replicate(repositories, units, monitor);	
-				}
-			});
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			public void run(IProgressMonitor monitor) throws InvocationTargetException,
+			InterruptedException {
+				try {
+					replicator.replicate(repositories, units, monitor);
+				} catch (ProvisionException e) {
+					finishException = e;
+				}	
+			}
+		});
+		if(finishException != null)
+			throw finishException;
+		MessageBox message = new MessageBox(getContainer().getShell(), SWT.ICON_INFORMATION);
+		message.setMessage(Message.ImportPage_IMPORT_NOTIFICATION);
+		message.open();
 	}
 
 

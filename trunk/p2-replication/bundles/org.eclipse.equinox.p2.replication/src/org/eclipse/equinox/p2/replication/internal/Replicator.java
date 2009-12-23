@@ -118,7 +118,7 @@ public class Replicator implements P2Replicator {
 		return selfProfile;
 	}
 
-	public void save(OutputStream output, IInstallableUnit[] ius, IProgressMonitor monitor) throws ProvisionException {
+	public IInstallableUnit[] save(OutputStream output, IInstallableUnit[] ius, IProgressMonitor monitor) throws ProvisionException {
 		SubMonitor subMonitor = SubMonitor.convert(monitor, "Save p2 installation", 1000); //$NON-NLS-1$
 		try {
 			List<URI> repositories = new ArrayList<URI>();
@@ -127,16 +127,24 @@ public class Replicator implements P2Replicator {
 			final Map<IInstallableUnit, InstallableUnitQuery> queries = new HashMap<IInstallableUnit, InstallableUnitQuery>(ius.length, 1);
 			for(int i = 0; i < ius.length; i++)
 				queries.put(ius[i], new InstallableUnitQuery(ius[i].getId(), ius[i].getVersion()));
+			int elapsed = 0;
 			for(URI uri : uris) {
 				if(queries.isEmpty())
 					break;
-				IMetadataRepository repo = repoManager.loadRepository(uri, subMonitor.newChild(500/uris.length));
-				Collector result = repo.query(CompoundQuery.createCompoundQuery(queries.values().toArray(new InstallableUnitQuery[queries.size()]), false), 
-						new Collector(), subMonitor.newChild(400/uris.length));
-				if(result.size() > 0) {
-					repositories.add(uri);
-					for(Object unit : result.toCollection())
-						queries.remove(unit);
+				try{
+					IMetadataRepository repo = repoManager.loadRepository(uri, subMonitor.newChild(500/uris.length));
+					Collector result = repo.query(CompoundQuery.createCompoundQuery(queries.values().toArray(new InstallableUnitQuery[queries.size()]), false), 
+							new Collector(), subMonitor.newChild(400/uris.length));
+					if(result.size() > 0) {
+						repositories.add(uri);
+						for(Object unit : result.toCollection())
+							queries.remove(unit);
+					}
+				} catch(ProvisionException e) {
+					// ignore the provision exception when loadRepository, it might be caused by network issue.
+				} finally {
+					elapsed += 900/uris.length;
+					subMonitor.setWorkRemaining(1000 - elapsed);
 				}
 			}
 			subMonitor.setWorkRemaining(100);
@@ -158,8 +166,11 @@ public class Replicator implements P2Replicator {
 			writer.end(P2FConstants.REPOSITORIES_ELEMENT);
 			writer.end(P2FConstants.P2F_ELEMENT);
 			writer.flush();
+
+			return queries.keySet().toArray(new IInstallableUnit[queries.size()]);
 		} catch (UnsupportedEncodingException e) {
 			// should not happen
+			return new IInstallableUnit[0];
 		} finally {
 			subMonitor.done();
 		}
@@ -187,19 +198,19 @@ public class Replicator implements P2Replicator {
 		return conf;
 	}
 
-	public void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) {
+	public void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) throws ProvisionException {
 		SubMonitor subMonitor = SubMonitor.convert(monitor, "Import p2 installation", 1000); //$NON-NLS-1$
 
 		try{
 			List<URI> uris = new ArrayList<URI>(repositories.length);
+			IMetadataRepositoryManager repoManager = getService(IMetadataRepositoryManager.class);
 			for(String repository : repositories) {
 				URI uri = URI.create(repository);
-				IMetadataRepositoryManager repoManager = getService(IMetadataRepositoryManager.class);
 				if(!repoManager.contains(uri)) {
 					repoManager.addRepository(uri);
+					repoManager.loadRepository(uri, subMonitor.newChild(900/repositories.length));
 				}
 				uris.add(uri);
-				subMonitor.worked(900/repositories.length);
 			}
 			subMonitor.setWorkRemaining(100);
 			ReplicateJob job = new ReplicateJob("Install", uris.toArray(new URI[uris.size()]), rootIUs); //$NON-NLS-1$

@@ -3,6 +3,7 @@ package org.eclipse.equinox.p2.replication.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -118,30 +119,43 @@ public class P2FParser extends MetadataParser implements P2FConstants{
 
 	private class RepositoriesHandler extends AbstractHandler {
 
-		private final ArrayList<String> units;
+		private final List<String> urls;
 
 		public RepositoriesHandler(P2FHandler p2fHandler, Attributes attributes) {
-			super(p2fHandler, INSTALLABLE_UNITS_ELEMENT);
+			super(p2fHandler, REPOSITORIES_ELEMENT);
 			String size = parseOptionalAttribute(attributes, COLLECTION_SIZE_ATTRIBUTE);
-			units = (size != null ? new ArrayList<String>(new Integer(size).intValue()) : new ArrayList<String>(4));
+			urls = (size != null ? new ArrayList<String>(new Integer(size).intValue()) : new ArrayList<String>(4));
 		}
 
 		@Override
 		public void startElement(String name, Attributes attributes)
 		throws SAXException {
 			if (name.equals(REPOSITORY_ELEMENT)) {
-				int length = attributes.getLength();
-				for(int i = 0; i < length; i++) {
-					if(attributes.getLocalName(i).equals(P2FURI_ATTRIBUTE)) 
-						units.add(attributes.getValue(i));
-				}
+				new RepositoryHandler(this, attributes, urls);
 			} else {
 				invalidElement(name, attributes);
 			}
 		}
 
 		public String[] getRepositories() {
-			return units.toArray(new String[units.size()]);
+			return urls.toArray(new String[urls.size()]);
+		}
+	}
+
+	private class RepositoryHandler extends AbstractHandler {
+
+		private final List<String> urls = null;
+
+		public RepositoryHandler(AbstractHandler parentHandler, Attributes attributes, List<String> urls) {
+			super(parentHandler, REPOSITORY_ELEMENT);
+			String[] values = parseRequiredAttributes(attributes, new String[]{P2FURI_ATTRIBUTE});
+			urls.add(values[0]);
+		}
+
+		@Override
+		public void startElement(String name, Attributes attributes)
+		throws SAXException {
+			invalidElement(name, attributes);
 		}
 	}
 }

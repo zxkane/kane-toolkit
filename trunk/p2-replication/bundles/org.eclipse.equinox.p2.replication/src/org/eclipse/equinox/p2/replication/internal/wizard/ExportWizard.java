@@ -4,14 +4,11 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.p2.replication.Constants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
 
 
-public class ExportWizard extends Wizard implements IExportWizard {
-
-	private ExportPage mainPage = null;
+public class ExportWizard extends AbstractWizard implements IExportWizard {
 
 	public ExportWizard() {
 	}
@@ -21,12 +18,6 @@ public class ExportWizard extends Wizard implements IExportWizard {
 		super.addPages();
 		mainPage = new ExportPage("mainPage"); //$NON-NLS-1$
 		addPage(mainPage);
-	}
-
-	@Override
-	public boolean performFinish() {
-		mainPage.doFinish();
-		return true;
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
