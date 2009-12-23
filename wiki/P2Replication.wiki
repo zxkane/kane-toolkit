@@ -13,7 +13,8 @@ This tool helps simplify the process, just export/import the configuration file 
 
 == How to install ==
 
-- install it from [http://kane-toolkit.googlecode.com/svn/trunk/p2-replication/repository/3.5/ online repository](recommended)
+- install it from online repository(recommended)
+         - [http://kane-toolkit.googlecode.com/svn/trunk/p2-replication/repository/3.5/ Eclipse Galileo]
 
 - download the featured version, then copy it into dropin folder of your Eclipse
 
