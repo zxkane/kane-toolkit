@@ -20,9 +20,17 @@ public interface P2Replicator {
 	IProfile getSelfProfile();
 	IInstallableUnit[] getRootIUs();
 
-	void save(OutputStream output, IInstallableUnit[] ius, IProgressMonitor monitor) throws ProvisionException;
+	/**
+	 * 
+	 * @param output
+	 * @param ius
+	 * @param monitor
+	 * @return returns the IInstallableUnits that don't query their repository
+	 * @throws ProvisionException
+	 */
+	IInstallableUnit[] save(OutputStream output, IInstallableUnit[] ius, IProgressMonitor monitor) throws ProvisionException;
 
 	InstallationConfiguration load(InputStream input) throws IOException;
 
-	void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor);
+	void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) throws ProvisionException;
 }

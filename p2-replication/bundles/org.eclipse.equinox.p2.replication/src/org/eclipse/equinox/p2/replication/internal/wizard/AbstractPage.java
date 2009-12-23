@@ -86,6 +86,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	protected Combo destinationNameField;
 	protected P2Replicator replicator = null;
 	protected CheckboxTableViewer viewer = null;
+	protected Exception finishException;
 
 	public AbstractPage(String pageName) {
 		super(pageName);
@@ -156,8 +157,6 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		destinationBrowseButton.setText(Message.Page_BUTTON_BROWSER);
 		destinationBrowseButton.addListener(SWT.Selection, this);
 		destinationBrowseButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
-
-		new Label(composite, SWT.NONE); // vertical spacer
 	}
 
 	protected void createInstallationTable(final Composite parent) {
@@ -235,7 +234,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		return complete;
 	}
 
-	protected abstract void doFinish();
+	protected abstract void doFinish() throws Exception;
 
 	protected abstract int getBrowseDialogStyle();
 

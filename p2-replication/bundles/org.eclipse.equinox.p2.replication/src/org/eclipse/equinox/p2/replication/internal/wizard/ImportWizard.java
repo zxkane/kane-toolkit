@@ -4,21 +4,12 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.p2.replication.Constants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 
-public class ImportWizard extends Wizard implements IImportWizard {
-
-	private ImportPage mainPage;
+public class ImportWizard extends AbstractWizard implements IImportWizard {
 
 	public ImportWizard() {
-	}
-
-	@Override
-	public boolean performFinish() {
-		mainPage.doFinish();
-		return true;
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
