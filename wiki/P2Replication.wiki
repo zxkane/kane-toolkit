@@ -4,9 +4,9 @@
 = Introduction =
 
 It's a tool to help quickly replicate the p2 installation to other Eclipse instance.
-Eclipse provisioning goes into p2 world from Eclipse 3.4. The classical way to install features/plug-ins is NOT recommended that simply copy them into features/plugins folder. And p2 won't support features/plugins into additional folder.
+Eclipse provisioning goes into p2 world from Eclipse 3.4. The classical way to install features/plug-ins is NOT recommended that simply copy them into features/plugins folder. And p2 dev team don't consider it's necessary to support installing features/plugins into external folder.
 So there is a lot of manual efforts to 'replicate' the same plug-ins in different Eclipse instance, different workstations or different platforms.
-This tool helps simplify the process, just export/import the configuration file like preference.
+This tool can help simplify the installing effort, just export/import the p2 installation to/from file like preference.
 
 
 = Details =
