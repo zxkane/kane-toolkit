@@ -121,7 +121,7 @@ public class P2FParser extends MetadataParser implements P2FConstants{
 
 		private final List<String> urls;
 
-		public RepositoriesHandler(P2FHandler p2fHandler, Attributes attributes) {
+		public RepositoriesHandler(AbstractHandler p2fHandler, Attributes attributes) {
 			super(p2fHandler, REPOSITORIES_ELEMENT);
 			String size = parseOptionalAttribute(attributes, COLLECTION_SIZE_ATTRIBUTE);
 			urls = (size != null ? new ArrayList<String>(new Integer(size).intValue()) : new ArrayList<String>(4));
