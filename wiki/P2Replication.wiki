@@ -18,7 +18,7 @@ This tool can help simplify the installing effort, just export/import the p2 ins
 
          - For Helios(not available yet)
 
-- download the featured version, then copy it into dropin folder of your Eclipse
+- download the [http://kane-toolkit.googlecode.com/files/org.eclipse.equinox.p2.replication_1.0.0.200912241518.jar featured version], then copy it into dropin folder of your Eclipse
 
 == Usage ==
 
