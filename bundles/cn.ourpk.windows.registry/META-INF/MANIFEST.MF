@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Windows Registry
-Bundle-SymbolicName: cn.ourpk.windows.registry
-Bundle-Version: 0.1.0.qualifier
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Bundle-Vendor: Kane Zhu
