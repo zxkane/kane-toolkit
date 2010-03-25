@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="P2 Installation Replicator">
+   <implementation class="org.eclipse.equinox.p2.replication.internal.Replicator"/>
+   <service>
+      <provide interface="org.eclipse.equinox.p2.replication.P2Replicator"/>
+   </service>
+   <reference bind="bindRegistry" cardinality="1..1" interface="org.eclipse.equinox.internal.provisional.p2.engine.IProfileRegistry" name="IProfileRegistry" policy="static" unbind="unbindRegisry"/>
+</scr:component>
