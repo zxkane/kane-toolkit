@@ -3,10 +3,10 @@ package org.eclipse.equinox.p2.replication.internal.wizard;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Locale;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.internal.provisional.p2.metadata.IInstallableUnit;
-import org.eclipse.equinox.internal.provisional.p2.ui.IUPropertyUtils;
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.p2.replication.Constants;
 import org.eclipse.equinox.p2.replication.P2Replicator;
 import org.eclipse.jface.dialogs.Dialog;
@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Widget;
 import org.osgi.util.tracker.ServiceTracker;
-@SuppressWarnings("restriction")
+
 public abstract class AbstractPage extends WizardPage implements Listener {
 
 	protected class InstallationContentProvider implements IStructuredContentProvider {
@@ -69,7 +69,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 			IInstallableUnit iu = (IInstallableUnit) element;
 			switch (columnIndex) {
 			case 0:
-				return IUPropertyUtils.getIUProperty(iu, IInstallableUnit.PROP_NAME);
+				return getIUProperty(iu, IInstallableUnit.PROP_NAME);
 			case 1:
 				return iu.getVersion().toString();
 			case 2:
@@ -215,6 +215,10 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		viewer.setInput(sortByName(getInput()));
 	}
 
+	private String getIUProperty(IInstallableUnit iu, String key) {
+		return iu.getProperty(key, Locale.getDefault().toString());
+	}
+
 	protected IContentProvider getContentProvider() {
 		return new InstallationContentProvider();
 	}
@@ -304,8 +308,8 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		Arrays.sort(rootIUs, new Comparator<IInstallableUnit>(){
 
 			public int compare(IInstallableUnit iu1, IInstallableUnit iu2) {
-				return IUPropertyUtils.getIUProperty(iu1, IInstallableUnit.PROP_NAME).compareTo(
-						IUPropertyUtils.getIUProperty(iu2, IInstallableUnit.PROP_NAME));
+				return getIUProperty(iu1, IInstallableUnit.PROP_NAME).compareTo(
+						getIUProperty(iu2, IInstallableUnit.PROP_NAME));
 			}
 
 		});
@@ -338,7 +342,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	}
 
 	protected boolean validateOptionsGroup() {
-		if(viewer.getCheckedElements().length > 0)
+		if(viewer == null || viewer.getCheckedElements().length > 0)
 			return true;
 
 		currentMessage = getNoOptionsMessage();
@@ -346,6 +350,8 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	}
 
 	protected boolean validDestination() {
+		if (this.destinationNameField == null)
+			return true;
 		File file = new File(getDestinationValue());
 		return !(file.getPath().length() <= 0 || file.isDirectory());
 	}
