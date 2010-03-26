@@ -8,8 +8,8 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.equinox.internal.provisional.p2.core.ProvisionException;
-import org.eclipse.equinox.internal.provisional.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.core.ProvisionException;
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
-@SuppressWarnings("restriction")
+
 public class ExportPage extends AbstractPage {
 
 	public ExportPage(String pageName) {
@@ -43,6 +43,8 @@ public class ExportPage extends AbstractPage {
 	@Override
 	public void doFinish() throws Exception {
 		finishException = null;
+		if(viewer == null)
+			return;
 		final Object[] checked = viewer.getCheckedElements();
 		OutputStream stream = null;
 		try {
@@ -107,7 +109,8 @@ public class ExportPage extends AbstractPage {
 
 	@Override
 	protected void giveFocusToDestination() {
-		viewer.getControl().setFocus();
+		if(viewer != null)
+			viewer.getControl().setFocus();
 	}
 
 	@Override

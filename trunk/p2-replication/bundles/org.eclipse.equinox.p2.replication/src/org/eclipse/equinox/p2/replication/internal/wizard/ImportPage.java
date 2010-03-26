@@ -11,12 +11,12 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.equinox.internal.provisional.p2.core.ProvisionException;
-import org.eclipse.equinox.internal.provisional.p2.engine.IProfile;
-import org.eclipse.equinox.internal.provisional.p2.metadata.IInstallableUnit;
-import org.eclipse.equinox.internal.provisional.p2.metadata.query.InstallableUnitQuery;
-import org.eclipse.equinox.internal.provisional.p2.query.Collector;
-import org.eclipse.equinox.internal.provisional.p2.query.CompoundQuery;
+import org.eclipse.equinox.p2.core.ProvisionException;
+import org.eclipse.equinox.p2.engine.IProfile;
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.query.IQuery;
+import org.eclipse.equinox.p2.query.IQueryResult;
+import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.equinox.p2.replication.P2Replicator.InstallationConfiguration;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
@@ -24,7 +24,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.MessageBox;
 
-@SuppressWarnings("restriction")
 public class ImportPage extends AbstractPage {
 
 	private String[] repositories;
@@ -45,12 +44,11 @@ public class ImportPage extends AbstractPage {
 		IProfile profile = replicator.getSelfProfile();
 		if(profile != null && viewer.getInput() != null) {
 			IInstallableUnit[] units = (IInstallableUnit[])viewer.getInput();
-			InstallableUnitQuery[] queries = new InstallableUnitQuery[units.length];
-			for(int i = 0; i < units.length; i++)
-				queries[i] = new InstallableUnitQuery(units[i].getId(), units[i].getVersion());
-			Collector collector = profile.query(CompoundQuery.createCompoundQuery(queries, false), 
-					new Collector(), new NullProgressMonitor());
-			if(collector.size() > 0) {
+			List<IQuery<IInstallableUnit>> queries = new ArrayList<IQuery<IInstallableUnit>>(units.length);
+			for(IInstallableUnit iu : units)
+				queries.add(QueryUtil.createIUQuery(iu.getId(), iu.getVersion()));
+			IQueryResult<IInstallableUnit> collector = profile.query(QueryUtil.createCompoundQuery(queries, false), new NullProgressMonitor());
+			if(!collector.isEmpty()) {
 				List<IInstallableUnit> shouldBeGrayed = new ArrayList<IInstallableUnit>();
 				for(Object founded : collector.toArray(IInstallableUnit.class)) {
 					IInstallableUnit installedIU = (IInstallableUnit)founded;

@@ -2,23 +2,22 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Eclipse P2 Installation Replication
 Bundle-SymbolicName: org.eclipse.equinox.p2.replication;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.2.0.qualifier
 Bundle-Vendor: kane.zhu@windriver.com
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-Localization: plugin
-Import-Package: org.eclipse.equinox.internal.p2.metadata.repository,
- org.eclipse.equinox.internal.p2.metadata.repository.io,
+Import-Package: org.eclipse.equinox.internal.p2.metadata.repository.io,
  org.eclipse.equinox.internal.p2.persistence,
- org.eclipse.equinox.internal.provisional.p2.core,
- org.eclipse.equinox.internal.provisional.p2.director,
- org.eclipse.equinox.internal.provisional.p2.engine,
- org.eclipse.equinox.internal.provisional.p2.metadata,
- org.eclipse.equinox.internal.provisional.p2.metadata.query,
- org.eclipse.equinox.internal.provisional.p2.metadata.repository,
- org.eclipse.equinox.internal.provisional.p2.query,
- org.eclipse.equinox.internal.provisional.p2.repository,
- org.eclipse.equinox.internal.provisional.p2.ui
+ org.eclipse.equinox.p2.core;version="2.0.0",
+ org.eclipse.equinox.p2.engine;version="2.0.0",
+ org.eclipse.equinox.p2.engine.query;version="2.0.0",
+ org.eclipse.equinox.p2.metadata;version="2.0.0",
+ org.eclipse.equinox.p2.planner;version="2.0.0",
+ org.eclipse.equinox.p2.query;version="2.0.0",
+ org.eclipse.equinox.p2.repository;version="2.0.0",
+ org.eclipse.equinox.p2.repository.artifact;version="2.0.0",
+ org.eclipse.equinox.p2.repository.metadata;version="2.0.0"
 Service-Component: OSGI-INF/replicator.xml
 Bundle-ActivationPolicy: lazy

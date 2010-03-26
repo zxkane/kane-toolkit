@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,35 +18,35 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.metadata.repository.io.XMLConstants;
-import org.eclipse.equinox.internal.provisional.p2.core.ProvisionException;
-import org.eclipse.equinox.internal.provisional.p2.director.IPlanner;
-import org.eclipse.equinox.internal.provisional.p2.director.ProfileChangeRequest;
-import org.eclipse.equinox.internal.provisional.p2.director.ProvisioningPlan;
-import org.eclipse.equinox.internal.provisional.p2.engine.DefaultPhaseSet;
-import org.eclipse.equinox.internal.provisional.p2.engine.IEngine;
-import org.eclipse.equinox.internal.provisional.p2.engine.IProfile;
-import org.eclipse.equinox.internal.provisional.p2.engine.IProfileRegistry;
-import org.eclipse.equinox.internal.provisional.p2.engine.IUProfilePropertyQuery;
-import org.eclipse.equinox.internal.provisional.p2.engine.ProvisioningContext;
-import org.eclipse.equinox.internal.provisional.p2.metadata.IInstallableUnit;
-import org.eclipse.equinox.internal.provisional.p2.metadata.query.InstallableUnitQuery;
-import org.eclipse.equinox.internal.provisional.p2.metadata.repository.IMetadataRepository;
-import org.eclipse.equinox.internal.provisional.p2.metadata.repository.IMetadataRepositoryManager;
-import org.eclipse.equinox.internal.provisional.p2.query.Collector;
-import org.eclipse.equinox.internal.provisional.p2.query.CompoundQuery;
+import org.eclipse.equinox.p2.core.IProvisioningAgent;
+import org.eclipse.equinox.p2.core.ProvisionException;
+import org.eclipse.equinox.p2.engine.IEngine;
+import org.eclipse.equinox.p2.engine.IProfile;
+import org.eclipse.equinox.p2.engine.IProfileRegistry;
+import org.eclipse.equinox.p2.engine.IProvisioningPlan;
+import org.eclipse.equinox.p2.engine.PhaseSetFactory;
+import org.eclipse.equinox.p2.engine.ProvisioningContext;
+import org.eclipse.equinox.p2.engine.query.UserVisibleRootQuery;
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.planner.IPlanner;
+import org.eclipse.equinox.p2.planner.IProfileChangeRequest;
+import org.eclipse.equinox.p2.query.IQuery;
+import org.eclipse.equinox.p2.query.IQueryResult;
+import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.equinox.p2.replication.Constants;
 import org.eclipse.equinox.p2.replication.P2Replicator;
-import org.osgi.util.tracker.ServiceTracker;
+import org.eclipse.equinox.p2.repository.metadata.IMetadataRepository;
+import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
 
 @SuppressWarnings("restriction")
 public class Replicator implements P2Replicator { 
 
 	private class ReplicateJob extends Job {
 
-		private final IInstallableUnit[] toBeInstalled;
+		private final Collection<IInstallableUnit> toBeInstalled;
 		private final URI[] uris;
 
-		public ReplicateJob(String name, URI[] uris, IInstallableUnit[] units) {
+		public ReplicateJob(String name, URI[] uris, Collection<IInstallableUnit> units) {
 			super(name);
 			this.uris = uris;
 			toBeInstalled = units;
@@ -56,19 +57,21 @@ public class Replicator implements P2Replicator {
 			SubMonitor progress = SubMonitor.convert(monitor, 
 					"P2 installation replication", 1000); //$NON-NLS-1$
 			try {
-				ProfileChangeRequest request = ProfileChangeRequest.createByProfileId(getSelfProfile().getProfileId());
-				request.addInstallableUnits(toBeInstalled);
+				IPlanner planner = (IPlanner) agent.getService(IPlanner.SERVICE_NAME);
+				//ProfileChangeRequest.createByProfileId(getSelfProfile().getProfileId());
+				IProfileChangeRequest request = planner.createChangeRequest(getSelfProfile()); 
+				request.addAll(toBeInstalled);
 				for(IInstallableUnit unit : toBeInstalled)
 					request.setInstallableUnitProfileProperty(unit, "org.eclipse.equinox.p2.type.root", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-				IPlanner planner = getService(IPlanner.class);
-				ProvisioningContext context = new ProvisioningContext(uris);
+				ProvisioningContext context = new ProvisioningContext(agent);
+				context.setMetadataRepositories(uris);
 				context.setArtifactRepositories(uris);
-				ProvisioningPlan plan = planner.getProvisioningPlan(request, context, progress.newChild(100));
+				IProvisioningPlan plan = planner.getProvisioningPlan(request, context, progress.newChild(100));
 				IStatus result = plan.getStatus();
 				if(!result.isOK())
 					return result;
-				IEngine engine = getService(IEngine.class);
-				result = engine.perform(getSelfProfile(), new DefaultPhaseSet(), plan.getOperands(), context, progress.newChild(900));
+				IEngine engine = (IEngine) agent.getService(IEngine.SERVICE_NAME);
+				result = engine.perform(plan, PhaseSetFactory.createDefaultPhaseSet(), progress.newChild(900));
 				return result;
 			} finally {
 				progress.done();
@@ -89,27 +92,31 @@ public class Replicator implements P2Replicator {
 		}
 	}
 
-	private IProfileRegistry profileRegistry;
 	private IProfile selfProfile = null;
+	private IProvisioningAgent agent = null;
 
-	public void bindRegistry(IProfileRegistry registry) {
-		profileRegistry = registry;
-		selfProfile = registry.getProfile(IProfileRegistry.SELF);
+	public void bind(IProvisioningAgent agent) {
+		this.agent = agent;
+		IProfileRegistry registry = (IProfileRegistry) agent.getService(IProfileRegistry.SERVICE_NAME);
+		if(registry != null) {
+			String selfID = System.getProperty("eclipse.p2.profile"); //$NON-NLS-1$
+			if(selfID == null)
+				selfID = IProfileRegistry.SELF;
+			selfProfile = registry.getProfile(selfID);
+		}
 	}
 
-	public void unbindRegistry(IProfileRegistry registry) {
-		if(profileRegistry == registry) {
-			profileRegistry = null;
+	public void unbind(IProvisioningAgent agent) {
+		if(this.agent == agent) {
+			this.agent = null;
 			selfProfile = null;
 		}
 	}
 
 	public IInstallableUnit[] getRootIUs() {
 		if(selfProfile != null) {
-			Collector collector = new Collector();
-			selfProfile.query(new IUProfilePropertyQuery(selfProfile, "org.eclipse.equinox.p2.type.root", "true"),  //$NON-NLS-1$ //$NON-NLS-2$
-					collector, new NullProgressMonitor());
-			return (IInstallableUnit[]) collector.toArray(IInstallableUnit.class);
+			IQueryResult<IInstallableUnit> resutl = selfProfile.query(new UserVisibleRootQuery(), new NullProgressMonitor());
+			return resutl.toArray(IInstallableUnit.class);
 		}
 		return null;
 	}
@@ -122,22 +129,22 @@ public class Replicator implements P2Replicator {
 		SubMonitor subMonitor = SubMonitor.convert(monitor, "Save p2 installation", 1000); //$NON-NLS-1$
 		try {
 			List<URI> repositories = new ArrayList<URI>();
-			IMetadataRepositoryManager repoManager = getService(IMetadataRepositoryManager.class);
+			IMetadataRepositoryManager repoManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 			URI[] uris = repoManager.getKnownRepositories(IMetadataRepositoryManager.REPOSITORIES_ALL);
-			final Map<IInstallableUnit, InstallableUnitQuery> queries = new HashMap<IInstallableUnit, InstallableUnitQuery>(ius.length, 1);
+			final Map<IInstallableUnit, IQuery<IInstallableUnit>> queries = new HashMap<IInstallableUnit, IQuery<IInstallableUnit>>(ius.length, 1);
 			for(int i = 0; i < ius.length; i++)
-				queries.put(ius[i], new InstallableUnitQuery(ius[i].getId(), ius[i].getVersion()));
+				queries.put(ius[i], QueryUtil.createIUQuery(ius[i].getId(), ius[i].getVersion()));
 			int elapsed = 0;
 			for(URI uri : uris) {
 				if(queries.isEmpty())
 					break;
 				try{
 					IMetadataRepository repo = repoManager.loadRepository(uri, subMonitor.newChild(500/uris.length));
-					Collector result = repo.query(CompoundQuery.createCompoundQuery(queries.values().toArray(new InstallableUnitQuery[queries.size()]), false), 
-							new Collector(), subMonitor.newChild(400/uris.length));
-					if(result.size() > 0) {
+					IQueryResult<IInstallableUnit> result = repo.query(QueryUtil.createCompoundQuery(queries.values(), false), 
+							subMonitor.newChild(400/uris.length));
+					if(!result.isEmpty()) {
 						repositories.add(uri);
-						for(Object unit : result.toCollection())
+						for(IInstallableUnit unit : result.toSet())
 							queries.remove(unit);
 					}
 				} catch(ProvisionException e) {
@@ -176,18 +183,6 @@ public class Replicator implements P2Replicator {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T> T getService(Class<T> clazz) {
-		ServiceTracker serviceTracker = new ServiceTracker(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
-				clazz.getName(), null);
-		serviceTracker.open();
-		try {
-			return (T)serviceTracker.getService();
-		} finally {
-			serviceTracker.close();
-		}
-	}
-
 	public InstallationConfiguration load(InputStream input) throws IOException {
 		P2FParser parser = new P2FParser(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
 				Constants.Bundle_ID);
@@ -203,7 +198,7 @@ public class Replicator implements P2Replicator {
 
 		try{
 			List<URI> uris = new ArrayList<URI>(repositories.length);
-			IMetadataRepositoryManager repoManager = getService(IMetadataRepositoryManager.class);
+			IMetadataRepositoryManager repoManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 			for(String repository : repositories) {
 				URI uri = URI.create(repository);
 				if(!repoManager.contains(uri)) {
@@ -213,7 +208,10 @@ public class Replicator implements P2Replicator {
 				uris.add(uri);
 			}
 			subMonitor.setWorkRemaining(100);
-			ReplicateJob job = new ReplicateJob("Install", uris.toArray(new URI[uris.size()]), rootIUs); //$NON-NLS-1$
+			List<IInstallableUnit> list = new ArrayList<IInstallableUnit>();
+			for (IInstallableUnit iu : rootIUs)
+				list.add(iu);
+			ReplicateJob job = new ReplicateJob("Install", uris.toArray(new URI[uris.size()]), list); //$NON-NLS-1$
 			job.belongsTo(this);
 			job.schedule();
 		} finally {

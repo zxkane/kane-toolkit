@@ -4,5 +4,5 @@
    <service>
       <provide interface="org.eclipse.equinox.p2.replication.P2Replicator"/>
    </service>
-   <reference bind="bindRegistry" cardinality="1..1" interface="org.eclipse.equinox.internal.provisional.p2.engine.IProfileRegistry" name="IProfileRegistry" policy="static" unbind="unbindRegisry"/>
+   <reference bind="bind" cardinality="1..1" interface="org.eclipse.equinox.p2.core.IProvisioningAgent" name="IProvisioningAgent" policy="static" unbind="unbind"/>
 </scr:component>
