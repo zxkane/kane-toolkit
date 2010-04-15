@@ -16,7 +16,7 @@ This tool can help simplify the installing effort, just export/import the p2 ins
 - install it from online repository(recommended)
          - [http://kane-toolkit.googlecode.com/svn/trunk/p2-replication/repository/3.5/ For Eclipse Galileo]
 
-         - For Helios(not available yet)
+         - [http://kane-toolkit.googlecode.com/svn/trunk/p2-replication/repository/helios/ For Helios M6]
 
 - download the [http://kane-toolkit.googlecode.com/files/org.eclipse.equinox.p2.replication_1.0.0.200912241518.jar featured version], then copy it into dropin folder of your Eclipse
 
