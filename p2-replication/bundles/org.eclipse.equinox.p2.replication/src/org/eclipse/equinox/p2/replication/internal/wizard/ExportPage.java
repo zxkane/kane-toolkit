@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.equinox.internal.p2.ui.ProvUI;
+import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -59,7 +61,7 @@ public class ExportPage extends AbstractPage {
 				InterruptedException {
 					IInstallableUnit[] units = new IInstallableUnit[checked.length];
 					for(int i = 0; i < units.length; i++)
-						units[i] = (IInstallableUnit)checked[i];
+						units[i] = ProvUI.getAdapter(checked[i], IInstallableUnit.class);
 					try {
 						IInstallableUnit[] missingRepoIUs = replicator.save(out, units, monitor);
 						if(missingRepoIUs.length > 0) {
@@ -97,8 +99,10 @@ public class ExportPage extends AbstractPage {
 	}
 
 	@Override
-	protected IInstallableUnit[] getInput() {
-		return replicator.getRootIUs();
+	protected Object getInput() {
+		//		return replicator.getRootIUs();
+		ProfileElement element = new ProfileElement(null, replicator.getSelfProfile().getProfileId());
+		return element;
 	}
 
 
