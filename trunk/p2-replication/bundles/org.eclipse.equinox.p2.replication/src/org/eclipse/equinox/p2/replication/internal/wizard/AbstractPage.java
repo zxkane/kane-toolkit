@@ -6,6 +6,11 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.internal.p2.ui.ProvUIMessages;
+import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
+import org.eclipse.equinox.internal.p2.ui.viewers.DeferredQueryContentProvider;
+import org.eclipse.equinox.internal.p2.ui.viewers.IUColumnConfig;
+import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.p2.replication.Constants;
 import org.eclipse.equinox.p2.replication.P2Replicator;
@@ -159,14 +164,18 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		destinationBrowseButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 	}
 
+	private IUColumnConfig[] getColumnConfig() {
+		return new IUColumnConfig[] {new IUColumnConfig(ProvUIMessages.ProvUI_NameColumnTitle, IUColumnConfig.COLUMN_NAME, ILayoutConstants.DEFAULT_PRIMARY_COLUMN_WIDTH), new IUColumnConfig(ProvUIMessages.ProvUI_VersionColumnTitle, IUColumnConfig.COLUMN_VERSION, ILayoutConstants.DEFAULT_SMALL_COLUMN_WIDTH), new IUColumnConfig(ProvUIMessages.ProvUI_IdColumnTitle, IUColumnConfig.COLUMN_ID, ILayoutConstants.DEFAULT_COLUMN_WIDTH)};
+	}
+
 	protected void createInstallationTable(final Composite parent) {
 		viewer = CheckboxTableViewer.newCheckList(parent, SWT.MULTI | SWT.BORDER);
 		final Table table = viewer.getTable();
 		createColumns(viewer);
 		viewer.getControl().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		viewer.getControl().setSize(300, 200);
-		viewer.setContentProvider(getContentProvider());
-		viewer.setLabelProvider(new InstallationLabelProvider());
+		viewer.setContentProvider(new DeferredQueryContentProvider());
+		viewer.setLabelProvider(new IUDetailsLabelProvider(null, getColumnConfig(), null));
 		parent.addControlListener(new ControlAdapter() {
 			private final int[] columnRate = new int[]{4, 2, 4};
 			@Override
@@ -212,7 +221,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 				updatePageCompletion();
 			}
 		});
-		viewer.setInput(sortByName(getInput()));
+		viewer.setInput(getInput());
 	}
 
 	private String getIUProperty(IInstallableUnit iu, String key) {
@@ -255,7 +264,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 
 	protected abstract String getFileDialogTitle();
 
-	protected abstract IInstallableUnit[] getInput();
+	protected abstract Object getInput();
 
 	protected abstract String getInvalidDestinationMessage();
 
