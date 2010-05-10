@@ -18,8 +18,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.metadata.repository.io.XMLConstants;
-import org.eclipse.equinox.internal.provisional.p2.director.ProfileChangeRequest;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
+import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IEngine;
 import org.eclipse.equinox.p2.engine.IProfile;
@@ -59,8 +59,7 @@ public class Replicator implements P2Replicator {
 					"P2 installation replication", 1000); //$NON-NLS-1$
 			try {
 				IPlanner planner = (IPlanner) agent.getService(IPlanner.SERVICE_NAME);
-				IProfileChangeRequest request = ProfileChangeRequest.createByProfileId(agent, getSelfProfile().getProfileId());
-				//				IProfileChangeRequest request = planner.createChangeRequest(getSelfProfile()); 
+				IProfileChangeRequest request = planner.createChangeRequest(getSelfProfile()); 
 				request.addAll(toBeInstalled);
 				for(IInstallableUnit unit : toBeInstalled)
 					request.setInstallableUnitProfileProperty(unit, "org.eclipse.equinox.p2.type.root", "true"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -95,6 +94,7 @@ public class Replicator implements P2Replicator {
 
 	private IProfile selfProfile = null;
 	private IProvisioningAgent agent = null;
+	private IProvisioningAgentProvider provider;
 
 	public void bind(IProvisioningAgent agent) {
 		this.agent = agent;
@@ -218,5 +218,13 @@ public class Replicator implements P2Replicator {
 		} finally {
 			subMonitor.done();
 		}
+	}
+
+	public void bindProvider(IProvisioningAgentProvider provider) {
+		this.provider = provider;
+	}
+
+	public IProvisioningAgentProvider getAgentProvider() {
+		return provider;
 	}
 }

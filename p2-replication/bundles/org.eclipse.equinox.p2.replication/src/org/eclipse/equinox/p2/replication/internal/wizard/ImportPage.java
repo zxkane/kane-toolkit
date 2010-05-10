@@ -75,7 +75,7 @@ public class ImportPage extends AbstractPage {
 	}
 
 	@Override
-	protected String getFileDialogTitle() {
+	protected String getDialogTitle() {
 		return Message.ImportPage_FILEDIALOG_TITLE;
 	}
 

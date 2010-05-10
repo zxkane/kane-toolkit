@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
@@ -16,6 +17,7 @@ public interface P2Replicator {
 		public IInstallableUnit[] getRootIUs();
 	};
 
+	IProvisioningAgentProvider getAgentProvider();
 	IProfile getSelfProfile();
 	IInstallableUnit[] getRootIUs();
 
