@@ -28,6 +28,10 @@ public class Message extends NLS {
 	public static String ImportWizard_WINDOWTITLE;
 	public static String Page_BUTTON_BROWSER;
 	public static String PAGE_NOINSTALLTION_ERROR;
+	public static String ImportFromInstallationPage_DESTINATION_LABEL;
+	public static String ImportFromInstallationPage_DIALOG_TITLE;
+	public static String ImportFromInstallationPage_INVALID_DESTINATION;
+	public static String ImportFromInstallationPage_DIALOG_DESCRIPTION;
 
 	static {
 		NLS.initializeMessages(

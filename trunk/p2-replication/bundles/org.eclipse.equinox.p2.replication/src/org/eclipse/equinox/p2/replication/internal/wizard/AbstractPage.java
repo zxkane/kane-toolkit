@@ -249,8 +249,14 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 
 	protected abstract void doFinish() throws Exception;
 
-	protected abstract int getBrowseDialogStyle();
+	protected int getBrowseDialogStyle() {
+		return SWT.OPEN;
+	}
 
+	/**
+	 * returns the destination label
+	 * @return non null string
+	 */
 	protected abstract String getDestinationLabel();
 
 	/**
@@ -262,7 +268,11 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		return destinationNameField.getText().trim();
 	}
 
-	protected abstract String getFileDialogTitle();
+	/**
+	 * return the title of dialog
+	 * @return non null string
+	 */
+	protected abstract String getDialogTitle();
 
 	protected abstract Object getInput();
 
@@ -280,7 +290,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	protected void handleDestinationBrowseButtonPressed() {
 		FileDialog dialog = new FileDialog(getContainer().getShell(),
 				getBrowseDialogStyle() | SWT.SHEET);
-		dialog.setText(getFileDialogTitle());
+		dialog.setText(getDialogTitle());
 		dialog.setFilterPath(getDestinationValue());
 		dialog.setFilterExtensions(new String[] {Message.EXTENSION_P2F, Message.EXTENSION_ALL});
 		dialog.setFilterNames(new String[] {Message.EXTENSION_P2F_NAME, Message.EXTENSION_ALL_NAME});

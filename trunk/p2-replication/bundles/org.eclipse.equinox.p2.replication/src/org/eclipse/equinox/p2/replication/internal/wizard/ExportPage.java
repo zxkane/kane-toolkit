@@ -94,7 +94,7 @@ public class ExportPage extends AbstractPage {
 	}
 
 	@Override
-	protected String getFileDialogTitle() {
+	protected String getDialogTitle() {
 		return Message.ExportPage_FILEDIALOG_TITLE;
 	}
 
