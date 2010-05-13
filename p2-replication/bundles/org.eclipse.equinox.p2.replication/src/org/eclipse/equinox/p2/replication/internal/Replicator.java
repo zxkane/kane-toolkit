@@ -227,4 +227,8 @@ public class Replicator implements P2Replicator {
 	public IProvisioningAgentProvider getAgentProvider() {
 		return provider;
 	}
+
+	public IProvisioningAgent getAgent() {
+		return agent;
+	}
 }
