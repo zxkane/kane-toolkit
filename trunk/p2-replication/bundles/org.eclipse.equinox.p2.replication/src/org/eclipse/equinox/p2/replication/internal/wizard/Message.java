@@ -32,6 +32,7 @@ public class Message extends NLS {
 	public static String ImportFromInstallationPage_DIALOG_TITLE;
 	public static String ImportFromInstallationPage_INVALID_DESTINATION;
 	public static String ImportFromInstallationPage_DIALOG_DESCRIPTION;
+	public static String ImportFromInstallationPage_SELECT_COMPONENT;
 
 	static {
 		NLS.initializeMessages(
