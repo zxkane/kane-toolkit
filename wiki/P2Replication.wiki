@@ -30,4 +30,6 @@ Choose ‘File' - 'Export'- 'P2' - 'P2 Installation' to export your p2 installat
 
 Choose 'File' - 'Import' - 'P2' - 'P2 Installation' to import p2 installation from the configuration file. 
 
+Choose 'File' - 'Import' - 'P2' - 'From existing installation' to import features/plugins from another existing Eclipse instance to save time to download them. 
+
 Notes: the already installed features can't be installed again.
