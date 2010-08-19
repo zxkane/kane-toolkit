@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.jdt.ui.quickFixProcessors">
       <quickFixProcessor
-            class="cn.ourpk.jdt.quickfix.QuickFixProcessor"
+            class="org.eclipse.jdt.ui.quickfix.QuickFixProcessor"
             id="escapeFix">
       </quickFixProcessor>
    </extension>

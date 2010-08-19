@@ -1,4 +1,4 @@
-package cn.ourpk.jdt.quickfix;
+package org.eclipse.jdt.ui.quickfix;
 
 import java.util.ArrayList;
 import java.util.Arrays;
