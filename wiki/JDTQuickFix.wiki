@@ -20,3 +20,7 @@ Character "\" used in path need be escaped, I have to fix them one by one in the
 
 = To do =
   * not defined yet
+
+= How to install =
+  * Manually add repository 'http://kane-toolkit.googlecode.com/svn/trunk/jdt-quickfix/repository/' to install
+  * search 'JDT quickfix' on Eclipse marketplace
