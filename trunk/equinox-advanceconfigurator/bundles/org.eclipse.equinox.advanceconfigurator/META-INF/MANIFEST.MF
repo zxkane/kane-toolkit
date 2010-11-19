@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Equninox Advance Configurator
+Bundle-SymbolicName: org.eclipse.equinox.advanceconfigurator;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.eclipse.equinox.advanceconfigurator.Activator
+Bundle-Vendor: kane.zhu@windriver.com
+Require-Bundle: org.eclipse.core.runtime
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ActivationPolicy: lazy
