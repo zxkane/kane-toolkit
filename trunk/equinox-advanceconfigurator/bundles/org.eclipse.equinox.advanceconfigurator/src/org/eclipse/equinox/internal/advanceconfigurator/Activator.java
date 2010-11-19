@@ -1,4 +1,4 @@
-package org.eclipse.equinox.advanceconfigurator;
+package org.eclipse.equinox.internal.advanceconfigurator;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
