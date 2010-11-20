@@ -4,7 +4,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {
-
+	public final static boolean DEBUG = false;
 	private static BundleContext context;
 
 	static BundleContext getContext() {
@@ -17,6 +17,10 @@ public class Activator implements BundleActivator {
 	 */
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
+		AdvanceConfiguratorImpl conf = new AdvanceConfiguratorImpl(
+				bundleContext,
+				bundleContext.getBundle());
+		conf.applyConfiguration();
 	}
 
 	/*

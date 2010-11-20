@@ -5,8 +5,6 @@ Bundle-SymbolicName: org.eclipse.equinox.advanceconfigurator;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: org.eclipse.equinox.internal.advanceconfigurator.Activator
 Bundle-Vendor: kane.zhu@windriver.com
-Require-Bundle: org.eclipse.core.runtime,
- org.eclipse.equinox.simpleconfigurator
+Require-Bundle: org.eclipse.osgi
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ActivationPolicy: lazy
-Import-Package: org.eclipse.equinox.internal.provisional.configurator

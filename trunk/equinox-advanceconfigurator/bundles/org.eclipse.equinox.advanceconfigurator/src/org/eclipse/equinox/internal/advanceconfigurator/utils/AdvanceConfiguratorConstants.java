@@ -2,6 +2,7 @@ package org.eclipse.equinox.internal.advanceconfigurator.utils;
 
 public class AdvanceConfiguratorConstants {
 
+	public static final String PROP_KEY_EXCLUSIVE_INSTALLATION = "org.eclipse.equinox.simpleconfigurator.exclusiveInstallation"; //$NON-NLS-1$
 	/**
 	 * If BundleContext#getProperty(PROP_KEY_USE_REFERENCE) does not equal "false" ignoring case, 
 	 * when a SimpleConfigurator installs a bundle, "reference:" is added to its bundle location in order to avoid
@@ -22,9 +23,15 @@ public class AdvanceConfiguratorConstants {
 
 	public static final String POLICY_LIST = "policy.info"; //$NON-NLS-1$
 	
+	public static final String POLICY_NAME = "policy"; //$NON-NLS-1$
+
 	public static final String CONFIG_LIST = "bundles.info"; //$NON-NLS-1$
 	
 	public static final String CONFIGURATOR_FOLDER = "org.eclipse.equinox.advanceconfigurator"; //$NON-NLS-1$
+
+	public static final String SIMPLE_CONFIGURATOR_FOLDER = "org.eclipse.equinox.simpleconfigurator"; //$NON-NLS-1$
+
+	public static final String PROP_SIMPLE_KEY_CONFIGURL = "org.eclipse.equinox.simpleconfigurator.configUrl"; //$NON-NLS-1$
 
 	public static final String TARGET_CONFIGURATOR_NAME = "org.eclipse.equinox.advanceconfigurator"; //$NON-NLS-1$
 
