@@ -14,8 +14,7 @@ public class AdvancedConfiguratorWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
@@ -34,6 +33,6 @@ public class AdvancedConfiguratorWizard extends Wizard {
 
 	@Override
 	public boolean canFinish() {
-		return false;
+		return getContainer().getCurrentPage() == createPage && createPage.getPolicyName().length() > 0;
 	}
 }

@@ -2,6 +2,8 @@ package org.eclipse.equinox.advancedconfigurator.internal.wizard;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -28,9 +30,19 @@ public class CreatePolicyPage extends WizardPage {
 		Label text = new Label(comp1, SWT.NONE);
 		text.setText("Input the name of policy:   ");
 		name = new Text(comp1, SWT.BORDER);
+		name.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (name.getText().trim().length() > 0)
+					CreatePolicyPage.this.setPageComplete(true);
+			}
+		});
 		Composite comp2 = new Composite(content, SWT.NONE);
 		comp2.setLayoutData(new GridData(2, 1, true, true));
 		setControl(content);
 	}
 
+	public String getPolicyName() {
+		return name.getText().trim();
+	}
 }
