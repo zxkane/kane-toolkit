@@ -1,7 +1,10 @@
 package org.eclipse.equinox.advancedconfigurator.manipulator.internal;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -54,8 +57,31 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 	}
 
 	public void addPolicy(String policyName, IInstallableUnit[] components) {
-		// TODO Auto-generated method stub
+		URL[] configs = EquinoxUtils.getConfigAreaURL(Activator.getContext());
+		if (configs != null) {
+			File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + File.separator + policyName);
+			policy.mkdirs();
+			BufferedWriter writer = null;
+			try {
+				File bundles = new File(policy, "bundles.info");
+				if (!bundles.exists())
+					bundles.createNewFile();
+				writer = new BufferedWriter(new FileWriter(bundles));
+				for (IInstallableUnit iu : components) {
+					writer.write(iu.getId() + " " + iu.getVersion());
+					writer.write("\n");
+				}
+			} catch (IOException e) {
 
+			} finally {
+				if (writer != null)
+					try {
+						writer.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+			}
+		}
 	}
 
 }
