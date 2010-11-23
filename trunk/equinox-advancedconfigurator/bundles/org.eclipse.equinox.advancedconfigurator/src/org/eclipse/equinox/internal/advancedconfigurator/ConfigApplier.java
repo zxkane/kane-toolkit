@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvanceConfiguratorConstants;
+import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvancedConfiguratorConstants;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.BundleInfo;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.EquinoxUtils;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.SimpleConfiguratorUtils;
@@ -196,7 +196,7 @@ class ConfigApplier {
 	private ArrayList installBundles(BundleInfo[] finalList, Collection toStart) {
 		ArrayList toRefresh = new ArrayList();
 
-		String useReferenceProperty = manipulatingContext.getProperty(AdvanceConfiguratorConstants.PROP_KEY_USE_REFERENCE);
+		String useReferenceProperty = manipulatingContext.getProperty(AdvancedConfiguratorConstants.PROP_KEY_USE_REFERENCE);
 		boolean useReference = useReferenceProperty == null ? runningOnEquinox : Boolean.valueOf(useReferenceProperty).booleanValue();
 
 		for (int i = 0; i < finalList.length; i++) {
@@ -268,7 +268,7 @@ class ConfigApplier {
 				continue;
 			if (packageAdminService.getBundleType(current) == PackageAdmin.BUNDLE_TYPE_FRAGMENT)
 				continue;
-			if (AdvanceConfiguratorConstants.TARGET_CONFIGURATOR_NAME.equals(current.getSymbolicName()))
+			if (AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME.equals(current.getSymbolicName()))
 				continue;
 
 			try {

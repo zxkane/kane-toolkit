@@ -1,5 +1,7 @@
 package org.eclipse.equinox.advancedconfigurator.internal.wizard;
 
+import org.eclipse.equinox.advancedconfigurator.Policy;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
@@ -35,6 +37,8 @@ public class CreatePolicyPage extends WizardPage {
 			public void keyReleased(KeyEvent e) {
 				if (name.getText().trim().length() > 0)
 					CreatePolicyPage.this.setPageComplete(true);
+				else
+					CreatePolicyPage.this.setPageComplete(false);
 			}
 		});
 		Composite comp2 = new Composite(content, SWT.NONE);
@@ -44,5 +48,21 @@ public class CreatePolicyPage extends WizardPage {
 
 	public String getPolicyName() {
 		return name.getText().trim();
+	}
+
+	@Override
+	public IWizardPage getNextPage() {
+		return ((AdvancedConfiguratorWizard) getWizard()).configuratePage;
+	}
+
+	@Override
+	public void setVisible(boolean visible) {
+		if (visible) {
+			Policy policy = ((AdvancedConfiguratorWizard) getWizard()).overviewPage.getSelectedPolicy();
+			if (policy != null)
+				name.setText(policy.getName());
+			name.setFocus();
+		}
+		super.setVisible(visible);
 	}
 }
