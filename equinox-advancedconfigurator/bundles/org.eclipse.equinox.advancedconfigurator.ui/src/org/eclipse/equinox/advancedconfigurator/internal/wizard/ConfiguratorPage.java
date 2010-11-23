@@ -10,6 +10,7 @@ import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.engine.IProfileRegistry;
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
@@ -35,6 +36,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.osgi.util.tracker.ServiceTracker;
 
+@SuppressWarnings("restriction")
 public class ConfiguratorPage extends WizardPage {
 
 	protected CheckboxTableViewer viewer = null;
@@ -253,5 +255,14 @@ public class ConfiguratorPage extends WizardPage {
 
 	public void handleEvent(Event event) {
 		updatePageCompletion();
+	}
+
+	public IInstallableUnit[] getSelectedComponents() {
+		InstalledIUElement[] elements = (InstalledIUElement[]) viewer.getCheckedElements();
+		IInstallableUnit[] ius = new IInstallableUnit[elements.length];
+		for (int i = 0; i < ius.length; i++) {
+			ius[i] = elements[i].getIU();
+		}
+		return ius;
 	}
 }
