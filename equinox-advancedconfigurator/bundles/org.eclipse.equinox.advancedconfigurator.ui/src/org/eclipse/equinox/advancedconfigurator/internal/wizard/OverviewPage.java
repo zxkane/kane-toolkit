@@ -1,14 +1,7 @@
 package org.eclipse.equinox.advancedconfigurator.internal.wizard;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLDecoder;
-
+import org.eclipse.equinox.advancedconfigurator.Policy;
 import org.eclipse.equinox.advancedconfigurator.internal.Activator;
-import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvanceConfiguratorConstants;
-import org.eclipse.equinox.internal.advancedconfigurator.utils.EquinoxUtils;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -24,12 +17,7 @@ public class OverviewPage extends WizardPage {
 	class PolicyLabelProvider extends LabelProvider {
 		@Override
 		public String getText(Object element) {
-			File f = (File) element;
-			try {
-				return URLDecoder.decode(f.getName(), "utf-8");
-			} catch (UnsupportedEncodingException e) {
-				// won't happen
-			}
+			Policy f = (Policy) element;
 			return f.getName();
 		}
 	}
@@ -47,8 +35,7 @@ public class OverviewPage extends WizardPage {
 		}
 
 		public Object[] getElements(Object inputElement) {
-			// TODO Auto-generated method stub
-			return null;
+			return (Policy[]) inputElement;
 		}
 
 	}
@@ -72,19 +59,7 @@ public class OverviewPage extends WizardPage {
 	}
 
 	private Object getInput() {
-		URL[] configURL = EquinoxUtils.getConfigAreaURL(Activator.getContext());
-		if (configURL != null) {
-			File f = new File(configURL[0].getFile(), AdvanceConfiguratorConstants.CONFIGURATOR_FOLDER);
-			return f.listFiles(new FileFilter() {
-
-				public boolean accept(File pathname) {
-					if (pathname.isDirectory())
-						return true;
-					return false;
-				}
-			});
-		}
-		return null;
+		return Activator.getAdvancedManipulator().getPolicies();
 	}
 
 	@Override
@@ -92,5 +67,13 @@ public class OverviewPage extends WizardPage {
 		if (viewer.getCheckedElements().length == 0)
 			return ((AdvancedConfiguratorWizard) getWizard()).createPage;
 		return super.getNextPage();
+	}
+
+	public Policy getSelectedPolicy() {
+		Object[] checked = viewer.getCheckedElements();
+		if (checked.length > 0)
+			return (Policy) viewer.getCheckedElements()[0];
+		else
+			return null;
 	}
 }

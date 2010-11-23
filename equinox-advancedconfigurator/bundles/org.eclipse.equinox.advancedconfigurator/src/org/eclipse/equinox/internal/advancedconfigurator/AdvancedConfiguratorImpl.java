@@ -9,7 +9,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Properties;
 
-import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvanceConfiguratorConstants;
+import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvancedConfiguratorConstants;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.EquinoxUtils;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.Utils;
 import org.osgi.framework.Bundle;
@@ -51,7 +51,7 @@ public class AdvancedConfiguratorImpl {
 	}
 
 	private boolean isExclusiveInstallation() {
-		String value = context.getProperty(AdvanceConfiguratorConstants.PROP_KEY_EXCLUSIVE_INSTALLATION);
+		String value = context.getProperty(AdvancedConfiguratorConstants.PROP_KEY_EXCLUSIVE_INSTALLATION);
 		if (value == null || value.trim().length() == 0)
 			value = "true";
 		return Boolean.valueOf(value).booleanValue();
@@ -59,8 +59,8 @@ public class AdvancedConfiguratorImpl {
 
 	/**
 	 * find the url of bundle info, 
-	 * 1. it's given by system property <code>AdvanceConfiguratorConstants.PROP_KEY_CONFIGURL</code> 
-	 * 2. it's record in AdvanceConfiguratorConstants.CONFIGURATOR_FOLDER/AdvanceConfiguratorConstants.POLICY_LIST
+	 * 1. it's given by system property <code>AdvancedConfiguratorConstants.PROP_KEY_CONFIGURL</code> 
+	 * 2. it's record in AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER/AdvancedConfiguratorConstants.POLICY_LIST
 	 * 3. use the given by system property "org.eclipse.equinox.simpleconfigurator.configUrl"
 	 * 4. use the default one in configuration folder of "org.eclipse.equinox.simpleconfigurator"
 	 * 
@@ -68,20 +68,20 @@ public class AdvancedConfiguratorImpl {
 	 * @throws IOException
 	 */
 	public URL getConfigurationURL() throws IOException {
-		String specifiedURL = context.getProperty(AdvanceConfiguratorConstants.PROP_KEY_CONFIGURL);
+		String specifiedURL = context.getProperty(AdvancedConfiguratorConstants.PROP_KEY_CONFIGURL);
 		if (specifiedURL == null) {
 			URL[] configURL = EquinoxUtils.getConfigAreaURL(context);
 			if (configURL != null) {
-				String relative = AdvanceConfiguratorConstants.CONFIGURATOR_FOLDER + "/" + AdvanceConfiguratorConstants.POLICY_LIST; //$NON-NLS-1$
+				String relative = AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + "/" + AdvancedConfiguratorConstants.POLICY_LIST; //$NON-NLS-1$
 				File userConfig = new File(configURL[0].getFile(), relative);
 				InputStream input = null;
 				try {
 					Properties prop = new Properties();
 					input = new FileInputStream(userConfig);
 					prop.load(input);
-					String name = prop.getProperty(AdvanceConfiguratorConstants.POLICY_NAME);
+					String name = prop.getProperty(AdvancedConfiguratorConstants.POLICY_NAME);
 					if (name != null)
-						specifiedURL = "file:" + AdvanceConfiguratorConstants.CONFIGURATOR_FOLDER + "/" + URLDecoder.decode(name, "UTF-8") + "/" + AdvanceConfiguratorConstants.CONFIG_LIST; //$NON-NLS-1$
+						specifiedURL = "file:" + AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + "/" + URLDecoder.decode(name, "UTF-8") + "/" + AdvancedConfiguratorConstants.CONFIG_LIST; //$NON-NLS-1$
 				} catch (IOException e) {
 					//ignore
 				} finally {
@@ -90,9 +90,9 @@ public class AdvancedConfiguratorImpl {
 				}				
 			}
 			if (specifiedURL == null) {
-				specifiedURL = context.getProperty(AdvanceConfiguratorConstants.PROP_SIMPLE_KEY_CONFIGURL);
+				specifiedURL = context.getProperty(AdvancedConfiguratorConstants.PROP_SIMPLE_KEY_CONFIGURL);
 				if (specifiedURL == null)
-					specifiedURL = "file:" + AdvanceConfiguratorConstants.SIMPLE_CONFIGURATOR_FOLDER + "/" + AdvanceConfiguratorConstants.CONFIG_LIST;
+					specifiedURL = "file:" + AdvancedConfiguratorConstants.SIMPLE_CONFIGURATOR_FOLDER + "/" + AdvancedConfiguratorConstants.CONFIG_LIST;
 			}
 		}
 

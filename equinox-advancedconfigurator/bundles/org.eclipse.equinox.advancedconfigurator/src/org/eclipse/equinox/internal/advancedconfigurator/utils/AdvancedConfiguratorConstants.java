@@ -1,6 +1,6 @@
 package org.eclipse.equinox.internal.advancedconfigurator.utils;
 
-public class AdvanceConfiguratorConstants {
+public class AdvancedConfiguratorConstants {
 
 	public static final String PROP_KEY_EXCLUSIVE_INSTALLATION = "org.eclipse.equinox.simpleconfigurator.exclusiveInstallation"; //$NON-NLS-1$
 	/**
