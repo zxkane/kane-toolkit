@@ -1,5 +1,8 @@
 package org.eclipse.equinox.advancedconfigurator.internal.wizard;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.equinox.advancedconfigurator.internal.Activator;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.model.InstalledIUElement;
@@ -11,6 +14,8 @@ import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.engine.IProfileRegistry;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.query.IQueryResult;
+import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
@@ -20,6 +25,8 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
@@ -42,6 +49,7 @@ public class ConfiguratorPage extends WizardPage {
 	protected CheckboxTableViewer viewer = null;
 	protected String currentMessage;
 	private IProfile selfProfile;
+	private List<String> initialComps;
 
 	public ConfiguratorPage(String pageName) {
 		super(pageName);
@@ -100,7 +108,22 @@ public class ConfiguratorPage extends WizardPage {
 			try {
 				tracker.open();
 				IProvisioningAgent agent = (IProvisioningAgent) tracker.getService();
-				selfProfile = ((IProfileRegistry) agent.getService(IProfileRegistry.SERVICE_NAME)).getProfile(IProfileRegistry.SELF);
+				IProfileRegistry registry = (IProfileRegistry) agent.getService(IProfileRegistry.SERVICE_NAME);
+				selfProfile = registry.getProfile(IProfileRegistry.SELF);
+				if (selfProfile != null) {
+					long[] timestamps = registry.listProfileTimestamps(selfProfile.getProfileId());
+					for (long timestamp : timestamps) {
+						IProfile profile = registry.getProfile(selfProfile.getProfileId(), timestamp);
+						IQueryResult<IInstallableUnit> result = profile.query(QueryUtil.createPipeQuery(QueryUtil.createIUGroupQuery(), QueryUtil
+								.createQuery("select(iu2 | !exists(iu | iu.requirements.exists(r | iu2 ~= r)))")), null);
+						if (!result.isEmpty()) {
+							initialComps = new ArrayList<String>();
+							for (IInstallableUnit iu : result.toSet())
+								initialComps.add(iu.getId());
+							break;
+						}
+					}
+				}
 			} finally {
 				tracker.close();
 			}
@@ -166,7 +189,7 @@ public class ConfiguratorPage extends WizardPage {
 
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				InstalledIUElement e = (InstalledIUElement) event.getElement();
-				if ("org.eclipse.sdk.ide".equals(e.getIU().getId())) {
+				if (initialComps.contains(e.getIU().getId())) {
 					event.getCheckable().setChecked(e, true);
 				}
 			}
@@ -175,7 +198,7 @@ public class ConfiguratorPage extends WizardPage {
 
 			public boolean isGrayed(Object element) {
 				InstalledIUElement e = (InstalledIUElement) element;
-				if ("org.eclipse.sdk.ide".equals(e.getIU().getId())) {
+				if (initialComps.contains(e.getIU().getId())) {
 					return true;
 				}
 				return false;
@@ -183,10 +206,18 @@ public class ConfiguratorPage extends WizardPage {
 
 			public boolean isChecked(Object element) {
 				InstalledIUElement e = (InstalledIUElement) element;
-				if ("org.eclipse.sdk.ide".equals(e.getIU().getId())) {
+				if (initialComps.contains(e.getIU().getId())) {
 					return true;
 				}
 				return false;
+			}
+		});
+		viewer.setSorter(new ViewerSorter() {
+			@Override
+			public int compare(Viewer viewer, Object e1, Object e2) {
+				InstalledIUElement iu1 = (InstalledIUElement) e1;
+				InstalledIUElement iu2 = (InstalledIUElement) e2;
+				return iu1.getIU().getProperty(IInstallableUnit.PROP_NAME, null).compareTo(iu2.getIU().getProperty(IInstallableUnit.PROP_NAME, null));
 			}
 		});
 		viewer.setInput(getInput());
@@ -258,10 +289,10 @@ public class ConfiguratorPage extends WizardPage {
 	}
 
 	public IInstallableUnit[] getSelectedComponents() {
-		InstalledIUElement[] elements = (InstalledIUElement[]) viewer.getCheckedElements();
-		IInstallableUnit[] ius = new IInstallableUnit[elements.length];
-		for (int i = 0; i < ius.length; i++) {
-			ius[i] = elements[i].getIU();
+		Object[] objs = viewer.getCheckedElements();
+		IInstallableUnit[] ius = new IInstallableUnit[objs.length];
+		for (int i = 0; i < objs.length; i++) {
+			ius[i] = ((InstalledIUElement) objs[i]).getIU();
 		}
 		return ius;
 	}
