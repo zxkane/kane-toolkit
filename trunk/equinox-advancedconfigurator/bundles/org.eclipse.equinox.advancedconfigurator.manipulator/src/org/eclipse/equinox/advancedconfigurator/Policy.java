@@ -1,9 +1,13 @@
 package org.eclipse.equinox.advancedconfigurator;
 
-import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 
 public interface Policy {
+	public class Component {
+		public String id;
+		public String version;
+	}
+
 	public String getName();
 
-	public IInstallableUnit[] getComponents();
+	public Component[] getComponents();
 }
