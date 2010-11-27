@@ -1,0 +1,16 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+*Advanced Configurator* is an enhancement comparing to the default bundles management of Eclipse(the internal name is simple configurator).
+
+This tool is intended to provide a flexible and configurable way to run the single eclipse instance with enabling different plug-ins.
+
+
+= How to install =
+
+to be added soon
+
+= How to use =
+
+to be added soon
