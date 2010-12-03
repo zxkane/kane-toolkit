@@ -19,6 +19,8 @@ import org.eclipse.equinox.advancedconfigurator.Policy.Component;
 import org.eclipse.equinox.advancedconfigurator.manipulator.AdvancedManipulator;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvancedConfiguratorConstants;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.EquinoxUtils;
+import org.eclipse.equinox.simpleconfigurator.manipulator.SimpleConfiguratorManipulator;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class AdvancedManipulatorImpl implements AdvancedManipulator {
 
@@ -106,6 +108,17 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					writer.write(comp.id + "," + comp.version);
 					writer.write("\n");
 				}
+
+				ServiceTracker tracker = new ServiceTracker(Activator.getContext(), SimpleConfiguratorManipulator.class.getName(), null);
+				try {
+					tracker.open();
+					SimpleConfiguratorManipulator manipulator = (SimpleConfiguratorManipulator) tracker.getService();
+					org.eclipse.equinox.frameworkadmin.BundleInfo[] bundleInfos = manipulator.loadConfiguration(Activator.getContext(),
+							AdvancedConfiguratorConstants.SIMPLE_CONFIGURATOR_FOLDER + File.separator + AdvancedConfiguratorConstants.CONFIG_LIST);
+					System.out.println(bundleInfos.length);
+				} finally {
+					tracker.close();
+				}
 			} catch (IOException e) {
 
 			} finally {
@@ -118,5 +131,4 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 			}
 		}
 	}
-
 }
