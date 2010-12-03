@@ -102,7 +102,7 @@ public class ConfiguratorPage extends WizardPage {
 		}
 	}
 
-	private IProfile getSelfProfile() {
+	IProfile getSelfProfile() {
 		if (selfProfile == null) {
 			ServiceTracker tracker = new ServiceTracker(Activator.getContext(), IProvisioningAgent.class.getName(), null);
 			try {
@@ -115,7 +115,8 @@ public class ConfiguratorPage extends WizardPage {
 					for (long timestamp : timestamps) {
 						IProfile profile = registry.getProfile(selfProfile.getProfileId(), timestamp);
 						IQueryResult<IInstallableUnit> result = profile.query(QueryUtil.createPipeQuery(QueryUtil.createIUGroupQuery(), QueryUtil
-								.createQuery("select(iu2 | !exists(iu | iu.requirements.exists(r | iu2 ~= r)))")), null);
+								.createQuery("select(iu2 | !exists(iu | iu.requirements.exists(r | iu2 ~= r)))"))
+						/* QueryUtil.createIUPropertyQuery(IProfile.PROP_PROFILE_ROOT_IU, Boolean.TRUE.toString()) */, null);
 						if (!result.isEmpty()) {
 							initialComps = new ArrayList<String>();
 							for (IInstallableUnit iu : result.toSet())
