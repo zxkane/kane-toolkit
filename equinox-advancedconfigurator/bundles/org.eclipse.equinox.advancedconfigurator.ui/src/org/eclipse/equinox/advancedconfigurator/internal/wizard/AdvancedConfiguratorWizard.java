@@ -53,8 +53,7 @@ public class AdvancedConfiguratorWizard extends Wizard {
 		IProfile profile = configuratePage.getSelfProfile();
 		IQueryResult<IInstallableUnit> root = profile.query(QueryUtil.createIUQuery(id, Version.create(version)), null);
 		IQueryResult<IInstallableUnit> osgiBundles = profile.query(QueryUtil.createQuery(
-				"select(iu | exists(iu | iu.providedCapabilities.exists(p | p.namespace == $0 && p.name == $1)))", "org.eclipse.equinox.p2.eclipse.type",
-				"bundle"), null);
+				"select(iu | iu.providedCapabilities.exists(p | p.namespace == $0 && p.name == $1))", "org.eclipse.equinox.p2.eclipse.type", "bundle"), null);
 		HashSet<IInstallableUnit> ius = new HashSet<IInstallableUnit>();
 		for (IInstallableUnit iu : root.toSet()) {
 			ius.add(iu);
