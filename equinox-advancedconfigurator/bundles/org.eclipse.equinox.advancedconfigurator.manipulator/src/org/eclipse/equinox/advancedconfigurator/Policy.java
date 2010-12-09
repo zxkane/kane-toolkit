@@ -13,4 +13,6 @@ public interface Policy {
 	public String getName();
 
 	public Component[] getComponents();
+
+	public boolean isDefault();
 }
