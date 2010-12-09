@@ -5,9 +5,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import org.eclipse.equinox.advancedconfigurator.Policy;
@@ -31,12 +34,34 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class AdvancedManipulatorImpl implements AdvancedManipulator {
 
+	private static final String DEFAULT_POLICY_KEY = "defaultPolicy";
 	private static final String BUNDLES_LIST = "bundles.list";
 
 	public Policy[] getPolicies() {
 		URL[] configs = EquinoxUtils.getConfigAreaURL(Activator.getContext());
 		if (configs != null) {
 			File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER);
+			File defaultPolicyList = new File(policy, AdvancedConfiguratorConstants.POLICY_LIST);
+			File defaultPolicy = null;
+			BufferedReader reader = null;
+
+			try {
+				reader = new BufferedReader(new FileReader(defaultPolicyList));
+				Properties prop = new Properties();
+				prop.load(reader);
+				String file = prop.getProperty(DEFAULT_POLICY_KEY);
+				if (file != null)
+					defaultPolicy = new File(file);
+			} catch (FileNotFoundException e) {
+				// do nothing
+			} catch (IOException e) {
+			} finally {
+				if (reader != null)
+					try {
+						reader.close();
+					} catch (IOException e) {
+					}
+			}
 			if (policy.exists() && policy.isDirectory()) {
 				File[] candinates = policy.listFiles(new FileFilter() {
 
@@ -47,8 +72,11 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					}
 				});
 				List<Policy> policies = new ArrayList<Policy>(candinates.length);
-				for (File c : candinates)
+				for (File c : candinates) {
 					policies.add(buildPolicy(c));
+					if (c.equals(defaultPolicy))
+						((PolicyImpl) policies.get(policies.size() - 1)).setDefault(true);
+				}
 				return policies.toArray(new Policy[policies.size()]);
 			}
 		}
@@ -102,12 +130,13 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 
 	}
 
-	public void addPolicy(String policyName, Component[] components) {
+	public void addPolicy(String policyName, boolean isDefault, Component[] components) {
 		URL[] configs = EquinoxUtils.getConfigAreaURL(Activator.getContext());
 		if (configs != null) {
 			File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + File.separator + policyName);
 			policy.mkdirs();
 			BufferedWriter writer = null;
+			OutputStream output = null;
 			try {
 				File bundleFile = new File(policy, BUNDLES_LIST);
 				if (!bundleFile.exists())
@@ -120,6 +149,12 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					writer.write("\n");
 				}
 
+				File policyList = new File(policy.getParentFile(), AdvancedConfiguratorConstants.POLICY_LIST);
+				Properties policyProp = new Properties();
+				policyProp.put(DEFAULT_POLICY_KEY, policy.getAbsolutePath());
+				output = new FileOutputStream(policyList);
+				policyProp.store(output, null);
+
 				ServiceTracker tracker = new ServiceTracker(Activator.getContext(), SimpleConfiguratorManipulator.class.getName(), null);
 				ServiceTracker locationTracker = new ServiceTracker(Activator.getContext(), Activator.getContext().createFilter(Location.INSTALL_FILTER), null);
 				try {
@@ -129,8 +164,12 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 							AdvancedConfiguratorConstants.SIMPLE_CONFIGURATOR_FOLDER + File.separator + AdvancedConfiguratorConstants.CONFIG_LIST);
 					List<BundleInfo> policyBundleInfos = new ArrayList<BundleInfo>(policyBundles.size());
 					for (BundleInfo bundle : totalBundleInfos) {
-						if (policyBundles.contains(bundle))
+						// prevent simpleconfigurator to take effect
+						if ("org.eclipse.equinox.simpleconfigurator".equals(bundle.getSymbolicName()))
+							continue;
+						if (policyBundles.contains(bundle)) {
 							policyBundleInfos.add(bundle);
+						}
 					}
 					locationTracker.open();
 					Location location = (Location) locationTracker.getService();
@@ -144,13 +183,19 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					locationTracker.close();
 				}
 			} catch (IOException e) {
-
+				e.printStackTrace();
 			} catch (InvalidSyntaxException e) {
 				// won't happen
 			} finally {
 				if (writer != null)
 					try {
 						writer.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				if (output != null)
+					try {
+						output.close();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}

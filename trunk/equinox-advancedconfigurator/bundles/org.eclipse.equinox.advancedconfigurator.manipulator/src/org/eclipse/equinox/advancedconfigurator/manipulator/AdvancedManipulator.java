@@ -6,7 +6,7 @@ import org.eclipse.equinox.advancedconfigurator.Policy.Component;
 public interface AdvancedManipulator {
 	public Policy[] getPolicies();
 
-	public void addPolicy(String policyName, Component[] components);
+	public void addPolicy(String policyName, boolean isDefault, Component[] components);
 
 	public void updatePolicy(Policy oldPolicy, Policy newPolicy);
 }

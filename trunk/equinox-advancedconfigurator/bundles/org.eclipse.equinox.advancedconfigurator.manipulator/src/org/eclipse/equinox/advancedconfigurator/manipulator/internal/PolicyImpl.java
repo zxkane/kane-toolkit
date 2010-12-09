@@ -6,6 +6,7 @@ public class PolicyImpl implements Policy {
 
 	private String name;
 	private Component[] topComponents;
+	private boolean isDefault = false;
 
 	public String getName() {
 		return name;
@@ -23,4 +24,11 @@ public class PolicyImpl implements Policy {
 		this.topComponents = topComponents;
 	}
 
+	public boolean isDefault() {
+		return isDefault;
+	}
+
+	public void setDefault(boolean isDefault) {
+		this.isDefault = isDefault;
+	}
 }

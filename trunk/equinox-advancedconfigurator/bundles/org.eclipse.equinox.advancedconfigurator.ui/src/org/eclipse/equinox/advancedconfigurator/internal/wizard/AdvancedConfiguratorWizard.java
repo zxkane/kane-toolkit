@@ -35,6 +35,7 @@ public class AdvancedConfiguratorWizard extends Wizard {
 	public boolean performFinish() {
 		if (overviewPage.getSelectedPolicy() == null) {
 			String policyName = createPage.getPolicyName();
+			boolean isDefault = createPage.isDefault();
 			IInstallableUnit[] ius = configuratePage.getSelectedComponents();
 			Component[] comps = new Component[ius.length];
 			for (int i = 0; i < ius.length; i++) {
@@ -44,7 +45,7 @@ public class AdvancedConfiguratorWizard extends Wizard {
 				comp.bundles = getBundles(comp.id, comp.version);
 				comps[i] = comp;
 			}
-			Activator.getAdvancedManipulator().addPolicy(policyName, comps);
+			Activator.getAdvancedManipulator().addPolicy(policyName, isDefault, comps);
 		}
 		return true;
 	}
