@@ -3,6 +3,8 @@ package org.eclipse.equinox.advancedconfigurator.internal.wizard;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.equinox.advancedconfigurator.Policy;
+import org.eclipse.equinox.advancedconfigurator.Policy.Component;
 import org.eclipse.equinox.advancedconfigurator.internal.Activator;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.model.InstalledIUElement;
@@ -14,6 +16,7 @@ import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.engine.IProfileRegistry;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.metadata.Version;
 import org.eclipse.equinox.p2.query.IQueryResult;
 import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.jface.dialogs.Dialog;
@@ -228,7 +231,16 @@ public class ConfiguratorPage extends WizardPage {
 	public void setVisible(boolean visible) {
 		super.setVisible(visible);
 		if (visible == true) {
-			// TODO recheck the components for existing policy
+			Policy selectPolicy = ((AdvancedConfiguratorWizard) getWizard()).overviewPage.getSelectedPolicy();
+			if (selectPolicy != null) {
+				IProfile profile = getSelfProfile();
+				for (Component comp : selectPolicy.getComponents()) {
+					IQueryResult<IInstallableUnit> ius = profile.available(QueryUtil.createIUQuery(comp.id, Version.create(comp.version)), null);
+					for (IInstallableUnit iu : ius.toSet()) {
+						viewer.setChecked(new InstalledIUElement(null, profile.getProfileId(), iu), true);
+					}
+				}
+			}
 			viewer.getTable().setFocus();
 		}
 	}
