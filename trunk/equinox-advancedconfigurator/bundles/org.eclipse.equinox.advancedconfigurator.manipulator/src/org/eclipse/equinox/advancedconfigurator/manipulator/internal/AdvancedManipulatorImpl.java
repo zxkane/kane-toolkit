@@ -4,13 +4,16 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -21,20 +24,25 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.advancedconfigurator.Policy;
 import org.eclipse.equinox.advancedconfigurator.Policy.Component;
 import org.eclipse.equinox.advancedconfigurator.manipulator.AdvancedManipulator;
 import org.eclipse.equinox.frameworkadmin.BundleInfo;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvancedConfiguratorConstants;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.EquinoxUtils;
+import org.eclipse.equinox.internal.frameworkadmin.equinox.EquinoxFwConfigFileParser;
+import org.eclipse.equinox.internal.provisional.frameworkadmin.FrameworkAdmin;
+import org.eclipse.equinox.internal.provisional.frameworkadmin.Manipulator;
 import org.eclipse.equinox.simpleconfigurator.manipulator.SimpleConfiguratorManipulator;
 import org.eclipse.osgi.service.datalocation.Location;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.util.tracker.ServiceTracker;
 
+@SuppressWarnings("restriction")
 public class AdvancedManipulatorImpl implements AdvancedManipulator {
 
-	private static final String DEFAULT_POLICY_KEY = "defaultPolicy";
 	private static final String BUNDLES_LIST = "bundles.list";
 
 	public Policy[] getPolicies() {
@@ -43,22 +51,22 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 			File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER);
 			File defaultPolicyList = new File(policy, AdvancedConfiguratorConstants.POLICY_LIST);
 			File defaultPolicy = null;
-			BufferedReader reader = null;
+			InputStream input = null;
 
 			try {
-				reader = new BufferedReader(new FileReader(defaultPolicyList));
+				input = new FileInputStream(defaultPolicyList);
 				Properties prop = new Properties();
-				prop.load(reader);
-				String file = prop.getProperty(DEFAULT_POLICY_KEY);
+				prop.load(input);
+				String file = prop.getProperty(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY);
 				if (file != null)
 					defaultPolicy = new File(file);
 			} catch (FileNotFoundException e) {
 				// do nothing
 			} catch (IOException e) {
 			} finally {
-				if (reader != null)
+				if (input != null)
 					try {
-						reader.close();
+						input.close();
 					} catch (IOException e) {
 					}
 			}
@@ -149,12 +157,6 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					writer.write("\n");
 				}
 
-				File policyList = new File(policy.getParentFile(), AdvancedConfiguratorConstants.POLICY_LIST);
-				Properties policyProp = new Properties();
-				policyProp.put(DEFAULT_POLICY_KEY, policy.getAbsolutePath());
-				output = new FileOutputStream(policyList);
-				policyProp.store(output, null);
-
 				ServiceTracker tracker = new ServiceTracker(Activator.getContext(), SimpleConfiguratorManipulator.class.getName(), null);
 				ServiceTracker locationTracker = new ServiceTracker(Activator.getContext(), Activator.getContext().createFilter(Location.INSTALL_FILTER), null);
 				try {
@@ -165,22 +167,51 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					List<BundleInfo> policyBundleInfos = new ArrayList<BundleInfo>(policyBundles.size());
 					for (BundleInfo bundle : totalBundleInfos) {
 						// prevent simpleconfigurator to take effect
-						if ("org.eclipse.equinox.simpleconfigurator".equals(bundle.getSymbolicName()))
-							continue;
+						if ("org.eclipse.equinox.simpleconfigurator".equals(bundle.getSymbolicName())) {
+							bundle.setStartLevel(4);
+							bundle.setMarkedAsStarted(false);
+							// continue;
+						}
 						if (policyBundles.contains(bundle)) {
 							policyBundleInfos.add(bundle);
 						}
 					}
 					locationTracker.open();
 					Location location = (Location) locationTracker.getService();
+					URI installURI = location.getURL().toURI();
+					URI configRelURI = new File(configs[0].getFile()).getParentFile().toURI();
 					manipulator.saveConfiguration(policyBundleInfos.toArray(new BundleInfo[policyBundleInfos.size()]), new File(policy,
-							AdvancedConfiguratorConstants.CONFIG_LIST), location.getURL().toURI());
-
+							AdvancedConfiguratorConstants.CONFIG_LIST), configRelURI.equals(installURI) ? installURI : configRelURI);
 				} catch (URISyntaxException e) {
 					// won't happen
 				} finally {
 					tracker.close();
 					locationTracker.close();
+				}
+
+				if (isDefault) {
+					File policyList = new File(policy.getParentFile(), AdvancedConfiguratorConstants.POLICY_LIST);
+					Properties policyProp = new Properties();
+					policyProp.put(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY, policy.getAbsolutePath());
+					output = new FileOutputStream(policyList);
+					policyProp.store(output, null);
+
+					ServiceTracker adminTracker = new ServiceTracker(Activator.getContext(), FrameworkAdmin.class.getName(), null);
+					try {
+						adminTracker.open();
+						FrameworkAdmin frameworkAdmin = (FrameworkAdmin) adminTracker.getService();
+
+						Bundle bundle = Platform.getBundle(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
+						BundleInfo[] bundles = new BundleInfo[] { new BundleInfo(bundle.getSymbolicName(), bundle.getVersion().toString(), URI.create(bundle
+								.getLocation()), 1, true) };
+						EquinoxFwConfigFileParser parser = new EquinoxFwConfigFileParser(Activator.getContext());
+						Manipulator manipulator = frameworkAdmin.getRunningManipulator();
+						manipulator.load();
+						parser.saveFwConfig(bundles, manipulator, true, false);
+					} finally {
+						adminTracker.close();
+					}
+
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
