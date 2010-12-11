@@ -17,10 +17,10 @@ public class Activator implements BundleActivator {
 	 */
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
-		AdvancedConfiguratorImpl conf = new AdvancedConfiguratorImpl(
-				bundleContext,
-				bundleContext.getBundle());
-		conf.applyConfiguration();
+		if (bundleContext.getBundles().length <= 2) {
+			AdvancedConfiguratorImpl conf = new AdvancedConfiguratorImpl(bundleContext, bundleContext.getBundle());
+			conf.applyConfiguration();
+		}
 	}
 
 	/*

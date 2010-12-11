@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.Properties;
 
 import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvancedConfiguratorConstants;
@@ -79,9 +78,9 @@ public class AdvancedConfiguratorImpl {
 					Properties prop = new Properties();
 					input = new FileInputStream(userConfig);
 					prop.load(input);
-					String name = prop.getProperty(AdvancedConfiguratorConstants.POLICY_NAME);
-					if (name != null)
-						specifiedURL = "file:" + AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + "/" + URLDecoder.decode(name, "UTF-8") + "/" + AdvancedConfiguratorConstants.CONFIG_LIST; //$NON-NLS-1$
+					String file = prop.getProperty(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY);
+					if (file != null)
+						specifiedURL = new File(file, AdvancedConfiguratorConstants.CONFIG_LIST).toURI().toURL().toString();
 				} catch (IOException e) {
 					//ignore
 				} finally {
