@@ -11,6 +11,7 @@ import org.eclipse.equinox.frameworkadmin.BundleInfo;
 import org.eclipse.equinox.internal.p2.touchpoint.eclipse.Util;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.metadata.IInstallableUnitFragment;
 import org.eclipse.equinox.p2.metadata.IRequirement;
 import org.eclipse.equinox.p2.metadata.Version;
 import org.eclipse.equinox.p2.query.IQueryResult;
@@ -76,6 +77,8 @@ public class AdvancedConfiguratorWizard extends Wizard {
 	}
 
 	private void expandRequirement(Set<IInstallableUnit> ius, IQueryable<IInstallableUnit> querable, IInstallableUnit iu) {
+		if (iu instanceof IInstallableUnitFragment)
+			return;
 		for (IRequirement r : iu.getRequirements()) {
 			for (IInstallableUnit req : querable.query(QueryUtil.createMatchQuery(r.getMatches()), null).toSet()) {
 				if (ius.contains(req))

@@ -123,13 +123,13 @@ public class OverviewPage extends WizardPage {
 		compButtons.setLayout(new FillLayout(SWT.HORIZONTAL));
 		Group group = new Group(compButtons, SWT.BORDER);
 		group.setLayout(new GridLayout(3, true));
-		Button revertToSimple = new Button(group, SWT.BORDER);
+		Button revertToSimple = new Button(group, SWT.PUSH);
 		revertToSimple.setText(Messages.OverviewPage_ButtonRevert_Label);
 		revertToSimple.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
-		Button makeDefaults = new Button(group, SWT.BORDER);
+		Button makeDefaults = new Button(group, SWT.PUSH);
 		makeDefaults.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
 		makeDefaults.setText(Messages.OverviewPage_ButtonDefault_Label);
-		Button delete = new Button(group, SWT.BORDER);
+		Button delete = new Button(group, SWT.PUSH);
 		delete.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
 		delete.setText(Messages.OverviewPage_ButtonDelete_Label);
 		setControl(content);
