@@ -8,5 +8,11 @@ public interface AdvancedManipulator {
 
 	public void addPolicy(String policyName, boolean isDefault, Component[] components);
 
+	public boolean setDefault(Policy policy);
+
+	public void addManipulatorListener(ManipulatorListener l);
+
+	public void removeManipulatorListener(ManipulatorListener l);
+
 	public void updatePolicy(Policy oldPolicy, Policy newPolicy);
 }
