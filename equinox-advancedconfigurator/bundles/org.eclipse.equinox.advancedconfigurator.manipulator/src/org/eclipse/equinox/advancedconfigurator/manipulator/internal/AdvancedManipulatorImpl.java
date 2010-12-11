@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -28,6 +29,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.advancedconfigurator.Policy;
 import org.eclipse.equinox.advancedconfigurator.Policy.Component;
 import org.eclipse.equinox.advancedconfigurator.manipulator.AdvancedManipulator;
+import org.eclipse.equinox.advancedconfigurator.manipulator.ManipulatorEvent;
+import org.eclipse.equinox.advancedconfigurator.manipulator.ManipulatorListener;
 import org.eclipse.equinox.frameworkadmin.BundleInfo;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvancedConfiguratorConstants;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.EquinoxUtils;
@@ -44,6 +47,7 @@ import org.osgi.util.tracker.ServiceTracker;
 public class AdvancedManipulatorImpl implements AdvancedManipulator {
 
 	private static final String BUNDLES_LIST = "bundles.list";
+	private final List<ManipulatorListener> listeners = new ArrayList<ManipulatorListener>();
 
 	public Policy[] getPolicies() {
 		URL[] configs = EquinoxUtils.getConfigAreaURL(Activator.getContext());
@@ -141,11 +145,11 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 	public void addPolicy(String policyName, boolean isDefault, Component[] components) {
 		URL[] configs = EquinoxUtils.getConfigAreaURL(Activator.getContext());
 		if (configs != null) {
-			File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + File.separator + policyName);
-			policy.mkdirs();
 			BufferedWriter writer = null;
-			OutputStream output = null;
 			try {
+				File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + File.separator
+						+ URLEncoder.encode(policyName, "utf-8"));
+				policy.mkdirs();
 				File bundleFile = new File(policy, BUNDLES_LIST);
 				if (!bundleFile.exists())
 					bundleFile.createNewFile();
@@ -189,30 +193,12 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					locationTracker.close();
 				}
 
+				Policy newPolicy = buildPolicy(policy);
 				if (isDefault) {
-					File policyList = new File(policy.getParentFile(), AdvancedConfiguratorConstants.POLICY_LIST);
-					Properties policyProp = new Properties();
-					policyProp.put(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY, policy.getAbsolutePath());
-					output = new FileOutputStream(policyList);
-					policyProp.store(output, null);
-
-					ServiceTracker adminTracker = new ServiceTracker(Activator.getContext(), FrameworkAdmin.class.getName(), null);
-					try {
-						adminTracker.open();
-						FrameworkAdmin frameworkAdmin = (FrameworkAdmin) adminTracker.getService();
-
-						Bundle bundle = Platform.getBundle(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
-						BundleInfo[] bundles = new BundleInfo[] { new BundleInfo(bundle.getSymbolicName(), bundle.getVersion().toString(), URI.create(bundle
-								.getLocation()), 1, true) };
-						EquinoxFwConfigFileParser parser = new EquinoxFwConfigFileParser(Activator.getContext());
-						Manipulator manipulator = frameworkAdmin.getRunningManipulator();
-						manipulator.load();
-						parser.saveFwConfig(bundles, manipulator, true, false);
-					} finally {
-						adminTracker.close();
-					}
-
+					updatePolicyList(newPolicy);
+					updateOSGiBundles(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
 				}
+				fireEvent(ManipulatorEvent.ADD_POLICY, null, newPolicy);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (InvalidSyntaxException e) {
@@ -224,13 +210,84 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-				if (output != null)
-					try {
-						output.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
 			}
 		}
+	}
+
+	private void fireEvent(int addPolicy, Policy oldState, Policy newState) {
+		ManipulatorEvent event = new ManipulatorEvent(addPolicy, oldState, newState);
+		for (ManipulatorListener l : listeners)
+			l.notify(event);
+	}
+
+	private void updatePolicyList(Policy policy) throws FileNotFoundException, IOException {
+		URL[] configs = EquinoxUtils.getConfigAreaURL(Activator.getContext());
+		if (configs != null) {
+			File advConfig = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER);
+			OutputStream output = null;
+			try {
+				File policyList = new File(advConfig, AdvancedConfiguratorConstants.POLICY_LIST);
+				Properties policyProp = new Properties();
+				policyProp.put(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY, policy == null ? "" : new File(advConfig, policy.getName()).getAbsolutePath());
+				output = new FileOutputStream(policyList);
+				policyProp.store(output, null);
+			} finally {
+				if (output != null)
+					output.close();
+			}
+		}
+	}
+
+	private void updateOSGiBundles(String symbolName) throws IOException {
+		ServiceTracker adminTracker = new ServiceTracker(Activator.getContext(), FrameworkAdmin.class.getName(), null);
+		try {
+			adminTracker.open();
+			FrameworkAdmin frameworkAdmin = (FrameworkAdmin) adminTracker.getService();
+
+			Bundle bundle = Platform.getBundle(symbolName);
+			BundleInfo[] bundles = new BundleInfo[] { new BundleInfo(bundle.getSymbolicName(), bundle.getVersion().toString(),
+					URI.create(bundle.getLocation()), 1, true) };
+			EquinoxFwConfigFileParser parser = new EquinoxFwConfigFileParser(Activator.getContext());
+			Manipulator manipulator = frameworkAdmin.getRunningManipulator();
+			manipulator.load();
+			parser.saveFwConfig(bundles, manipulator, true, false);
+		} finally {
+			adminTracker.close();
+		}
+	}
+
+	/**
+	 * @param policy if it's null, revert to use simple configurator
+	 */
+	public boolean setDefault(Policy policy) {
+		try {
+			if (policy == null)
+				updateOSGiBundles("org.eclipse.equinox.simpleconfigurator");
+			Policy previous = null;
+			for (Policy p : getPolicies()) {
+				if (p.isDefault()) {
+					previous = p;
+					break;
+				}
+			}
+			if (!previous.equals(policy)) {
+				((PolicyImpl) previous).setDefault(false);
+				if (policy != null)
+					((PolicyImpl) policy).setDefault(false);
+				updatePolicyList(policy);
+			}
+			fireEvent(ManipulatorEvent.CHANGE_DEFAULT_POLICY, previous, policy);
+		} catch (IOException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public void addManipulatorListener(ManipulatorListener l) {
+		this.listeners.add(l);
+	}
+
+	public void removeManipulatorListener(ManipulatorListener l) {
+		listeners.remove(l);
 	}
 }
