@@ -10,7 +10,7 @@ public class AdvancedConfiguratorConstants {
 	 * 	 
 	 * Default: true
 	 */
-	public static final String PROP_KEY_USE_REFERENCE = "org.eclipse.equinox.advanceconfigurator.useReference"; //$NON-NLS-1$
+	public static final String PROP_KEY_USE_REFERENCE = "org.eclipse.equinox.advancedconfigurator.useReference"; //$NON-NLS-1$
 
 	/**
 	 * BundleContext#getProperty(PROP_KEY_CONFIGURL) is used for SimpleConfigurator to do life cycle control of bundles.
@@ -19,20 +19,20 @@ public class AdvancedConfiguratorConstants {
 	 * 
 	 * Default: null
 	 */
-	public static final String PROP_KEY_CONFIGURL = "org.eclipse.equinox.advanceconfigurator.configUrl"; //$NON-NLS-1$
+	public static final String PROP_KEY_CONFIGURL = "org.eclipse.equinox.advancedconfigurator.configUrl"; //$NON-NLS-1$
 
 	public static final String POLICY_LIST = "policy.info"; //$NON-NLS-1$
 	
-	public static final String POLICY_NAME = "policy"; //$NON-NLS-1$
+	public static final String DEFAULT_POLICY_KEY = "defaultPolicy"; //$NON-NLS-1$
 
 	public static final String CONFIG_LIST = "bundles.info"; //$NON-NLS-1$
 	
-	public static final String CONFIGURATOR_FOLDER = "org.eclipse.equinox.advanceconfigurator"; //$NON-NLS-1$
+	public static final String CONFIGURATOR_FOLDER = "org.eclipse.equinox.advancedconfigurator"; //$NON-NLS-1$
 
 	public static final String SIMPLE_CONFIGURATOR_FOLDER = "org.eclipse.equinox.simpleconfigurator"; //$NON-NLS-1$
 
 	public static final String PROP_SIMPLE_KEY_CONFIGURL = "org.eclipse.equinox.simpleconfigurator.configUrl"; //$NON-NLS-1$
 
-	public static final String TARGET_CONFIGURATOR_NAME = "org.eclipse.equinox.advanceconfigurator"; //$NON-NLS-1$
+	public static final String TARGET_CONFIGURATOR_NAME = "org.eclipse.equinox.advancedconfigurator"; //$NON-NLS-1$
 
 }
