@@ -151,6 +151,14 @@ public class OverviewPage extends WizardPage implements ManipulatorListener {
 		Button delete = new Button(group, SWT.PUSH);
 		delete.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
 		delete.setText(Messages.OverviewPage_ButtonDelete_Label);
+		delete.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Object[] elements = viewer.getCheckedElements();
+				if (elements.length > 0)
+					Activator.getAdvancedManipulator().removePolicy((Policy) elements[0]);
+			}
+		});
 		setControl(content);
 		Activator.getAdvancedManipulator().addManipulatorListener(this);
 	}
