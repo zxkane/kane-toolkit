@@ -2,6 +2,8 @@ package org.eclipse.equinox.internal.advancedconfigurator;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.startlevel.StartLevel;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
 	public final static boolean DEBUG = false;
@@ -17,7 +19,10 @@ public class Activator implements BundleActivator {
 	 */
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
-		if (bundleContext.getBundles().length <= 2) {
+		ServiceTracker tracker = new ServiceTracker(bundleContext, StartLevel.class.getName(), null);
+		tracker.open();
+		StartLevel startLevel = (StartLevel) tracker.getService();
+		if (startLevel.getBundleStartLevel(bundleContext.getBundle()) == 1) {
 			AdvancedConfiguratorImpl conf = new AdvancedConfiguratorImpl(bundleContext, bundleContext.getBundle());
 			conf.applyConfiguration();
 		}
