@@ -14,5 +14,7 @@ public interface AdvancedManipulator {
 
 	public void removeManipulatorListener(ManipulatorListener l);
 
+	public void removePolicy(Policy policy);
+
 	public void updatePolicy(Policy oldPolicy, Policy newPolicy);
 }

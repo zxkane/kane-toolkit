@@ -147,8 +147,7 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 		if (configs != null) {
 			BufferedWriter writer = null;
 			try {
-				File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + File.separator
-						+ URLEncoder.encode(policyName, "utf-8"));
+				File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + File.separator + encodePolicyName(policyName));
 				policy.mkdirs();
 				File bundleFile = new File(policy, BUNDLES_LIST);
 				if (!bundleFile.exists())
@@ -186,19 +185,19 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					URI configRelURI = new File(configs[0].getFile()).getParentFile().toURI();
 					manipulator.saveConfiguration(policyBundleInfos.toArray(new BundleInfo[policyBundleInfos.size()]), new File(policy,
 							AdvancedConfiguratorConstants.CONFIG_LIST), configRelURI.equals(installURI) ? installURI : configRelURI);
+
+					Policy newPolicy = buildPolicy(policy);
+					if (isDefault) {
+						updatePolicyList(newPolicy);
+						updateOSGiBundles(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
+					}
+					fireEvent(ManipulatorEvent.ADD_POLICY, null, newPolicy);
 				} catch (URISyntaxException e) {
 					// won't happen
 				} finally {
 					tracker.close();
 					locationTracker.close();
 				}
-
-				Policy newPolicy = buildPolicy(policy);
-				if (isDefault) {
-					updatePolicyList(newPolicy);
-					updateOSGiBundles(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
-				}
-				fireEvent(ManipulatorEvent.ADD_POLICY, null, newPolicy);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (InvalidSyntaxException e) {
@@ -211,6 +210,14 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 						e.printStackTrace();
 					}
 			}
+		}
+	}
+
+	private String encodePolicyName(String policyName) {
+		try {
+			return URLEncoder.encode(policyName, "utf-8");
+		} catch (UnsupportedEncodingException e) {
+			return policyName;
 		}
 	}
 
@@ -261,26 +268,32 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 	 */
 	public boolean setDefault(Policy policy) {
 		try {
-			if (policy == null)
-				updateOSGiBundles("org.eclipse.equinox.simpleconfigurator");
-			Policy previous = null;
-			for (Policy p : getPolicies()) {
-				if (p.isDefault()) {
-					previous = p;
-					break;
-				}
-			}
-			if (!previous.equals(policy)) {
-				((PolicyImpl) previous).setDefault(false);
-				if (policy != null)
-					((PolicyImpl) policy).setDefault(false);
-				updatePolicyList(policy);
-			}
+			Policy previous = setDefaultInternal(policy);
 			fireEvent(ManipulatorEvent.CHANGE_DEFAULT_POLICY, previous, policy);
 		} catch (IOException e) {
+			e.printStackTrace();
 			return false;
 		}
 		return true;
+	}
+
+	private Policy setDefaultInternal(Policy policy) throws IOException, FileNotFoundException {
+		if (policy == null)
+			updateOSGiBundles("org.eclipse.equinox.simpleconfigurator");
+		Policy previous = null;
+		for (Policy p : getPolicies()) {
+			if (p.isDefault()) {
+				previous = p;
+				break;
+			}
+		}
+		if (!previous.equals(policy)) {
+			((PolicyImpl) previous).setDefault(false);
+			if (policy != null)
+				((PolicyImpl) policy).setDefault(false);
+			updatePolicyList(policy);
+		}
+		return previous;
 	}
 
 	public void addManipulatorListener(ManipulatorListener l) {
@@ -289,5 +302,29 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 
 	public void removeManipulatorListener(ManipulatorListener l) {
 		listeners.remove(l);
+	}
+
+	public void removePolicy(Policy policy) {
+		URL[] configs = EquinoxUtils.getConfigAreaURL(Activator.getContext());
+		if (configs != null) {
+			try {
+				if (policy.isDefault())
+					setDefaultInternal(null);
+				File policyDir = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER + File.separator
+						+ encodePolicyName(policy.getName()));
+				deleteFiles(policyDir);
+				fireEvent(ManipulatorEvent.REMOVE_POLICY, policy, null);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void deleteFiles(File file) {
+		if (file.isDirectory()) {
+			for (File sub : file.listFiles())
+				deleteFiles(sub);
+		}
+		file.delete();
 	}
 }
