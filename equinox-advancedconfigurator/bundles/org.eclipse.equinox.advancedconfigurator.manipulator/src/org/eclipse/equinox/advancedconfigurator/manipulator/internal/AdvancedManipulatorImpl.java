@@ -137,12 +137,27 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 		return p;
 	}
 
-	public void updatePolicy(Policy oldPolicy, Policy newPolicy) {
-		// TODO Auto-generated method stub
-
+	public void addPolicy(String policyName, boolean isDefault, Component[] components) {
+		Policy newPolicy = addInternal(policyName, isDefault, components);
+		if (newPolicy != null)
+			fireEvent(ManipulatorEvent.ADD_POLICY, null, newPolicy);
 	}
 
-	public void addPolicy(String policyName, boolean isDefault, Component[] components) {
+	private Policy addInternal(String policyName, boolean isDefault, Component[] components) {
+		Policy newPolicy = buildPolicy(policyName, components);
+		try {
+			if (isDefault && newPolicy != null) {
+				setDefaultInternal(newPolicy);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		return newPolicy;
+	}
+
+	private Policy buildPolicy(String policyName, Component[] components) {
 		URL[] configs = EquinoxUtils.getConfigAreaURL(Activator.getContext());
 		if (configs != null) {
 			BufferedWriter writer = null;
@@ -187,11 +202,7 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 							AdvancedConfiguratorConstants.CONFIG_LIST), configRelURI.equals(installURI) ? installURI : configRelURI);
 
 					Policy newPolicy = buildPolicy(policy);
-					if (isDefault) {
-						updatePolicyList(newPolicy);
-						updateOSGiBundles(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
-					}
-					fireEvent(ManipulatorEvent.ADD_POLICY, null, newPolicy);
+					return newPolicy;
 				} catch (URISyntaxException e) {
 					// won't happen
 				} finally {
@@ -211,6 +222,7 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					}
 			}
 		}
+		return null;
 	}
 
 	private String encodePolicyName(String policyName) {
@@ -245,15 +257,21 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 		}
 	}
 
-	private void updateOSGiBundles(String symbolName) throws IOException {
+	private void updateOSGiBundles(String symbolName) throws IOException, URISyntaxException {
 		ServiceTracker adminTracker = new ServiceTracker(Activator.getContext(), FrameworkAdmin.class.getName(), null);
 		try {
 			adminTracker.open();
 			FrameworkAdmin frameworkAdmin = (FrameworkAdmin) adminTracker.getService();
 
 			Bundle bundle = Platform.getBundle(symbolName);
-			BundleInfo[] bundles = new BundleInfo[] { new BundleInfo(bundle.getSymbolicName(), bundle.getVersion().toString(),
-					URI.create(bundle.getLocation()), 1, true) };
+			String location = bundle.getLocation();
+			URI uri = null;
+			if (location.startsWith("initial@")) { //$NON-NLS-1$
+				location = location.substring(8);
+				uri = new URL(location).toURI();
+			} else
+				uri = URI.create(location);
+			BundleInfo[] bundles = new BundleInfo[] { new BundleInfo(bundle.getSymbolicName(), bundle.getVersion().toString(), uri, 1, true) };
 			EquinoxFwConfigFileParser parser = new EquinoxFwConfigFileParser(Activator.getContext());
 			Manipulator manipulator = frameworkAdmin.getRunningManipulator();
 			manipulator.load();
@@ -270,16 +288,16 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 		try {
 			Policy previous = setDefaultInternal(policy);
 			fireEvent(ManipulatorEvent.CHANGE_DEFAULT_POLICY, previous, policy);
+			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
-			return false;
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
 		}
-		return true;
+		return false;
 	}
 
-	private Policy setDefaultInternal(Policy policy) throws IOException, FileNotFoundException {
-		if (policy == null)
-			updateOSGiBundles("org.eclipse.equinox.simpleconfigurator");
+	private Policy setDefaultInternal(Policy policy) throws IOException, FileNotFoundException, URISyntaxException {
 		Policy previous = null;
 		for (Policy p : getPolicies()) {
 			if (p.isDefault()) {
@@ -287,12 +305,15 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 				break;
 			}
 		}
-		if (!previous.equals(policy)) {
+		if (previous != null && !previous.equals(policy)) {
 			((PolicyImpl) previous).setDefault(false);
-			if (policy != null)
-				((PolicyImpl) policy).setDefault(false);
-			updatePolicyList(policy);
 		}
+		if (policy != null) {
+			((PolicyImpl) policy).setDefault(true);
+			updateOSGiBundles(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
+		} else
+			updateOSGiBundles("org.eclipse.equinox.simpleconfigurator");
+		updatePolicyList(policy);
 		return previous;
 	}
 
@@ -316,6 +337,8 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 				fireEvent(ManipulatorEvent.REMOVE_POLICY, policy, null);
 			} catch (IOException e) {
 				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -326,5 +349,28 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 				deleteFiles(sub);
 		}
 		file.delete();
+	}
+
+	public void updatePolicy(Policy oldPolicy, String newName, boolean isDefault, Component[] components) {
+		Policy newPolicy = null;
+		if (oldPolicy.getName().equals(newName)) {
+			newPolicy = buildPolicy(newName, components);
+			try {
+				if (oldPolicy.isDefault() != isDefault) {
+					setDefaultInternal(newPolicy);
+					((PolicyImpl) newPolicy).setDefault(isDefault);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+		} else {
+			newPolicy = addInternal(newName, isDefault, components);
+			if (newPolicy != null)
+				removePolicy(oldPolicy);
+		}
+		if (newPolicy != null)
+			fireEvent(ManipulatorEvent.Update_POLICY, oldPolicy, newPolicy);
 	}
 }

@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Advanced Configurator Manipulator
 Bundle-SymbolicName: org.eclipse.equinox.advancedconfigurator.manipulator;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 0.5.0.qualifier
 Bundle-Activator: org.eclipse.equinox.advancedconfigurator.manipulator.internal.Activator
 Bundle-Vendor: kane.zhu@windriver.com
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.equinox.simpleconfigurator.manipulator;bundle-version="2.0.0",
- org.eclipse.equinox.advancedconfigurator;bundle-version="1.0.0"
+ org.eclipse.equinox.advancedconfigurator;bundle-version="0.5.0"
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/manipulator.xml
