@@ -12,4 +12,5 @@ to be added soon
 
 = How to use =
 
-to be added soon
+Click the menu item '_Help_' - '_Advanced Configurator..._' to the wizard to create new policy that contains which features you want to launch.
+http://code.google.com/p/kane-toolkit/source/browse/trunk/equinox-advancedconfigurator/images/menu.png
