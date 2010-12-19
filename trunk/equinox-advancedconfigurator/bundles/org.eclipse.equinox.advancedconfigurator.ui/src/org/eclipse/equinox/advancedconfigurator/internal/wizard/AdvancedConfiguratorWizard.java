@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.equinox.advancedconfigurator.Policy;
 import org.eclipse.equinox.advancedconfigurator.Policy.Component;
 import org.eclipse.equinox.advancedconfigurator.internal.Activator;
 import org.eclipse.equinox.frameworkadmin.BundleInfo;
@@ -34,21 +35,32 @@ public class AdvancedConfiguratorWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
-		if (overviewPage.getSelectedPolicy() == null) {
+		Policy selectedPolicy = overviewPage.getSelectedPolicy();
+		if (selectedPolicy == null) {
 			String policyName = createPage.getPolicyName();
 			boolean isDefault = createPage.isDefault();
-			IInstallableUnit[] ius = configuratePage.getSelectedComponents();
-			Component[] comps = new Component[ius.length];
-			for (int i = 0; i < ius.length; i++) {
-				Component comp = new Component();
-				comp.id = ius[i].getId();
-				comp.version = ius[i].getVersion().toString();
-				comp.bundles = getBundles(comp.id, comp.version);
-				comps[i] = comp;
-			}
+			Component[] comps = getSelectedComponents();
 			Activator.getAdvancedManipulator().addPolicy(policyName, isDefault, comps);
+		} else {
+			String policyName = createPage.getPolicyName();
+			boolean isDefault = createPage.isDefault();
+			Component[] comps = getSelectedComponents();
+			Activator.getAdvancedManipulator().updatePolicy(selectedPolicy, policyName, isDefault, comps);
 		}
 		return true;
+	}
+
+	private Component[] getSelectedComponents() {
+		IInstallableUnit[] ius = configuratePage.getSelectedComponents();
+		Component[] comps = new Component[ius.length];
+		for (int i = 0; i < ius.length; i++) {
+			Component comp = new Component();
+			comp.id = ius[i].getId();
+			comp.version = ius[i].getVersion().toString();
+			comp.bundles = getBundles(comp.id, comp.version);
+			comps[i] = comp;
+		}
+		return comps;
 	}
 
 	private BundleInfo[] getBundles(String id, String version) {
