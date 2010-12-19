@@ -12,5 +12,11 @@ to be added soon
 
 = How to use =
 
-Click the menu item '_Help_' - '_Advanced Configurator..._' to the wizard to create new policy that contains which features you want to launch.
+Click the menu item '_Help_' - '_Advanced Configurator..._' to open the wizard to help you create policy or manage existing ones.
 http://kane-toolkit.googlecode.com/svn-history/r267/trunk/equinox-advancedconfigurator/images/menu.png
+You could create the new policy, change another policy as default and reverting to the Eclipse's default configuration via the wizard.
+http://kane-toolkit.googlecode.com/svn-history/r273/trunk/equinox-advancedconfigurator/images/main.png
+Click 'Next' to create a new policy or modify existing policy. Input the name for the new policy. In below example I created a policy that only contains Android development capability.
+http://kane-toolkit.googlecode.com/svn-history/r273/trunk/equinox-advancedconfigurator/images/inputname.png
+Click 'Next' to last page to choose the products related to Android development, then click 'Finish' to complete the configuration.
+http://kane-toolkit.googlecode.com/svn-history/r273/trunk/equinox-advancedconfigurator/images/choose.png
