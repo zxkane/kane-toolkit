@@ -5,7 +5,8 @@ import org.eclipse.equinox.advancedconfigurator.Policy;
 public class ManipulatorEvent {
 	public static final int ADD_POLICY = 1;
 	public static final int REMOVE_POLICY = 2;
-	public static final int CHANGE_DEFAULT_POLICY = 4;
+	public static final int Update_POLICY = 4;
+	public static final int CHANGE_DEFAULT_POLICY = 8;
 
 	private int eventType = 0;
 	private Policy oldStatePolicy = null;

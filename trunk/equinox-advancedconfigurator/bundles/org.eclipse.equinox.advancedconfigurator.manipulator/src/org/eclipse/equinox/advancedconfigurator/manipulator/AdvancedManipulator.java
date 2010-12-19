@@ -16,5 +16,5 @@ public interface AdvancedManipulator {
 
 	public void removePolicy(Policy policy);
 
-	public void updatePolicy(Policy oldPolicy, Policy newPolicy);
+	public void updatePolicy(Policy oldPolicy, String newName, boolean isDefault, Component[] components);
 }
