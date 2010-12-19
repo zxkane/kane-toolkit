@@ -354,6 +354,8 @@ class ConfigApplier {
 		for (int i = 0; i < allBundles.length; i++) {
 			if (allBundles[i].getBundleId() == 0)
 				continue;
+			if (allBundles[i].getSymbolicName().startsWith("org.eclipse.equinox.advancedconfigurator"))
+				continue;
 			removedBundles.add(allBundles[i]);
 		}
 

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Equninox Advance Configurator
 Bundle-SymbolicName: org.eclipse.equinox.advancedconfigurator;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 0.5.0.qualifier
 Bundle-Activator: org.eclipse.equinox.internal.advancedconfigurator.Activator
 Bundle-Vendor: kane.zhu@windriver.com
 Require-Bundle: org.eclipse.osgi
