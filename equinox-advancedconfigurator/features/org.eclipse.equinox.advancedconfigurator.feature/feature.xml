@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="org.eclipse.equinox.advancedconfigurator.feature"
+      label="Equinox Advanced Configurator Feature"
+      version="0.5.0.qualifier"
+      provider-name="kane.zhu@windriver.com">
+
+   <plugin
+         id="org.eclipse.equinox.advancedconfigurator"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.advancedconfigurator.manipulator"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.equinox.advancedconfigurator.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>
