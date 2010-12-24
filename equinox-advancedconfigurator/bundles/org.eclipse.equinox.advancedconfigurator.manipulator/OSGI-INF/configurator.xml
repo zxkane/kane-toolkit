@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="org.eclipse.equinox.advancedconfigurator.configurator">
+   <implementation class="org.eclipse.equinox.advancedconfigurator.manipulator.internal.SimpleConfiguratorManipulatorImpl" />
+   <property name="org.eclipse.equinox.configurator.BundleSymbolicName" type="String" value="org.eclipse.equinox.advancedconfigurator"/>
+   <property name="service.vendor" type="String" value="Eclipse.org"/>
+   <property name="service.ranking" type="Integer" value="99"/>
+   <service>
+      <provide interface="org.eclipse.equinox.internal.provisional.configuratormanipulator.ConfiguratorManipulator"/>
+      <provide interface="org.eclipse.equinox.simpleconfigurator.manipulator.SimpleConfiguratorManipulator"/>
+   </service>
+   <reference cardinality="1..1" interface="org.eclipse.equinox.advancedconfigurator.AdvancedConfigurator" name="AdvancedConfigurator" policy="static"/>
+</scr:component>

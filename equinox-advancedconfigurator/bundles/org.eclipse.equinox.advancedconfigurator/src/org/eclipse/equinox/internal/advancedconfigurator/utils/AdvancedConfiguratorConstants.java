@@ -14,8 +14,8 @@ public class AdvancedConfiguratorConstants {
 
 	/**
 	 * BundleContext#getProperty(PROP_KEY_CONFIGURL) is used for SimpleConfigurator to do life cycle control of bundles.
-	 * The file specified by the returned url is read by AdvanceConfigurator and do life cycle control according to it.
-	 * If improper value or null is returned, AdvanceConfigurator doesn't do it.
+	 * The file specified by the returned url is read by AdvancedConfigurator and do life cycle control according to it.
+	 * If improper value or null is returned, AdvancedConfigurator doesn't do it.
 	 * 
 	 * Default: null
 	 */
