@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -257,21 +258,19 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 		}
 	}
 
-	private void updateOSGiBundles(String symbolName) throws IOException, URISyntaxException {
+	private void updateOSGiBundles(String symbolName, String symbolName2) throws IOException, URISyntaxException {
 		ServiceTracker adminTracker = new ServiceTracker(Activator.getContext(), FrameworkAdmin.class.getName(), null);
 		try {
 			adminTracker.open();
 			FrameworkAdmin frameworkAdmin = (FrameworkAdmin) adminTracker.getService();
 
 			Bundle bundle = Platform.getBundle(symbolName);
-			String location = bundle.getLocation();
-			URI uri = null;
-			if (location.startsWith("initial@")) { //$NON-NLS-1$
-				location = location.substring(8);
-				uri = new URL(location).toURI();
-			} else
-				uri = URI.create(location);
-			BundleInfo[] bundles = new BundleInfo[] { new BundleInfo(bundle.getSymbolicName(), bundle.getVersion().toString(), uri, 1, true) };
+			URI uri = getLocation(bundle);
+			Bundle bundle2 = Platform.getBundle(symbolName2);
+			URI uri2 = getLocation(bundle2);
+
+			BundleInfo[] bundles = new BundleInfo[] { new BundleInfo(bundle.getSymbolicName(), bundle.getVersion().toString(), uri, 1, true),
+					new BundleInfo(bundle2.getSymbolicName(), bundle2.getVersion().toString(), uri2, 4, false) };
 			EquinoxFwConfigFileParser parser = new EquinoxFwConfigFileParser(Activator.getContext());
 			Manipulator manipulator = frameworkAdmin.getRunningManipulator();
 			manipulator.load();
@@ -279,6 +278,17 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 		} finally {
 			adminTracker.close();
 		}
+	}
+
+	private URI getLocation(Bundle bundle) throws URISyntaxException, MalformedURLException {
+		String location = bundle.getLocation();
+
+		if (location.startsWith("initial@")) { //$NON-NLS-1$
+			location = location.substring(8);
+		}
+		if (location.startsWith("reference:file:plugins/"))
+			location = location.replace("reference:file:plugins/", "reference:file:");
+		return new URL(location).toURI();
 	}
 
 	/**
@@ -310,9 +320,9 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 		}
 		if (policy != null) {
 			((PolicyImpl) policy).setDefault(true);
-			updateOSGiBundles(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
+			updateOSGiBundles(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME, "org.eclipse.equinox.simpleconfigurator");
 		} else
-			updateOSGiBundles("org.eclipse.equinox.simpleconfigurator");
+			updateOSGiBundles("org.eclipse.equinox.simpleconfigurator", AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME);
 		updatePolicyList(policy);
 		return previous;
 	}
