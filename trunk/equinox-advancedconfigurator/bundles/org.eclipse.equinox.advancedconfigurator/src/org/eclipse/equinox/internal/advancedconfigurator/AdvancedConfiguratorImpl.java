@@ -8,13 +8,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
+import org.eclipse.equinox.advancedconfigurator.AdvancedConfigurator;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvancedConfiguratorConstants;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.EquinoxUtils;
 import org.eclipse.equinox.internal.advancedconfigurator.utils.Utils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-public class AdvancedConfiguratorImpl {
+public class AdvancedConfiguratorImpl implements AdvancedConfigurator {
 	
 	private static URL configurationURL = null;
 	private static Object configurationLock = new Object();

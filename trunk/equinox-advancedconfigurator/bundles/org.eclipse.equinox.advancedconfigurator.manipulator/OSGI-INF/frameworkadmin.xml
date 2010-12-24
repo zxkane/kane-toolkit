@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="org.eclipse.equinox.advancedconfigurator.frameworkadmin">
+   <implementation class="org.eclipse.equinox.advancedconfigurator.manipulator.internal.EquinoxFwAdminImpl"/>
+   <property name="service.ranking" type="Integer" value="99"/>
+   <service>
+      <provide interface="org.eclipse.equinox.internal.provisional.frameworkadmin.FrameworkAdmin"/>
+   </service>
+   <reference bind="setStartLevel" cardinality="1..1" interface="org.osgi.service.startlevel.StartLevel" name="StartLevel" policy="static"/>
+   <reference bind="setPlatformAdmin" cardinality="1..1" interface="org.eclipse.osgi.service.resolver.PlatformAdmin" name="PlatformAdmin" policy="static"/>
+   <reference cardinality="1..1" interface="org.eclipse.equinox.advancedconfigurator.AdvancedConfigurator" name="AdvancedConfigurator" policy="static"/>
+</scr:component>

@@ -1,7 +1,11 @@
 package org.eclipse.equinox.internal.advancedconfigurator;
 
+import java.util.Hashtable;
+
+import org.eclipse.equinox.advancedconfigurator.AdvancedConfigurator;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -12,6 +16,8 @@ public class Activator implements BundleActivator {
 	static BundleContext getContext() {
 		return context;
 	}
+
+	private ServiceRegistration confReg;
 
 	/*
 	 * (non-Javadoc)
@@ -24,6 +30,7 @@ public class Activator implements BundleActivator {
 		StartLevel startLevel = (StartLevel) tracker.getService();
 		if (startLevel.getBundleStartLevel(bundleContext.getBundle()) == 1) {
 			AdvancedConfiguratorImpl conf = new AdvancedConfiguratorImpl(bundleContext, bundleContext.getBundle());
+			confReg = bundleContext.registerService(AdvancedConfigurator.class.getName(), conf, new Hashtable<String, String>());
 			conf.applyConfiguration();
 		}
 	}
@@ -34,6 +41,8 @@ public class Activator implements BundleActivator {
 	 */
 	public void stop(BundleContext bundleContext) throws Exception {
 		Activator.context = null;
+		if (confReg != null)
+			confReg.unregister();
 	}
 
 }
