@@ -81,7 +81,8 @@ public class AdvancedConfiguratorImpl implements AdvancedConfigurator {
 					prop.load(input);
 					String file = prop.getProperty(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY);
 					if (file != null)
-						specifiedURL = new File(file, AdvancedConfiguratorConstants.CONFIG_LIST).toURI().toURL().toString();
+						specifiedURL = new File(new File(userConfig.getParentFile(), file), AdvancedConfiguratorConstants.CONFIG_LIST).toURI().toURL()
+								.toString();
 				} catch (IOException e) {
 					//ignore
 				} finally {

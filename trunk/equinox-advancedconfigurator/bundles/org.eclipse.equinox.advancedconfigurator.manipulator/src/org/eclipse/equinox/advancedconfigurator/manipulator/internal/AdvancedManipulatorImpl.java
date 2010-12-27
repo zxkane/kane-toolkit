@@ -37,6 +37,7 @@ import org.eclipse.equinox.internal.advancedconfigurator.utils.AdvancedConfigura
 import org.eclipse.equinox.internal.advancedconfigurator.utils.EquinoxUtils;
 import org.eclipse.equinox.internal.frameworkadmin.equinox.EquinoxFwConfigFileParser;
 import org.eclipse.equinox.internal.provisional.frameworkadmin.FrameworkAdmin;
+import org.eclipse.equinox.internal.provisional.frameworkadmin.FrameworkAdminRuntimeException;
 import org.eclipse.equinox.internal.provisional.frameworkadmin.Manipulator;
 import org.eclipse.equinox.simpleconfigurator.manipulator.SimpleConfiguratorManipulator;
 import org.eclipse.osgi.service.datalocation.Location;
@@ -55,7 +56,7 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 		if (configs != null) {
 			File policy = new File(configs[0].getFile(), AdvancedConfiguratorConstants.CONFIGURATOR_FOLDER);
 			File defaultPolicyList = new File(policy, AdvancedConfiguratorConstants.POLICY_LIST);
-			File defaultPolicy = null;
+			String defaultPolicyFolderName = null;
 			InputStream input = null;
 
 			try {
@@ -64,7 +65,7 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 				prop.load(input);
 				String file = prop.getProperty(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY);
 				if (file != null)
-					defaultPolicy = new File(file);
+					defaultPolicyFolderName = file;
 			} catch (FileNotFoundException e) {
 				// do nothing
 			} catch (IOException e) {
@@ -84,11 +85,36 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 						return false;
 					}
 				});
+
+				boolean isAdvancedConfigurator = false;
+				ServiceTracker adminTracker = new ServiceTracker(Activator.getContext(), FrameworkAdmin.class.getName(), null);
+				try {
+					adminTracker.open();
+					FrameworkAdmin frameworkAdmin = (FrameworkAdmin) adminTracker.getService();
+					Manipulator manipulator = frameworkAdmin.getRunningManipulator();
+					manipulator.load();
+					for (BundleInfo info : manipulator.getConfigData().getBundles()) {
+						if (info.isMarkedAsStarted() && info.getStartLevel() == 1
+								&& info.getSymbolicName().equals(AdvancedConfiguratorConstants.TARGET_CONFIGURATOR_NAME)) {
+							isAdvancedConfigurator = true;
+							break;
+						}
+					}
+				} catch (IllegalStateException e) {
+					e.printStackTrace();
+				} catch (FrameworkAdminRuntimeException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					adminTracker.close();
+				}
 				List<Policy> policies = new ArrayList<Policy>(candinates.length);
 				for (File c : candinates) {
 					policies.add(buildPolicy(c));
-					if (c.equals(defaultPolicy))
+					if (isAdvancedConfigurator && c.getName().equals(defaultPolicyFolderName)) {
 						((PolicyImpl) policies.get(policies.size() - 1)).setDefault(true);
+					}
 				}
 				return policies.toArray(new Policy[policies.size()]);
 			}
@@ -187,7 +213,7 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 					for (BundleInfo bundle : totalBundleInfos) {
 						// prevent simpleconfigurator to take effect
 						if ("org.eclipse.equinox.simpleconfigurator".equals(bundle.getSymbolicName())) {
-							bundle.setStartLevel(4);
+							bundle.setStartLevel(8);
 							bundle.setMarkedAsStarted(false);
 							// continue;
 						}
@@ -248,7 +274,7 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 			try {
 				File policyList = new File(advConfig, AdvancedConfiguratorConstants.POLICY_LIST);
 				Properties policyProp = new Properties();
-				policyProp.put(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY, policy == null ? "" : new File(advConfig, policy.getName()).getAbsolutePath());
+				policyProp.put(AdvancedConfiguratorConstants.DEFAULT_POLICY_KEY, policy == null ? "" : encodePolicyName(policy.getName()));
 				output = new FileOutputStream(policyList);
 				policyProp.store(output, null);
 			} finally {
@@ -270,7 +296,7 @@ public class AdvancedManipulatorImpl implements AdvancedManipulator {
 			URI uri2 = getLocation(bundle2);
 
 			BundleInfo[] bundles = new BundleInfo[] { new BundleInfo(bundle.getSymbolicName(), bundle.getVersion().toString(), uri, 1, true),
-					new BundleInfo(bundle2.getSymbolicName(), bundle2.getVersion().toString(), uri2, 4, false) };
+					new BundleInfo(bundle2.getSymbolicName(), bundle2.getVersion().toString(), uri2, 8, false) };
 			EquinoxFwConfigFileParser parser = new EquinoxFwConfigFileParser(Activator.getContext());
 			Manipulator manipulator = frameworkAdmin.getRunningManipulator();
 			manipulator.load();

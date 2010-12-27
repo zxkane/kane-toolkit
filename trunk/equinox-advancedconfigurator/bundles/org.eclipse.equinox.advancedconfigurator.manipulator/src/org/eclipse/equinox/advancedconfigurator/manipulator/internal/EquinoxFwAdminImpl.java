@@ -42,7 +42,6 @@ public class EquinoxFwAdminImpl implements FrameworkAdmin {
 
 	public EquinoxFwAdminImpl() {
 		this(null, false);
-		System.out.println("construct EquinoxFwAdminImpl");
 	}
 
 	// private String configuratorManipulatorFactoryName = null;
