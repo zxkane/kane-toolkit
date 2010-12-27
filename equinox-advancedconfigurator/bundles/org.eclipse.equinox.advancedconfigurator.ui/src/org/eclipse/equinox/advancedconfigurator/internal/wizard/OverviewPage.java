@@ -2,6 +2,7 @@ package org.eclipse.equinox.advancedconfigurator.internal.wizard;
 
 import org.eclipse.equinox.advancedconfigurator.Policy;
 import org.eclipse.equinox.advancedconfigurator.internal.Activator;
+import org.eclipse.equinox.advancedconfigurator.internal.Util;
 import org.eclipse.equinox.advancedconfigurator.manipulator.ManipulatorEvent;
 import org.eclipse.equinox.advancedconfigurator.manipulator.ManipulatorListener;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
@@ -186,12 +187,16 @@ public class OverviewPage extends WizardPage implements ManipulatorListener {
 			return null;
 	}
 
-	public void notify(ManipulatorEvent e) {
+	public void notify(final ManipulatorEvent e) {
 		Display.getDefault().asyncExec(new Runnable() {
 
 			public void run() {
 				if (!viewer.getTable().isDisposed()) {
 					viewer.setInput(getInput());
+					Policy oldPolicy = e.getOldStatePolicy();
+					Policy newPolicy = e.getNewStatePolicy();
+					if (oldPolicy == null || newPolicy == null || (oldPolicy.isDefault() != newPolicy.isDefault()))
+						Util.restartConfirm();
 				}
 			}
 		});

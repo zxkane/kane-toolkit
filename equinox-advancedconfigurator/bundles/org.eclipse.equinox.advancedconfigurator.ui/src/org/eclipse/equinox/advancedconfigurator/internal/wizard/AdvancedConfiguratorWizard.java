@@ -20,6 +20,7 @@ import org.eclipse.equinox.p2.query.IQueryable;
 import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 
 @SuppressWarnings("restriction")
 public class AdvancedConfiguratorWizard extends Wizard {
@@ -41,11 +42,27 @@ public class AdvancedConfiguratorWizard extends Wizard {
 			boolean isDefault = createPage.isDefault();
 			Component[] comps = getSelectedComponents();
 			Activator.getAdvancedManipulator().addPolicy(policyName, isDefault, comps);
+			if (isDefault)
+				Display.getDefault().asyncExec(new Runnable() {
+
+					public void run() {
+						org.eclipse.equinox.advancedconfigurator.internal.Util.restartConfirm();
+					}
+				});
 		} else {
 			String policyName = createPage.getPolicyName();
 			boolean isDefault = createPage.isDefault();
 			Component[] comps = getSelectedComponents();
 			Activator.getAdvancedManipulator().updatePolicy(selectedPolicy, policyName, isDefault, comps);
+			if (selectedPolicy.isDefault() == false && isDefault == false)
+				;
+			else
+				Display.getDefault().asyncExec(new Runnable() {
+
+					public void run() {
+						org.eclipse.equinox.advancedconfigurator.internal.Util.restartConfirm();
+					}
+				});
 		}
 		return true;
 	}

@@ -47,10 +47,6 @@ import org.osgi.framework.Constants;
  */
 @SuppressWarnings("restriction")
 public class SimpleConfiguratorManipulatorImpl implements SimpleConfiguratorManipulator, ConfiguratorManipulator {
-	public SimpleConfiguratorManipulatorImpl() {
-		System.out.println("construct SimpleConfiguratorManipulatorImpl");
-	}
-
 	class LocationInfo {
 		URI[] prerequisiteLocations = null;
 		URI systemBundleLocation = null;
