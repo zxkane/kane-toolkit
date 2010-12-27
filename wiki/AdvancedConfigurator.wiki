@@ -8,7 +8,13 @@ So *Advanced Configurator* is an enhancement implementation of bundle manager co
 
 = How to install =
 
-to be added soon
+===Install it via Eclipse Marketplace===
+
+===Manual install===
+
+Add below repository into your eclipse
+
+ `http://kane-toolkit.googlecode.com/svn/trunk/equinox-advancedconfigurator/advanced-repository/`
 
 = How to use =
 
