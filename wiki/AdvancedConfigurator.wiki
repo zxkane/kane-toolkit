@@ -30,4 +30,4 @@ http://kane-toolkit.googlecode.com/svn-history/r273/trunk/equinox-advancedconfig
 = Known limitation =
 
 Eclipse would load the all installed plug-ins to make thing mess if installing, updating or uninstalling features when you're launching your eclipse via advanced configurator.
-So you'd better installing, updating or uninstalling features when switching back to use simple configurator.
+So you'd better installing, updating or uninstalling features after switching back to use simple configurator.
