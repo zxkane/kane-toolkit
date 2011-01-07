@@ -10,6 +10,10 @@ So *Advanced Configurator* is an enhancement implementation of bundle manager co
 
 ===Install it via Eclipse Marketplace===
 
+You could install it via Eclipse Marketplace if your eclipse has installed Marketplace feature.
+
+[http://marketplace.eclipse.org/content/equinox-advanced-configurator The home page of advanced configurator on Eclipse Marketplace]
+
 ===Manual install===
 
 Add below repository into your eclipse
