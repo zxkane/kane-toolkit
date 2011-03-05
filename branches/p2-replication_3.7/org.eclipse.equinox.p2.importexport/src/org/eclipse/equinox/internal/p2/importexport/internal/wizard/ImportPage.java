@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -19,12 +20,58 @@ import org.eclipse.equinox.p2.query.IQuery;
 import org.eclipse.equinox.p2.query.IQueryResult;
 import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.viewers.IContentProvider;
+import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.MessageBox;
 
 public class ImportPage extends AbstractPage {
+
+	private class InstallationContentProvider implements IStructuredContentProvider {
+
+		public void dispose() {
+		}
+
+		public Object[] getElements(Object inputElement) {
+			return (Object[])inputElement;
+		}
+
+		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+		}
+
+	}
+
+	private class InstallationLabelProvider extends LabelProvider implements ITableLabelProvider{
+
+		public Image getColumnImage(Object element, int columnIndex) {
+			return null;
+		}
+
+		public String getColumnText(Object element, int columnIndex) {
+			IInstallableUnit iu = (IInstallableUnit) element;
+			switch (columnIndex) {
+			case 0:
+				return getIUProperty(iu, IInstallableUnit.PROP_NAME);
+			case 1:
+				return iu.getVersion().toString();
+			case 2:
+				return iu.getId();
+			default:
+				throw new RuntimeException("Should not happen"); //$NON-NLS-1$
+			}
+
+		}
+
+		private String getIUProperty(IInstallableUnit iu, String key) {
+			return iu.getProperty(key, Locale.getDefault().toString());
+		}
+	}
 
 	private String[] repositories;
 
@@ -38,6 +85,16 @@ public class ImportPage extends AbstractPage {
 	protected void createContents(Composite composite) {
 		createDestinationGroup(composite);
 		createInstallationTable(composite);
+	}
+
+	@Override
+	protected IContentProvider getContentProvider() {
+		return new InstallationContentProvider();
+	}
+
+	@Override
+	protected ITableLabelProvider getLabelProvider() {
+		return new InstallationLabelProvider();
 	}
 
 	private void disableInstalled() {
