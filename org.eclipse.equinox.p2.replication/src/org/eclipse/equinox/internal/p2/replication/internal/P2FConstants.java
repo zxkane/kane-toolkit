@@ -1,4 +1,4 @@
-package org.eclipse.equinox.p2.replication.internal;
+package org.eclipse.equinox.internal.p2.replication.internal;
 
 public interface P2FConstants {
 

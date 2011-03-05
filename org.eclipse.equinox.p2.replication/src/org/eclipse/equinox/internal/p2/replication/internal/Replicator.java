@@ -1,4 +1,4 @@
-package org.eclipse.equinox.p2.replication.internal;
+package org.eclipse.equinox.internal.p2.replication.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +18,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.metadata.repository.io.XMLConstants;
+import org.eclipse.equinox.internal.p2.replication.Constants;
+import org.eclipse.equinox.internal.p2.replication.P2Replicator;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
@@ -34,8 +36,6 @@ import org.eclipse.equinox.p2.planner.IProfileChangeRequest;
 import org.eclipse.equinox.p2.query.IQuery;
 import org.eclipse.equinox.p2.query.IQueryResult;
 import org.eclipse.equinox.p2.query.QueryUtil;
-import org.eclipse.equinox.p2.replication.Constants;
-import org.eclipse.equinox.p2.replication.P2Replicator;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepository;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
 

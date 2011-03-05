@@ -1,4 +1,4 @@
-package org.eclipse.equinox.p2.replication.internal.wizard;
+package org.eclipse.equinox.internal.p2.replication.internal.wizard;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -11,13 +11,13 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.equinox.internal.p2.replication.P2Replicator.InstallationConfiguration;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.p2.query.IQuery;
 import org.eclipse.equinox.p2.query.IQueryResult;
 import org.eclipse.equinox.p2.query.QueryUtil;
-import org.eclipse.equinox.p2.replication.P2Replicator.InstallationConfiguration;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;

@@ -1,4 +1,4 @@
-package org.eclipse.equinox.p2.replication.internal.wizard;
+package org.eclipse.equinox.internal.p2.replication.internal.wizard;
 
 import java.io.File;
 import java.util.Arrays;
@@ -6,14 +6,14 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.internal.p2.replication.Constants;
+import org.eclipse.equinox.internal.p2.replication.P2Replicator;
 import org.eclipse.equinox.internal.p2.ui.ProvUIMessages;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.viewers.DeferredQueryContentProvider;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUColumnConfig;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
-import org.eclipse.equinox.p2.replication.Constants;
-import org.eclipse.equinox.p2.replication.P2Replicator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CheckboxTableViewer;

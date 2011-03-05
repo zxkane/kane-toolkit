@@ -1,4 +1,4 @@
-package org.eclipse.equinox.p2.replication.internal;
+package org.eclipse.equinox.internal.p2.replication.internal;
 
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
