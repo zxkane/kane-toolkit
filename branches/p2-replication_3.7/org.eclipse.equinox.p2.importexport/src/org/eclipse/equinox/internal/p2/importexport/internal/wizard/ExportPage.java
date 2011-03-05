@@ -1,4 +1,4 @@
-package org.eclipse.equinox.internal.p2.replication.internal.wizard;
+package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

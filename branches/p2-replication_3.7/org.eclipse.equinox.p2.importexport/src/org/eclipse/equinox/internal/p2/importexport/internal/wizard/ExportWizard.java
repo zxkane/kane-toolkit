@@ -1,7 +1,7 @@
-package org.eclipse.equinox.internal.p2.replication.internal.wizard;
+package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.internal.p2.replication.Constants;
+import org.eclipse.equinox.internal.p2.importexport.Constants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IExportWizard;

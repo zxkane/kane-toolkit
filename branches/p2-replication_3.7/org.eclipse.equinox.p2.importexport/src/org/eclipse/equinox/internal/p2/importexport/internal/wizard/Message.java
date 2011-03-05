@@ -1,4 +1,4 @@
-package org.eclipse.equinox.internal.p2.replication.internal.wizard;
+package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
 import org.eclipse.osgi.util.NLS;
 
@@ -36,6 +36,6 @@ public class Message extends NLS {
 
 	static {
 		NLS.initializeMessages(
-				"org.eclipse.equinox.internal.p2.replication.internal.wizard.message", Message.class); //$NON-NLS-1$
+				"org.eclipse.equinox.internal.p2.importexport.internal.wizard.message", Message.class); //$NON-NLS-1$
 	}
 }
