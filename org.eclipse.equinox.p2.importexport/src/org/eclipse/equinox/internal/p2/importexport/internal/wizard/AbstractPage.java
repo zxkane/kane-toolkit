@@ -1,9 +1,6 @@
 package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Locale;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.internal.p2.importexport.Constants;
@@ -13,24 +10,19 @@ import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.viewers.DeferredQueryContentProvider;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUColumnConfig;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
-import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -49,42 +41,6 @@ import org.eclipse.swt.widgets.Widget;
 import org.osgi.util.tracker.ServiceTracker;
 
 public abstract class AbstractPage extends WizardPage implements Listener {
-
-	protected class InstallationContentProvider implements IStructuredContentProvider {
-
-		public void dispose() {
-		}
-
-		public Object[] getElements(Object inputElement) {
-			return (Object[])inputElement;
-		}
-
-		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-		}
-
-	}
-
-	private class InstallationLabelProvider extends LabelProvider implements ITableLabelProvider{
-
-		public Image getColumnImage(Object element, int columnIndex) {
-			return null;
-		}
-
-		public String getColumnText(Object element, int columnIndex) {
-			IInstallableUnit iu = (IInstallableUnit) element;
-			switch (columnIndex) {
-			case 0:
-				return getIUProperty(iu, IInstallableUnit.PROP_NAME);
-			case 1:
-				return iu.getVersion().toString();
-			case 2:
-				return iu.getId();
-			default:
-				throw new RuntimeException("Should not happen"); //$NON-NLS-1$
-			}
-
-		}
-	}
 
 	protected String currentMessage;
 	protected Button destinationBrowseButton;
@@ -174,8 +130,8 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		createColumns(viewer);
 		viewer.getControl().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		viewer.getControl().setSize(300, 200);
-		viewer.setContentProvider(new DeferredQueryContentProvider());
-		viewer.setLabelProvider(new IUDetailsLabelProvider(null, getColumnConfig(), null));
+		viewer.setContentProvider(getContentProvider());
+		viewer.setLabelProvider(getLabelProvider());
 		parent.addControlListener(new ControlAdapter() {
 			private final int[] columnRate = new int[]{4, 2, 4};
 			@Override
@@ -224,12 +180,12 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		viewer.setInput(getInput());
 	}
 
-	private String getIUProperty(IInstallableUnit iu, String key) {
-		return iu.getProperty(key, Locale.getDefault().toString());
+	protected ITableLabelProvider getLabelProvider() {
+		return new IUDetailsLabelProvider(null, getColumnConfig(), null);
 	}
 
 	protected IContentProvider getContentProvider() {
-		return new InstallationContentProvider();
+		return new DeferredQueryContentProvider();
 	}
 
 	protected boolean determinePageCompletion() {
@@ -321,18 +277,6 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 
 	protected void setDestinationValue(String selectedFileName) {
 		destinationNameField.setText(selectedFileName);
-	}
-
-	private IInstallableUnit[] sortByName(IInstallableUnit[] rootIUs) {
-		Arrays.sort(rootIUs, new Comparator<IInstallableUnit>(){
-
-			public int compare(IInstallableUnit iu1, IInstallableUnit iu2) {
-				return getIUProperty(iu1, IInstallableUnit.PROP_NAME).compareTo(
-						getIUProperty(iu2, IInstallableUnit.PROP_NAME));
-			}
-
-		});
-		return rootIUs;
 	}
 
 	/**
