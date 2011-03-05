@@ -1,4 +1,4 @@
-package org.eclipse.equinox.p2.replication;
+package org.eclipse.equinox.internal.p2.replication;
 
 import java.io.IOException;
 import java.io.InputStream;

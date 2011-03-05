@@ -1,15 +1,15 @@
-package org.eclipse.equinox.p2.replication.internal.wizard;
+package org.eclipse.equinox.internal.p2.replication.internal.wizard;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.p2.replication.Constants;
+import org.eclipse.equinox.internal.p2.replication.Constants;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 
-public class ImportFromInstallationWizard extends AbstractWizard implements IImportWizard {
+public class ImportWizard extends AbstractWizard implements IImportWizard {
 
-	public ImportFromInstallationWizard() {
+	public ImportWizard() {
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
@@ -21,7 +21,7 @@ public class ImportFromInstallationWizard extends AbstractWizard implements IImp
 	@Override
 	public void addPages() {
 		super.addPages();
-		mainPage = new ImportFromInstallationPage("mainPage"); //$NON-NLS-1$
+		mainPage = new ImportPage("mainPage"); //$NON-NLS-1$
 		addPage(mainPage);
 	}
 }
