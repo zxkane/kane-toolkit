@@ -1,4 +1,4 @@
-package org.eclipse.equinox.internal.p2.replication.internal.wizard;
+package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.equinox.internal.p2.replication.P2Replicator.InstallationConfiguration;
+import org.eclipse.equinox.internal.p2.importexport.P2Replicator.InstallationConfiguration;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;

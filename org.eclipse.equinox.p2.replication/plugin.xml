@@ -9,7 +9,7 @@
       </category>
       <wizard
             category="org.eclipse.equinox.p2.category"
-            class="org.eclipse.equinox.internal.p2.replication.internal.wizard.ExportWizard"
+            class="org.eclipse.equinox.internal.p2.importexport.internal.wizard.ExportWizard"
             icon="icons/ico_import_export.gif"
             id="org.eclipse.equinox.p2.replication.export"
             name="%export.name">
@@ -23,14 +23,14 @@
       </category>
       <wizard
             category="org.eclipse.equinox.p2.category"
-            class="org.eclipse.equinox.internal.p2.replication.internal.wizard.ImportWizard"
+            class="org.eclipse.equinox.internal.p2.importexport.internal.wizard.ImportWizard"
             icon="icons/ico_import_export.gif"
             id="org.eclipse.equinox.p2.replication.import"
             name="%import.name">
       </wizard>
       <wizard
             category="org.eclipse.equinox.p2.category"
-            class="org.eclipse.equinox.internal.p2.replication.internal.wizard.ImportFromInstallationWizard"
+            class="org.eclipse.equinox.internal.p2.importexport.internal.wizard.ImportFromInstallationWizard"
             icon="icons/ico_import_export.gif"
             id="org.eclipse.equinox.p2.replication.importfrominstallation"
             name="%importfrominstallation.name">

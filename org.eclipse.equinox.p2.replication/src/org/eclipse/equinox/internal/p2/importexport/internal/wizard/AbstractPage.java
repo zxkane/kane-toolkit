@@ -1,4 +1,4 @@
-package org.eclipse.equinox.internal.p2.replication.internal.wizard;
+package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
 import java.io.File;
 import java.util.Arrays;
@@ -6,8 +6,8 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.internal.p2.replication.Constants;
-import org.eclipse.equinox.internal.p2.replication.P2Replicator;
+import org.eclipse.equinox.internal.p2.importexport.Constants;
+import org.eclipse.equinox.internal.p2.importexport.P2Replicator;
 import org.eclipse.equinox.internal.p2.ui.ProvUIMessages;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.viewers.DeferredQueryContentProvider;
