@@ -16,7 +16,6 @@ public class Message extends NLS {
 	public static String EXTENSION_ALL;
 	public static String EXTENSION_ALL_NAME;
 	public static String EXTENSION_P2F_NAME;
-	public static String EXTENSION_NAME;
 	public static String EXTENSION_P2F;
 	public static String ExportPage_LABEL_EXPORTFILE;
 	public static String ImportPage_DESCRIPTION;
