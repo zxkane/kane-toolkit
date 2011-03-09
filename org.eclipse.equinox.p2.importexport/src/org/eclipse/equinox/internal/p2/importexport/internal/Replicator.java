@@ -19,7 +19,8 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.importexport.Constants;
 import org.eclipse.equinox.internal.p2.importexport.P2Replicator;
-import org.eclipse.equinox.internal.p2.metadata.repository.io.XMLConstants;
+import org.eclipse.equinox.internal.p2.importexport.persistence.P2FParser;
+import org.eclipse.equinox.internal.p2.importexport.persistence.P2FWriter;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
@@ -80,9 +81,18 @@ public class Replicator implements P2Replicator {
 
 	}
 
-	private final class Configuriation implements InstallationConfiguration{
-		String[] repoStrings;
-		IInstallableUnit[] ius;
+	public static final class Configuriation implements InstallationConfiguration{
+		private String[] repoStrings;
+		private IInstallableUnit[] ius;
+
+		Configuriation() {
+		}
+
+		public Configuriation(IInstallableUnit[] ius, String[] repoStrings) {
+			this.ius = ius;
+			this.repoStrings = repoStrings;
+		}
+
 		public String[] getRepositories() {
 			return repoStrings;
 		}
@@ -156,24 +166,29 @@ public class Replicator implements P2Replicator {
 				}
 			}
 			subMonitor.setWorkRemaining(100);
+			//			P2FWriter writer = new P2FWriter(output, null);
+			//			writer.start(P2FConstants.P2F_ELEMENT);
+			//			writer.start(XMLConstants.INSTALLABLE_UNITS_ELEMENT);
+			//			int percent = 100/ius.length;
+			//			for(IInstallableUnit unit : ius) { 
+			//				writer.writeIU(unit);
+			//				subMonitor.worked(percent);
+			//			}
+			//			writer.end(XMLConstants.INSTALLABLE_UNITS_ELEMENT);
+			//			writer.start(P2FConstants.REPOSITORIES_ELEMENT);
+			//			for(URI uri : repositories) {
+			//				writer.start(P2FConstants.REPOSITORY_ELEMENT);
+			//				writer.attribute(P2FConstants.P2FURI_ATTRIBUTE, uri.toString());
+			//				writer.end(P2FConstants.REPOSITORY_ELEMENT);
+			//			}
+			//			writer.end(P2FConstants.REPOSITORIES_ELEMENT);
+			//			writer.end(P2FConstants.P2F_ELEMENT);
+			//			writer.flush();
 			P2FWriter writer = new P2FWriter(output, null);
-			writer.start(P2FConstants.P2F_ELEMENT);
-			writer.start(XMLConstants.INSTALLABLE_UNITS_ELEMENT);
-			int percent = 100/ius.length;
-			for(IInstallableUnit unit : ius) { 
-				writer.writeIU(unit);
-				subMonitor.worked(percent);
-			}
-			writer.end(XMLConstants.INSTALLABLE_UNITS_ELEMENT);
-			writer.start(P2FConstants.REPOSITORIES_ELEMENT);
-			for(URI uri : repositories) {
-				writer.start(P2FConstants.REPOSITORY_ELEMENT);
-				writer.attribute(P2FConstants.P2FURI_ATTRIBUTE, uri.toString());
-				writer.end(P2FConstants.REPOSITORY_ELEMENT);
-			}
-			writer.end(P2FConstants.REPOSITORIES_ELEMENT);
-			writer.end(P2FConstants.P2F_ELEMENT);
-			writer.flush();
+			List<String> uriStrings = new ArrayList<String>();
+			for (URI uri : repositories)
+				uriStrings.add(uri.toString());
+			writer.write(new Configuriation(ius, uriStrings.toArray(new String[uriStrings.size()])));
 
 			return queries.keySet().toArray(new IInstallableUnit[queries.size()]);
 		} catch (UnsupportedEncodingException e) {
@@ -185,13 +200,16 @@ public class Replicator implements P2Replicator {
 	}
 
 	public InstallationConfiguration load(InputStream input) throws IOException {
-		P2FParser parser = new P2FParser(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
+		/*P2FParser parser = new P2FParser(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
 				Constants.Bundle_ID);
 		parser.parse(input);
 		Configuriation conf = new Configuriation();
 		conf.ius = parser.getIUs();
-		conf.repoStrings = parser.getRepositories();
-		return conf;
+		conf.repoStrings = parser.getRepositories();*/
+		P2FParser parser = new P2FParser(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
+				Constants.Bundle_ID);
+		parser.parse(input);
+		return parser.getFeatures();
 	}
 
 	public void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) throws ProvisionException {
