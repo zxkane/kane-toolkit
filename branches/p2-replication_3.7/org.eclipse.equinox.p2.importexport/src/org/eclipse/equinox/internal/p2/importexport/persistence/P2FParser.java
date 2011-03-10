@@ -11,8 +11,7 @@ import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
-import org.eclipse.equinox.internal.p2.importexport.internal.Message;
-import org.eclipse.equinox.internal.p2.persistence.Messages;
+import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.persistence.XMLParser;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.p2.metadata.MetadataFactory;
@@ -237,7 +236,7 @@ public class P2FParser extends XMLParser implements P2FConstants {
 
 	@Override
 	protected String getErrorMessage() {
-		return Message.io_parseError;
+		return Messages.io_parseError;
 	}
 
 }

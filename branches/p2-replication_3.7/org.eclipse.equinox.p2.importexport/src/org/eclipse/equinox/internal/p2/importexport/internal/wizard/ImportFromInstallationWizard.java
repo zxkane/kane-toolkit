@@ -2,7 +2,7 @@ package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.internal.p2.importexport.internal.Constants;
-import org.eclipse.equinox.internal.p2.importexport.internal.Message;
+import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IImportWizard;
@@ -14,7 +14,7 @@ public class ImportFromInstallationWizard extends AbstractWizard implements IImp
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		setWindowTitle(Message.ImportWizard_WINDOWTITLE);
+		setWindowTitle(Messages.ImportWizard_WINDOWTITLE);
 		setDefaultPageImageDescriptor(ImageDescriptor.createFromURL(Platform.getBundle(Constants.Bundle_ID).getEntry("icons/ico_import_export.gif"))); //$NON-NLS-1$
 		setNeedsProgressMonitor(true);
 	}

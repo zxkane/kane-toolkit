@@ -17,8 +17,8 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.p2.extensionlocation.ExtensionLocationArtifactRepositoryFactory;
 import org.eclipse.equinox.internal.p2.extensionlocation.ExtensionLocationMetadataRepositoryFactory;
-import org.eclipse.equinox.internal.p2.importexport.internal.Message;
-import org.eclipse.equinox.internal.p2.importexport.internal.Replicator;
+import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
+import org.eclipse.equinox.internal.p2.importexport.internal.ImportExportImpl;
 import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ApplyProfileChangesDialog;
 import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
@@ -57,8 +57,8 @@ public class ImportFromInstallationPage extends AbstractPage {
 
 	public ImportFromInstallationPage(String pageName) {
 		super(pageName);
-		setTitle(Message.ImportFromInstallationPage_DIALOG_TITLE);
-		setDescription(Message.ImportFromInstallationPage_DIALOG_DESCRIPTION);
+		setTitle(Messages.ImportFromInstallationPage_DIALOG_TITLE);
+		setDescription(Messages.ImportFromInstallationPage_DIALOG_DESCRIPTION);
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public class ImportFromInstallationPage extends AbstractPage {
 				InterruptedException {
 					SubMonitor sub = SubMonitor.convert(monitor, 100);
 
-					IProvisioningAgent agent = ((Replicator)replicator).getAgent();
+					IProvisioningAgent agent = ((ImportExportImpl)replicator).getAgent();
 					IPlanner planner = (IPlanner)agent.getService(IPlanner.SERVICE_NAME);
 					IProfileChangeRequest request = planner.createChangeRequest(replicator.getSelfProfile());
 					request.addAll(units);
@@ -135,12 +135,12 @@ public class ImportFromInstallationPage extends AbstractPage {
 
 	@Override
 	protected String getDestinationLabel() {
-		return Message.ImportFromInstallationPage_DESTINATION_LABEL;
+		return Messages.ImportFromInstallationPage_DESTINATION_LABEL;
 	}
 
 	@Override
 	protected String getDialogTitle() {
-		return Message.ImportFromInstallationPage_DIALOG_TITLE;
+		return Messages.ImportFromInstallationPage_DIALOG_TITLE;
 	}
 
 	@Override
@@ -150,12 +150,12 @@ public class ImportFromInstallationPage extends AbstractPage {
 
 	@Override
 	protected String getInvalidDestinationMessage() {
-		return Message.ImportFromInstallationPage_INVALID_DESTINATION;
+		return Messages.ImportFromInstallationPage_INVALID_DESTINATION;
 	}
 
 	@Override
 	protected String getNoOptionsMessage() {
-		return Message.ImportFromInstallationPage_SELECT_COMPONENT;
+		return Messages.ImportFromInstallationPage_SELECT_COMPONENT;
 	}
 
 	@Override
@@ -200,7 +200,7 @@ public class ImportFromInstallationPage extends AbstractPage {
 			rt = super.validateDestinationGroup();
 
 		if (rt && otherInstanceAgent == null) {
-			IProvisioningAgent agent = ((Replicator)replicator).getAgent();
+			IProvisioningAgent agent = ((ImportExportImpl)replicator).getAgent();
 			IMetadataRepositoryManager manager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 			IArtifactRepositoryManager artifactManager = (IArtifactRepositoryManager) agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
 

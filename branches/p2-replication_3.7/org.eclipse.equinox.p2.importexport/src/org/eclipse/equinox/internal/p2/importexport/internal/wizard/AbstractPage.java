@@ -3,9 +3,9 @@ package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 import java.io.File;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.internal.p2.importexport.P2Replicator;
+import org.eclipse.equinox.internal.p2.importexport.P2ImportExport;
 import org.eclipse.equinox.internal.p2.importexport.internal.Constants;
-import org.eclipse.equinox.internal.p2.importexport.internal.Message;
+import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.ui.ProvUIMessages;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.viewers.DeferredQueryContentProvider;
@@ -46,7 +46,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	protected String currentMessage;
 	protected Button destinationBrowseButton;
 	protected Combo destinationNameField;
-	protected P2Replicator replicator = null;
+	protected P2ImportExport replicator = null;
 	protected CheckboxTableViewer viewer = null;
 	protected Exception finishException;
 
@@ -60,7 +60,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	}
 
 	private void createColumns(TableViewer viewer) {
-		String[] titles = { Message.Column_Name, Message.Column_Version, Message.Column_Id};
+		String[] titles = { Messages.Column_Name, Messages.Column_Version, Messages.Column_Id};
 		for (int i = 0; i < titles.length; i++) {
 			TableViewerColumn column = new TableViewerColumn(viewer, SWT.NONE);
 			column.getColumn().setText(titles[i]);
@@ -116,7 +116,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		destinationNameField.setLayoutData(data);
 		destinationNameField.addListener(SWT.Modify | SWT.Selection, this);
 		destinationBrowseButton = new Button(composite, SWT.PUSH);
-		destinationBrowseButton.setText(Message.Page_BUTTON_BROWSER);
+		destinationBrowseButton.setText(Messages.Page_BUTTON_BROWSER);
 		destinationBrowseButton.addListener(SWT.Selection, this);
 		destinationBrowseButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 	}
@@ -236,7 +236,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	protected abstract String getInvalidDestinationMessage();
 
 	protected String getNoOptionsMessage() {
-		return Message.PAGE_NOINSTALLTION_ERROR;
+		return Messages.PAGE_NOINSTALLTION_ERROR;
 	}
 	protected abstract void giveFocusToDestination();
 
@@ -249,13 +249,13 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 				getBrowseDialogStyle() | SWT.SHEET);
 		dialog.setText(getDialogTitle());
 		dialog.setFilterPath(getDestinationValue());
-		dialog.setFilterExtensions(new String[] {Message.EXTENSION_P2F, Message.EXTENSION_ALL});
-		dialog.setFilterNames(new String[] {Message.EXTENSION_P2F_NAME, Message.EXTENSION_ALL_NAME});
+		dialog.setFilterExtensions(new String[] {Messages.EXTENSION_P2F, Messages.EXTENSION_ALL});
+		dialog.setFilterNames(new String[] {Messages.EXTENSION_P2F_NAME, Messages.EXTENSION_ALL_NAME});
 		String selectedFileName = dialog.open();
 
 		if (selectedFileName != null) {
-			if(!selectedFileName.endsWith(Message.EXTENSION_P2F.substring(1)))
-				selectedFileName += Message.EXTENSION_P2F.substring(1);
+			if(!selectedFileName.endsWith(Messages.EXTENSION_P2F.substring(1)))
+				selectedFileName += Messages.EXTENSION_P2F.substring(1);
 			setDestinationValue(selectedFileName);
 		}
 	}
@@ -270,9 +270,9 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 
 	protected void initializeReplicator() {
 		ServiceTracker tracker = new ServiceTracker(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
-				P2Replicator.class.getName(), null);
+				P2ImportExport.class.getName(), null);
 		tracker.open();
-		replicator = (P2Replicator) tracker.getService();
+		replicator = (P2ImportExport) tracker.getService();
 		tracker.close();
 	}
 

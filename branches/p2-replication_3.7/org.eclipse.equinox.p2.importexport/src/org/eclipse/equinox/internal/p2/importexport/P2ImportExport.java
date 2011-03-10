@@ -12,12 +12,7 @@ import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 
-public interface P2Replicator {
-
-	public interface InstallationConfiguration{
-		public String[] getRepositories();
-		public IInstallableUnit[] getRootIUs();
-	};
+public interface P2ImportExport {
 
 	IProvisioningAgentProvider getAgentProvider();
 	IProfile getSelfProfile();
