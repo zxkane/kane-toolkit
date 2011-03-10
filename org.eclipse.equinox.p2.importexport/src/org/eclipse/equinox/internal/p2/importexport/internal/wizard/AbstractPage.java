@@ -3,8 +3,9 @@ package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 import java.io.File;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.internal.p2.importexport.Constants;
 import org.eclipse.equinox.internal.p2.importexport.P2Replicator;
+import org.eclipse.equinox.internal.p2.importexport.internal.Constants;
+import org.eclipse.equinox.internal.p2.importexport.internal.Message;
 import org.eclipse.equinox.internal.p2.ui.ProvUIMessages;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.viewers.DeferredQueryContentProvider;

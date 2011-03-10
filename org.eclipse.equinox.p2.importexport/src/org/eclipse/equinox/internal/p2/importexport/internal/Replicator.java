@@ -6,18 +6,21 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.equinox.internal.p2.importexport.Constants;
+import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
 import org.eclipse.equinox.internal.p2.importexport.P2Replicator;
 import org.eclipse.equinox.internal.p2.importexport.persistence.P2FParser;
 import org.eclipse.equinox.internal.p2.importexport.persistence.P2FWriter;
@@ -32,16 +35,18 @@ import org.eclipse.equinox.p2.engine.PhaseSetFactory;
 import org.eclipse.equinox.p2.engine.ProvisioningContext;
 import org.eclipse.equinox.p2.engine.query.UserVisibleRootQuery;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.metadata.VersionRange;
 import org.eclipse.equinox.p2.planner.IPlanner;
 import org.eclipse.equinox.p2.planner.IProfileChangeRequest;
-import org.eclipse.equinox.p2.query.IQuery;
 import org.eclipse.equinox.p2.query.IQueryResult;
 import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepository;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
+import org.eclipse.osgi.util.NLS;
 
-@SuppressWarnings("restriction")
 public class Replicator implements P2Replicator { 
+
+	private static final String SCHEME_FILE = "file"; //$NON-NLS-1$
 
 	private class ReplicateJob extends Job {
 
@@ -136,82 +141,6 @@ public class Replicator implements P2Replicator {
 		return selfProfile;
 	}
 
-	public IInstallableUnit[] save(OutputStream output, IInstallableUnit[] ius, IProgressMonitor monitor) throws ProvisionException {
-		SubMonitor subMonitor = SubMonitor.convert(monitor, "Save p2 installation", 1000); //$NON-NLS-1$
-		try {
-			List<URI> repositories = new ArrayList<URI>();
-			IMetadataRepositoryManager repoManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
-			URI[] uris = repoManager.getKnownRepositories(IMetadataRepositoryManager.REPOSITORIES_ALL);
-			final Map<IInstallableUnit, IQuery<IInstallableUnit>> queries = new HashMap<IInstallableUnit, IQuery<IInstallableUnit>>(ius.length, 1);
-			for(int i = 0; i < ius.length; i++)
-				queries.put(ius[i], QueryUtil.createIUQuery(ius[i].getId(), ius[i].getVersion()));
-			int elapsed = 0;
-			for(URI uri : uris) {
-				if(queries.isEmpty())
-					break;
-				try{
-					IMetadataRepository repo = repoManager.loadRepository(uri, subMonitor.newChild(500/uris.length));
-					IQueryResult<IInstallableUnit> result = repo.query(QueryUtil.createCompoundQuery(queries.values(), false), 
-							subMonitor.newChild(400/uris.length));
-					if(!result.isEmpty()) {
-						repositories.add(uri);
-						for(IInstallableUnit unit : result.toSet())
-							queries.remove(unit);
-					}
-				} catch(ProvisionException e) {
-					// ignore the provision exception when loadRepository, it might be caused by network issue.
-				} finally {
-					elapsed += 900/uris.length;
-					subMonitor.setWorkRemaining(1000 - elapsed);
-				}
-			}
-			subMonitor.setWorkRemaining(100);
-			//			P2FWriter writer = new P2FWriter(output, null);
-			//			writer.start(P2FConstants.P2F_ELEMENT);
-			//			writer.start(XMLConstants.INSTALLABLE_UNITS_ELEMENT);
-			//			int percent = 100/ius.length;
-			//			for(IInstallableUnit unit : ius) { 
-			//				writer.writeIU(unit);
-			//				subMonitor.worked(percent);
-			//			}
-			//			writer.end(XMLConstants.INSTALLABLE_UNITS_ELEMENT);
-			//			writer.start(P2FConstants.REPOSITORIES_ELEMENT);
-			//			for(URI uri : repositories) {
-			//				writer.start(P2FConstants.REPOSITORY_ELEMENT);
-			//				writer.attribute(P2FConstants.P2FURI_ATTRIBUTE, uri.toString());
-			//				writer.end(P2FConstants.REPOSITORY_ELEMENT);
-			//			}
-			//			writer.end(P2FConstants.REPOSITORIES_ELEMENT);
-			//			writer.end(P2FConstants.P2F_ELEMENT);
-			//			writer.flush();
-			P2FWriter writer = new P2FWriter(output, null);
-			List<String> uriStrings = new ArrayList<String>();
-			for (URI uri : repositories)
-				uriStrings.add(uri.toString());
-			writer.write(new Configuriation(ius, uriStrings.toArray(new String[uriStrings.size()])));
-
-			return queries.keySet().toArray(new IInstallableUnit[queries.size()]);
-		} catch (UnsupportedEncodingException e) {
-			// should not happen
-			return new IInstallableUnit[0];
-		} finally {
-			subMonitor.done();
-		}
-	}
-
-	public InstallationConfiguration load(InputStream input) throws IOException {
-		/*P2FParser parser = new P2FParser(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
-				Constants.Bundle_ID);
-		parser.parse(input);
-		Configuriation conf = new Configuriation();
-		conf.ius = parser.getIUs();
-		conf.repoStrings = parser.getRepositories();*/
-		P2FParser parser = new P2FParser(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
-				Constants.Bundle_ID);
-		parser.parse(input);
-		return parser.getFeatures();
-	}
-
 	public void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) throws ProvisionException {
 		SubMonitor subMonitor = SubMonitor.convert(monitor, "Import p2 installation", 1000); //$NON-NLS-1$
 
@@ -248,5 +177,93 @@ public class Replicator implements P2Replicator {
 
 	public IProvisioningAgent getAgent() {
 		return agent;
+	}
+
+	public List<FeatureDetail> importP2F(InputStream input) throws IOException {
+		P2FParser parser = new P2FParser(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
+				Constants.Bundle_ID);
+		parser.parse(input);
+		return parser.getFeatures();
+	}
+
+	public IStatus exportP2F(OutputStream output, IInstallableUnit[] ius,
+			IProgressMonitor monitor) {
+		SubMonitor subMonitor = SubMonitor.convert(monitor, Message.Replicator_ExportJobName, 1000);
+		IMetadataRepositoryManager repoManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
+		URI[] uris = repoManager.getKnownRepositories(IMetadataRepositoryManager.REPOSITORIES_ALL);
+		Arrays.sort(uris, new Comparator<URI>() {
+			public int compare(URI o1, URI o2) {
+				String scheme1 = o1.getScheme();
+				String scheme2 = o2.getScheme();
+				if (scheme1.equals(scheme2))
+					return 0;
+				if(SCHEME_FILE.equals(scheme1)) {
+					return 1;
+				} else if (SCHEME_FILE.equals(scheme2)) {
+					return -1;
+				}
+				return 0;
+			}
+		});
+		List<IMetadataRepository> repos = new ArrayList<IMetadataRepository>(uris.length);
+		for (URI uri : uris) {
+			try {
+				IMetadataRepository repo = repoManager.loadRepository(uri, subMonitor.newChild(500/uris.length, SubMonitor.SUPPRESS_ALL_LABELS));
+				repos.add(repo);
+			} catch (ProvisionException e) {
+				// ignore
+			}
+		}
+		subMonitor.setWorkRemaining(500);
+		List<FeatureDetail> features = new ArrayList<FeatureDetail>(ius.length);
+		SubMonitor sub2 = subMonitor.newChild(450, SubMonitor.SUPPRESS_ALL_LABELS);
+		sub2.setWorkRemaining(ius.length * 100);
+		MultiStatus queryRepoResult = new MultiStatus(Constants.Bundle_ID, 0, null, null);
+		for (IInstallableUnit iu : ius) {
+			List<URI> referredRepos = new ArrayList<URI>(1);
+			SubMonitor sub3 = sub2.newChild(100);
+			sub3.setWorkRemaining(repos.size() * 100);
+			for (IMetadataRepository repo : repos) {
+				if (SCHEME_FILE.equals(repo.getLocation().getScheme()) && referredRepos.size() > 0)
+					break;
+				IQueryResult<IInstallableUnit> result = repo.query(QueryUtil.createIUQuery(iu.getId(), new VersionRange(iu.getVersion(), true, null, true)), sub3.newChild(100));
+				if (!result.isEmpty())
+					referredRepos.add(repo.getLocation());
+			}
+			sub3.setWorkRemaining(1).worked(1);
+			if (referredRepos.size() == 0) {
+				queryRepoResult.add(new Status(IStatus.WARNING, Constants.Bundle_ID, NLS.bind(Message.Replicator_NotFoundInRepository, 
+						iu.getProperty(IInstallableUnit.PROP_NAME, Locale.getDefault().toString()))));
+			} else {
+				if (SCHEME_FILE.equals(referredRepos.get(0).getScheme()))
+					queryRepoResult.add(new Status(IStatus.INFO, Constants.Bundle_ID, NLS.bind(Message.Replicator_InstallFromLocal,
+							iu.getProperty(IInstallableUnit.PROP_NAME, Locale.getDefault().toString()))));
+				else {
+					FeatureDetail feature = new FeatureDetail(iu, referredRepos);
+					features.add(feature);
+				}
+			}
+		}
+		subMonitor.setWorkRemaining(50);
+		IStatus status = exportP2F(output, features, subMonitor);
+		if (status.isOK() && queryRepoResult.isOK())
+			return status;
+		MultiStatus rt = new MultiStatus(Constants.Bundle_ID, 0, new IStatus[]{queryRepoResult, status}, null, null);
+		return rt;
+	}
+
+	public IStatus exportP2F(OutputStream output, List<FeatureDetail> features,
+			IProgressMonitor monitor) {
+		SubMonitor sub = SubMonitor.convert(monitor, Message.Replicator_SaveJobName, 100);
+		try {
+			P2FWriter writer = new P2FWriter(output, null);
+			writer.write(features);
+			return Status.OK_STATUS;
+		} catch (UnsupportedEncodingException e) {
+			return new Status(IStatus.ERROR, Constants.Bundle_ID, e.getMessage(), e);
+		} finally {
+			sub.worked(100);
+		}
+
 	}
 }

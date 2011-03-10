@@ -4,13 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.eclipse.equinox.internal.p2.importexport.P2Replicator.InstallationConfiguration;
-import org.eclipse.equinox.internal.p2.importexport.internal.Replicator.Configuriation;
+import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
+import org.eclipse.equinox.internal.p2.importexport.internal.Message;
 import org.eclipse.equinox.internal.p2.persistence.Messages;
 import org.eclipse.equinox.internal.p2.persistence.XMLParser;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
@@ -27,20 +28,23 @@ import org.xml.sax.SAXException;
 public class P2FParser extends XMLParser implements P2FConstants {
 
 	static final VersionRange XML_TOLERANCE = new VersionRange(CURRENT_VERSION, true, Version.createOSGi(2, 0, 0), false);
-	private InstallationConfiguration features;
+	private List<FeatureDetail> features;
 
 	protected class RepositoryHandler extends AbstractHandler {
 
 		private final String[] required = new String[] {LOCATION_ELEMENT};
 		private final String[] optional = new String[] {};
+		private URI referredRepo;
+		private List<URI> uri;
 
-		public RepositoryHandler(AbstractHandler parentHandler, Attributes attributes, Collection<String> uri) {
+		public RepositoryHandler(AbstractHandler parentHandler, Attributes attributes, List<URI> uri) {
 			super(parentHandler, REPOSITORY_ELEMENT);
 			String[] values = parseAttributes(attributes, required, optional);
 			//skip entire subrepository if the location is missing
 			if (values[0] == null)
 				return;
-			uri.add(values[0]);
+			this.uri = uri;
+			referredRepo = checkURI(REPOSITORY_ELEMENT, LOCATION_ELEMENT, values[0]);
 		}
 
 		@Override
@@ -48,16 +52,22 @@ public class P2FParser extends XMLParser implements P2FConstants {
 		throws SAXException {
 			checkCancel();
 		}
+
+		@Override
+		protected void finished() {
+			if (referredRepo != null)
+				uri.add(referredRepo);
+		}
 	}
 
 	protected class RepositoriesHandler extends AbstractHandler {
 
-		Collection<String> uris;
+		List<URI> uris;
 
 		public RepositoriesHandler(AbstractHandler parentHandler, Attributes attributes) {
 			super(parentHandler, REPOSITORIES_ELEMENT);
 			String size = parseOptionalAttribute(attributes, COLLECTION_SIZE_ATTRIBUTE);
-			uris = (size == null) ? new ArrayList<String>() : new ArrayList<String>(new Integer(size).intValue());
+			uris = (size == null) ? new ArrayList<URI>() : new ArrayList<URI>(new Integer(size).intValue());
 		}
 
 		@Override
@@ -68,8 +78,8 @@ public class P2FParser extends XMLParser implements P2FConstants {
 			}
 		}
 
-		public String[] getRepositories() {
-			return uris.toArray(new String[uris.size()]);
+		public List<URI> getRepositories() {
+			return uris;
 		}
 	}
 
@@ -79,8 +89,9 @@ public class P2FParser extends XMLParser implements P2FConstants {
 
 		IInstallableUnit iu = null;
 		private RepositoriesHandler repositoriesHandler;
+		private List<FeatureDetail> features;
 
-		public FeatureHandler(AbstractHandler parentHandler, Attributes attributes, Collection<IInstallableUnit> ius) {
+		public FeatureHandler(AbstractHandler parentHandler, Attributes attributes, List<FeatureDetail> features) {
 			super(parentHandler, FEATURE_ELEMENT);
 			String[] values = parseAttributes(attributes, required, optional);
 			//skip entire record if the id is missing
@@ -91,7 +102,7 @@ public class P2FParser extends XMLParser implements P2FConstants {
 			desc.setProperty(IInstallableUnit.PROP_NAME, values[1]);
 			desc.setVersion(Version.create(values[2]));
 			iu = MetadataFactory.createInstallableUnit(desc);
-			ius.add(iu);
+			this.features = features;
 		}
 
 		@Override
@@ -100,30 +111,37 @@ public class P2FParser extends XMLParser implements P2FConstants {
 				repositoriesHandler = new RepositoriesHandler(this, attributes);
 			}
 		}
+
+		@Override
+		protected void finished() {
+			if (isValidXML()) {
+				FeatureDetail feature = new FeatureDetail(iu, repositoriesHandler.getRepositories());
+				features.add(feature);
+			}
+		}
 	}
 
 	protected class FeaturesHanlder extends AbstractHandler {
 
-		private FeatureHandler featureHandler = null;
-		private final Collection<IInstallableUnit> ius;
+		private final List<FeatureDetail> features;
 
 		public FeaturesHanlder(ContentHandler parentHandler, Attributes attributes) {
 			super(parentHandler, FEATURES_ELEMENT);
 			String size = parseOptionalAttribute(attributes, COLLECTION_SIZE_ATTRIBUTE);
-			ius = (size != null ? new ArrayList<IInstallableUnit>(new Integer(size).intValue()) : new ArrayList<IInstallableUnit>());
+			features = (size != null ? new ArrayList<FeatureDetail>(new Integer(size).intValue()) : new ArrayList<FeatureDetail>());
 		}
 
 		@Override
 		public void startElement(String name, Attributes attributes) {
 			if (name.equals(FEATURE_ELEMENT)) {
-				featureHandler = new FeatureHandler(this, attributes, ius);
+				new FeatureHandler(this, attributes, features);
 			} else {
 				invalidElement(name, attributes);
 			}
 		}
 
-		public IInstallableUnit[] getInstallableUnits() {
-			return ius.toArray(new IInstallableUnit[ius.size()]);
+		public List<FeatureDetail> getFeatureDetails() {
+			return features;
 		}
 	}
 
@@ -147,7 +165,6 @@ public class P2FParser extends XMLParser implements P2FConstants {
 		private final String[] optional = new String[] {};
 		private String[] attrValues = new String[required.length + optional.length];
 
-		private InstallationConfiguration features = null;
 		private FeaturesHanlder featuresHanlder;
 
 
@@ -171,18 +188,10 @@ public class P2FParser extends XMLParser implements P2FConstants {
 			}
 		}
 
-		public InstallationConfiguration getFeatures() {
-			return features;
-		}
-
-		/*
-		 * If we parsed valid XML then fill in our installation configuration object with the parsed data.
-		 */
 		@Override
 		protected void finished() {
 			if (isValidXML()) {
-				features = new Configuriation(featuresHanlder.getInstallableUnits(), 
-						featuresHanlder.featureHandler.repositoriesHandler.getRepositories());
+				features = featuresHanlder.getFeatureDetails();
 			}
 		}
 	}
@@ -207,9 +216,6 @@ public class P2FParser extends XMLParser implements P2FConstants {
 			P2FHandler p2fHandler = new P2FHandler();
 			xmlReader.setContentHandler(new P2FDocHandler(P2F_ELEMENT, p2fHandler));
 			xmlReader.parse(new InputSource(stream));
-			if (isValidXML()) {
-				features = p2fHandler.getFeatures();
-			}
 		} catch (SAXException e) {
 			throw new IOException(e.getMessage());
 		} catch (ParserConfigurationException e) {
@@ -219,7 +225,7 @@ public class P2FParser extends XMLParser implements P2FConstants {
 		}
 	}
 
-	public InstallationConfiguration getFeatures() {
+	public List<FeatureDetail> getFeatures() {
 		return features;
 	}
 
@@ -231,7 +237,7 @@ public class P2FParser extends XMLParser implements P2FConstants {
 
 	@Override
 	protected String getErrorMessage() {
-		return Messages.io_parseError;
+		return Message.io_parseError;
 	}
 
 }
