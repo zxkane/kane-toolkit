@@ -8,14 +8,16 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.equinox.internal.p2.importexport.internal.Message;
 import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
-import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
@@ -62,21 +64,28 @@ public class ExportPage extends AbstractPage {
 					IInstallableUnit[] units = new IInstallableUnit[checked.length];
 					for(int i = 0; i < units.length; i++)
 						units[i] = ProvUI.getAdapter(checked[i], IInstallableUnit.class);
-					try {
-						IInstallableUnit[] missingRepoIUs = replicator.save(out, units, monitor);
-						if(missingRepoIUs.length > 0) {
-							StringBuilder sb = new StringBuilder();
-							sb.append(Message.ExportPage_EXPORT_WARNING);
-							for(IInstallableUnit unit : missingRepoIUs) {
-								sb.append(unit.getId());
-								sb.append("\n"); //$NON-NLS-1$
+					IStatus status = replicator.exportP2F(out, units, monitor);
+					if (status.isMultiStatus()) {
+						final StringBuilder sb = new StringBuilder();
+						for (IStatus child : status.getChildren()) {
+							if (child.isMultiStatus()) {
+								for (IStatus grandchild : child.getChildren())
+									sb.append(grandchild.getMessage()).append("\n"); //$NON-NLS-1$
+							} else if (child.isOK())
+								sb.insert(0, Message.ExportPage_SuccessWithProblems);
+							else {
+								sb.insert(0, Message.ExportPage_Fail);
+								sb.append(status.getMessage());
 							}
-							MessageBox messageBox = new MessageBox(getShell(), SWT.ICON_WARNING);
-							messageBox.setMessage(sb.toString());
-							messageBox.open();
 						}
-					} catch (ProvisionException e) {
-						finishException = e;
+						Display.getDefault().asyncExec(new Runnable() {
+
+							public void run() {
+								MessageBox messageBox = new MessageBox(getShell(), SWT.ICON_WARNING);
+								messageBox.setMessage(sb.toString());
+								messageBox.open();
+							}
+						});
 					}
 				}
 			});

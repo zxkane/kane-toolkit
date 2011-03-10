@@ -6,13 +6,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.equinox.internal.p2.importexport.P2Replicator.InstallationConfiguration;
+import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
+import org.eclipse.equinox.internal.p2.importexport.internal.Message;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
@@ -165,11 +167,18 @@ public class ImportPage extends AbstractPage {
 			InputStream input = null;
 			try{
 				input = new BufferedInputStream(new FileInputStream(getDestinationValue()));
-				InstallationConfiguration conf = replicator.load(input);
-				viewer.setInput(conf.getRootIUs());
+				List<FeatureDetail> features = replicator.importP2F(input);
+				List<IInstallableUnit> rootIUs = new ArrayList<IInstallableUnit>(features.size());
+				List<String> repos = new ArrayList<String>(features.size());
+				for (FeatureDetail feature : features) {
+					rootIUs.add(feature.getTopIU());
+					for (URI uri : feature.getReferencedRepositories())
+						repos.add(uri.toString());
+				}
+				viewer.setInput(rootIUs.toArray(new IInstallableUnit[rootIUs.size()]));
 				disableInstalled();
 				viewer.refresh();
-				repositories = conf.getRepositories();
+				repositories = repos.toArray(new String[repos.size()]);
 			} catch(IOException e) {
 				//TODO
 				e.printStackTrace();

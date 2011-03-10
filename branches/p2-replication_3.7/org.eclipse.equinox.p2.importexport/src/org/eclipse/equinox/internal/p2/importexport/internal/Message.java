@@ -1,4 +1,4 @@
-package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
+package org.eclipse.equinox.internal.p2.importexport.internal;
 
 import org.eclipse.osgi.util.NLS;
 
@@ -12,12 +12,14 @@ public class Message extends NLS {
 	public static String ExportPage_DEST_ERRORMESSAGE;
 	public static String ExportPage_ERROR_CONFIG;
 	public static String ExportPage_EXPORT_WARNING;
+	public static String ExportPage_Fail;
 	public static String ExportPage_FILEDIALOG_TITLE;
 	public static String EXTENSION_ALL;
 	public static String EXTENSION_ALL_NAME;
 	public static String EXTENSION_P2F_NAME;
 	public static String EXTENSION_P2F;
 	public static String ExportPage_LABEL_EXPORTFILE;
+	public static String ExportPage_SuccessWithProblems;
 	public static String ImportPage_DESCRIPTION;
 	public static String ImportPage_DEST_ERROR;
 	public static String ImportPage_DESTINATION_LABEL;
@@ -33,8 +35,14 @@ public class Message extends NLS {
 	public static String ImportFromInstallationPage_DIALOG_DESCRIPTION;
 	public static String ImportFromInstallationPage_SELECT_COMPONENT;
 
+	public static String io_parseError;
+	public static String Replicator_ExportJobName;
+	public static String Replicator_InstallFromLocal;
+	public static String Replicator_NotFoundInRepository;
+	public static String Replicator_SaveJobName;
+
 	static {
 		NLS.initializeMessages(
-				"org.eclipse.equinox.internal.p2.importexport.internal.wizard.message", Message.class); //$NON-NLS-1$
+				"org.eclipse.equinox.internal.p2.importexport.internal.message", Message.class); //$NON-NLS-1$
 	}
 }

@@ -3,7 +3,7 @@ package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.equinox.internal.p2.importexport.Constants;
+import org.eclipse.equinox.internal.p2.importexport.internal.Constants;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
