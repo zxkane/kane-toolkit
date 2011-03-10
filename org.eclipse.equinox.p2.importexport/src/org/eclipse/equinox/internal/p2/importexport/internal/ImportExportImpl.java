@@ -21,7 +21,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
-import org.eclipse.equinox.internal.p2.importexport.P2Replicator;
+import org.eclipse.equinox.internal.p2.importexport.P2ImportExport;
 import org.eclipse.equinox.internal.p2.importexport.persistence.P2FParser;
 import org.eclipse.equinox.internal.p2.importexport.persistence.P2FWriter;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
@@ -44,7 +44,7 @@ import org.eclipse.equinox.p2.repository.metadata.IMetadataRepository;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
 import org.eclipse.osgi.util.NLS;
 
-public class Replicator implements P2Replicator { 
+public class ImportExportImpl implements P2ImportExport { 
 
 	private static final String SCHEME_FILE = "file"; //$NON-NLS-1$
 
@@ -84,27 +84,6 @@ public class Replicator implements P2Replicator {
 			}
 		}
 
-	}
-
-	public static final class Configuriation implements InstallationConfiguration{
-		private String[] repoStrings;
-		private IInstallableUnit[] ius;
-
-		Configuriation() {
-		}
-
-		public Configuriation(IInstallableUnit[] ius, String[] repoStrings) {
-			this.ius = ius;
-			this.repoStrings = repoStrings;
-		}
-
-		public String[] getRepositories() {
-			return repoStrings;
-		}
-
-		public IInstallableUnit[] getRootIUs() {
-			return ius;
-		}
 	}
 
 	private IProfile selfProfile = null;
@@ -188,7 +167,7 @@ public class Replicator implements P2Replicator {
 
 	public IStatus exportP2F(OutputStream output, IInstallableUnit[] ius,
 			IProgressMonitor monitor) {
-		SubMonitor subMonitor = SubMonitor.convert(monitor, Message.Replicator_ExportJobName, 1000);
+		SubMonitor subMonitor = SubMonitor.convert(monitor, Messages.Replicator_ExportJobName, 1000);
 		IMetadataRepositoryManager repoManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 		URI[] uris = repoManager.getKnownRepositories(IMetadataRepositoryManager.REPOSITORIES_ALL);
 		Arrays.sort(uris, new Comparator<URI>() {
@@ -232,11 +211,11 @@ public class Replicator implements P2Replicator {
 			}
 			sub3.setWorkRemaining(1).worked(1);
 			if (referredRepos.size() == 0) {
-				queryRepoResult.add(new Status(IStatus.WARNING, Constants.Bundle_ID, NLS.bind(Message.Replicator_NotFoundInRepository, 
+				queryRepoResult.add(new Status(IStatus.WARNING, Constants.Bundle_ID, NLS.bind(Messages.Replicator_NotFoundInRepository, 
 						iu.getProperty(IInstallableUnit.PROP_NAME, Locale.getDefault().toString()))));
 			} else {
 				if (SCHEME_FILE.equals(referredRepos.get(0).getScheme()))
-					queryRepoResult.add(new Status(IStatus.INFO, Constants.Bundle_ID, NLS.bind(Message.Replicator_InstallFromLocal,
+					queryRepoResult.add(new Status(IStatus.INFO, Constants.Bundle_ID, NLS.bind(Messages.Replicator_InstallFromLocal,
 							iu.getProperty(IInstallableUnit.PROP_NAME, Locale.getDefault().toString()))));
 				else {
 					FeatureDetail feature = new FeatureDetail(iu, referredRepos);
@@ -254,7 +233,7 @@ public class Replicator implements P2Replicator {
 
 	public IStatus exportP2F(OutputStream output, List<FeatureDetail> features,
 			IProgressMonitor monitor) {
-		SubMonitor sub = SubMonitor.convert(monitor, Message.Replicator_SaveJobName, 100);
+		SubMonitor sub = SubMonitor.convert(monitor, Messages.Replicator_SaveJobName, 100);
 		try {
 			P2FWriter writer = new P2FWriter(output, null);
 			writer.write(features);

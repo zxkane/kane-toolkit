@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.equinox.internal.p2.importexport.internal.Message;
+import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
@@ -26,8 +26,8 @@ public class ExportPage extends AbstractPage {
 
 	public ExportPage(String pageName) {
 		super(pageName);
-		setTitle(Message.EXPORTPage_TITLE);
-		setDescription(Message.EXPORTPage_DESCRIPTION);
+		setTitle(Messages.EXPORTPage_TITLE);
+		setDescription(Messages.EXPORTPage_DESCRIPTION);
 	}
 
 	@Override
@@ -35,9 +35,9 @@ public class ExportPage extends AbstractPage {
 		Label label = new Label(composite, SWT.NONE);
 		label.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		if(replicator.getSelfProfile() == null){			
-			label.setText(Message.ExportPage_ERROR_CONFIG);
+			label.setText(Messages.ExportPage_ERROR_CONFIG);
 		}else {
-			label.setText(Message.EXPORTPage_LABEL);
+			label.setText(Messages.EXPORTPage_LABEL);
 
 			createInstallationTable(composite);
 			createDestinationGroup(composite);
@@ -72,9 +72,9 @@ public class ExportPage extends AbstractPage {
 								for (IStatus grandchild : child.getChildren())
 									sb.append(grandchild.getMessage()).append("\n"); //$NON-NLS-1$
 							} else if (child.isOK())
-								sb.insert(0, Message.ExportPage_SuccessWithProblems);
+								sb.insert(0, Messages.ExportPage_SuccessWithProblems);
 							else {
-								sb.insert(0, Message.ExportPage_Fail);
+								sb.insert(0, Messages.ExportPage_Fail);
 								sb.append(status.getMessage());
 							}
 						}
@@ -104,7 +104,7 @@ public class ExportPage extends AbstractPage {
 
 	@Override
 	protected String getDialogTitle() {
-		return Message.ExportPage_FILEDIALOG_TITLE;
+		return Messages.ExportPage_FILEDIALOG_TITLE;
 	}
 
 	@Override
@@ -117,7 +117,7 @@ public class ExportPage extends AbstractPage {
 
 	@Override
 	protected String getInvalidDestinationMessage() {
-		return Message.ExportPage_DEST_ERRORMESSAGE;
+		return Messages.ExportPage_DEST_ERRORMESSAGE;
 	}
 
 	@Override
@@ -128,7 +128,7 @@ public class ExportPage extends AbstractPage {
 
 	@Override
 	protected String getDestinationLabel() {
-		return Message.ExportPage_LABEL_EXPORTFILE;
+		return Messages.ExportPage_LABEL_EXPORTFILE;
 	}
 
 	@Override

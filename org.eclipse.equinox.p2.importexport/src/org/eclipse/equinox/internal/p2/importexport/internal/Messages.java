@@ -2,7 +2,7 @@ package org.eclipse.equinox.internal.p2.importexport.internal;
 
 import org.eclipse.osgi.util.NLS;
 
-public class Message extends NLS {
+public class Messages extends NLS {
 	public static String Column_Id;
 	public static String Column_Name;
 	public static String Column_Version;
@@ -35,6 +35,7 @@ public class Message extends NLS {
 	public static String ImportFromInstallationPage_DIALOG_DESCRIPTION;
 	public static String ImportFromInstallationPage_SELECT_COMPONENT;
 
+	public static String io_IncompatibleVersion;
 	public static String io_parseError;
 	public static String Replicator_ExportJobName;
 	public static String Replicator_InstallFromLocal;
@@ -43,6 +44,6 @@ public class Message extends NLS {
 
 	static {
 		NLS.initializeMessages(
-				"org.eclipse.equinox.internal.p2.importexport.internal.message", Message.class); //$NON-NLS-1$
+				"org.eclipse.equinox.internal.p2.importexport.internal.messages", Messages.class); //$NON-NLS-1$
 	}
 }

@@ -14,7 +14,7 @@ import java.util.Locale;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
-import org.eclipse.equinox.internal.p2.importexport.internal.Message;
+import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
@@ -79,8 +79,8 @@ public class ImportPage extends AbstractPage {
 
 	public ImportPage(String pageName) {
 		super(pageName);
-		setTitle(Message.ImportPage_TITLE);
-		setDescription(Message.ImportPage_DESCRIPTION);
+		setTitle(Messages.ImportPage_TITLE);
+		setDescription(Messages.ImportPage_DESCRIPTION);
 	}
 
 	@Override
@@ -130,12 +130,12 @@ public class ImportPage extends AbstractPage {
 
 	@Override
 	protected String getDestinationLabel() {
-		return Message.ImportPage_DESTINATION_LABEL;
+		return Messages.ImportPage_DESTINATION_LABEL;
 	}
 
 	@Override
 	protected String getDialogTitle() {
-		return Message.ImportPage_FILEDIALOG_TITLE;
+		return Messages.ImportPage_FILEDIALOG_TITLE;
 	}
 
 	@Override
@@ -145,7 +145,7 @@ public class ImportPage extends AbstractPage {
 
 	@Override
 	protected String getInvalidDestinationMessage() {
-		return Message.ImportPage_DEST_ERROR;
+		return Messages.ImportPage_DEST_ERROR;
 	}
 
 	@Override
@@ -228,7 +228,7 @@ public class ImportPage extends AbstractPage {
 		if(finishException != null)
 			throw finishException;
 		MessageBox message = new MessageBox(getContainer().getShell(), SWT.ICON_INFORMATION);
-		message.setMessage(Message.ImportPage_IMPORT_NOTIFICATION);
+		message.setMessage(Messages.ImportPage_IMPORT_NOTIFICATION);
 		message.open();
 	}
 
