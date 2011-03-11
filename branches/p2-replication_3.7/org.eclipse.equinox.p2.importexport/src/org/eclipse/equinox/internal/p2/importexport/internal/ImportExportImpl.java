@@ -47,6 +47,8 @@ import org.eclipse.osgi.util.NLS;
 public class ImportExportImpl implements P2ImportExport { 
 
 	private static final String SCHEME_FILE = "file"; //$NON-NLS-1$
+	public static final int IGNORE_LOCAL_REPOSITORY = 1;
+	public static final int CANNOT_FIND_REPOSITORY = 2;
 
 	private class ReplicateJob extends Job {
 
@@ -167,6 +169,8 @@ public class ImportExportImpl implements P2ImportExport {
 
 	public IStatus exportP2F(OutputStream output, IInstallableUnit[] ius,
 			IProgressMonitor monitor) {
+		if (monitor == null)
+			monitor = new NullProgressMonitor();
 		SubMonitor subMonitor = SubMonitor.convert(monitor, Messages.Replicator_ExportJobName, 1000);
 		IMetadataRepositoryManager repoManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 		URI[] uris = repoManager.getKnownRepositories(IMetadataRepositoryManager.REPOSITORIES_ALL);
@@ -211,12 +215,12 @@ public class ImportExportImpl implements P2ImportExport {
 			}
 			sub3.setWorkRemaining(1).worked(1);
 			if (referredRepos.size() == 0) {
-				queryRepoResult.add(new Status(IStatus.WARNING, Constants.Bundle_ID, NLS.bind(Messages.Replicator_NotFoundInRepository, 
-						iu.getProperty(IInstallableUnit.PROP_NAME, Locale.getDefault().toString()))));
+				queryRepoResult.add(new Status(IStatus.WARNING, Constants.Bundle_ID, CANNOT_FIND_REPOSITORY, NLS.bind(Messages.Replicator_NotFoundInRepository, 
+						iu.getProperty(IInstallableUnit.PROP_NAME, Locale.getDefault().toString())), null));
 			} else {
 				if (SCHEME_FILE.equals(referredRepos.get(0).getScheme()))
-					queryRepoResult.add(new Status(IStatus.INFO, Constants.Bundle_ID, NLS.bind(Messages.Replicator_InstallFromLocal,
-							iu.getProperty(IInstallableUnit.PROP_NAME, Locale.getDefault().toString()))));
+					queryRepoResult.add(new Status(IStatus.INFO, Constants.Bundle_ID, IGNORE_LOCAL_REPOSITORY, NLS.bind(Messages.Replicator_InstallFromLocal,
+							iu.getProperty(IInstallableUnit.PROP_NAME, Locale.getDefault().toString())), null));
 				else {
 					FeatureDetail feature = new FeatureDetail(iu, referredRepos);
 					features.add(feature);
@@ -233,6 +237,8 @@ public class ImportExportImpl implements P2ImportExport {
 
 	public IStatus exportP2F(OutputStream output, List<FeatureDetail> features,
 			IProgressMonitor monitor) {
+		if (monitor == null)
+			monitor = new NullProgressMonitor();
 		SubMonitor sub = SubMonitor.convert(monitor, Messages.Replicator_SaveJobName, 100);
 		try {
 			P2FWriter writer = new P2FWriter(output, null);
@@ -243,6 +249,5 @@ public class ImportExportImpl implements P2ImportExport {
 		} finally {
 			sub.worked(100);
 		}
-
 	}
 }
