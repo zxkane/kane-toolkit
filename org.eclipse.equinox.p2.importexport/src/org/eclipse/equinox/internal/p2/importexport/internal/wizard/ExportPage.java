@@ -13,6 +13,7 @@ import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -20,24 +21,23 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.MessageBox;
 
 public class ExportPage extends AbstractPage {
 
 	public ExportPage(String pageName) {
 		super(pageName);
-		setTitle(Messages.EXPORTPage_TITLE);
-		setDescription(Messages.EXPORTPage_DESCRIPTION);
+		setTitle(Messages.ExportPage_Title);
+		setDescription(Messages.ExportPage_Description);
 	}
 
 	@Override
 	protected void createContents(Composite composite) {
 		Label label = new Label(composite, SWT.NONE);
 		label.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
-		if(replicator.getSelfProfile() == null){			
+		if(getSelfProfile() == null){			
 			label.setText(Messages.ExportPage_ERROR_CONFIG);
 		}else {
-			label.setText(Messages.EXPORTPage_LABEL);
+			label.setText(Messages.ExportPage_Label);
 
 			createInstallationTable(composite);
 			createDestinationGroup(composite);
@@ -64,9 +64,10 @@ public class ExportPage extends AbstractPage {
 					IInstallableUnit[] units = new IInstallableUnit[checked.length];
 					for(int i = 0; i < units.length; i++)
 						units[i] = ProvUI.getAdapter(checked[i], IInstallableUnit.class);
-					IStatus status = replicator.exportP2F(out, units, monitor);
+					IStatus status = importexportService.exportP2F(out, units, monitor);
 					if (status.isMultiStatus()) {
 						final StringBuilder sb = new StringBuilder();
+						boolean info = true;
 						for (IStatus child : status.getChildren()) {
 							if (child.isMultiStatus()) {
 								for (IStatus grandchild : child.getChildren())
@@ -74,16 +75,19 @@ public class ExportPage extends AbstractPage {
 							} else if (child.isOK())
 								sb.insert(0, Messages.ExportPage_SuccessWithProblems);
 							else {
+								info = false;
 								sb.insert(0, Messages.ExportPage_Fail);
 								sb.append(status.getMessage());
 							}
 						}
+						final boolean isInfo = info;
 						Display.getDefault().asyncExec(new Runnable() {
-
 							public void run() {
-								MessageBox messageBox = new MessageBox(getShell(), SWT.ICON_WARNING);
-								messageBox.setMessage(sb.toString());
-								messageBox.open();
+								String title = Messages.ExportPage_Title;
+								if (isInfo == true)
+									MessageDialog.openInformation(getShell(), title, sb.toString());
+								else
+									MessageDialog.openWarning(getShell(), title, sb.toString());
 							}
 						});
 					}
@@ -109,8 +113,8 @@ public class ExportPage extends AbstractPage {
 
 	@Override
 	protected Object getInput() {
-		//		return replicator.getRootIUs();
-		ProfileElement element = new ProfileElement(null, replicator.getSelfProfile().getProfileId());
+		//		return importexportService.getRootIUs();
+		ProfileElement element = new ProfileElement(null, getSelfProfile().getProfileId());
 		return element;
 	}
 

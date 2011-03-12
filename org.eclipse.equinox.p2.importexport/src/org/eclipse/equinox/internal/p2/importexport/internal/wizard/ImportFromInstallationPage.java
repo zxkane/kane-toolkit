@@ -17,11 +17,13 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.p2.extensionlocation.ExtensionLocationArtifactRepositoryFactory;
 import org.eclipse.equinox.internal.p2.extensionlocation.ExtensionLocationMetadataRepositoryFactory;
-import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.importexport.internal.ImportExportImpl;
+import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ApplyProfileChangesDialog;
 import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
+import org.eclipse.equinox.internal.p2.ui.viewers.IUColumnConfig;
+import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
 import org.eclipse.equinox.p2.core.IAgentLocation;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.core.ProvisionException;
@@ -41,6 +43,7 @@ import org.eclipse.equinox.p2.repository.metadata.IMetadataRepository;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
 import org.eclipse.equinox.p2.repository.metadata.spi.MetadataRepositoryFactory;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
@@ -49,7 +52,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PlatformUI;
 @SuppressWarnings("restriction")
-public class ImportFromInstallationPage extends AbstractPage {
+public class ImportFromInstallationPage extends AbstractImportPage {
 
 	protected IProvisioningAgent otherInstanceAgent;
 	private URI[] metaURIs = null;
@@ -80,9 +83,9 @@ public class ImportFromInstallationPage extends AbstractPage {
 				InterruptedException {
 					SubMonitor sub = SubMonitor.convert(monitor, 100);
 
-					IProvisioningAgent agent = ((ImportExportImpl)replicator).getAgent();
+					IProvisioningAgent agent = ((ImportExportImpl)importexportService).getAgent();
 					IPlanner planner = (IPlanner)agent.getService(IPlanner.SERVICE_NAME);
-					IProfileChangeRequest request = planner.createChangeRequest(replicator.getSelfProfile());
+					IProfileChangeRequest request = planner.createChangeRequest(getSelfProfile());
 					request.addAll(units);
 					ProvisioningContext context = new ProvisioningContext(agent);
 					context.setArtifactRepositories(artiURIs);
@@ -200,7 +203,7 @@ public class ImportFromInstallationPage extends AbstractPage {
 			rt = super.validateDestinationGroup();
 
 		if (rt && otherInstanceAgent == null) {
-			IProvisioningAgent agent = ((ImportExportImpl)replicator).getAgent();
+			IProvisioningAgent agent = ((ImportExportImpl)importexportService).getAgent();
 			IMetadataRepositoryManager manager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 			IArtifactRepositoryManager artifactManager = (IArtifactRepositoryManager) agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
 
@@ -233,7 +236,7 @@ public class ImportFromInstallationPage extends AbstractPage {
 				try {
 					File p2 = new File(destinate, "p2"); //$NON-NLS-1$
 					if (p2.exists()) {
-						otherInstanceAgent = replicator.getAgentProvider().createAgent(p2.toURI());
+						otherInstanceAgent = importexportService.getAgentProvider().createAgent(p2.toURI());
 						ArtifactRepositoryFactory factory = new ExtensionLocationArtifactRepositoryFactory();
 						factory.setAgent(agent);
 						IArtifactRepository artiRepo = factory.load(new File(destinate).toURI(), 0, progress.newChild(50));
@@ -327,4 +330,18 @@ public class ImportFromInstallationPage extends AbstractPage {
 		return file.exists() && file.isDirectory();
 	}
 
+	@Override
+	protected ITableLabelProvider getLabelProvider() {
+		return new IUDetailsLabelProvider(null, getColumnConfig(), null) {		
+			@Override
+			public String getColumnText(Object element, int columnIndex) {
+				String text = super.getColumnText(element, columnIndex);
+				if (columnIndex == IUColumnConfig.COLUMN_NAME) {
+					IInstallableUnit iu = ProvUI.getAdapter(element, IInstallableUnit.class);
+					return getIUNameWithDetail(iu);
+				}
+				return text;
+			}
+		};
+	}
 }

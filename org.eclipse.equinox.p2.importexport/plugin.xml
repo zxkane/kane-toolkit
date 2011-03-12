@@ -13,6 +13,9 @@
             icon="icons/ico_import_export.gif"
             id="org.eclipse.equinox.p2.replication.export"
             name="%export.name">
+            <description>
+            	%export.description
+            </description>
       </wizard>
    </extension>
    <extension
@@ -27,6 +30,9 @@
             icon="icons/ico_import_export.gif"
             id="org.eclipse.equinox.p2.replication.import"
             name="%import.name">
+            <description>
+            	%importfrominstance.description
+            </description>            
       </wizard>
       <wizard
             category="org.eclipse.equinox.p2.category"
@@ -34,6 +40,9 @@
             icon="icons/ico_import_export.gif"
             id="org.eclipse.equinox.p2.replication.importfrominstallation"
             name="%importfrominstallation.name">
+         <description>
+            %import.description
+         </description>
       </wizard>
    </extension>
 

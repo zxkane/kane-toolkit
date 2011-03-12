@@ -22,7 +22,7 @@ public class ExportWizard extends AbstractWizard implements IExportWizard {
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		setWindowTitle(Messages.EXPORTPage_TITLE);
+		setWindowTitle(Messages.ExportWizard_WizardTitle);
 		setDefaultPageImageDescriptor(ImageDescriptor.createFromURL(Platform.getBundle(Constants.Bundle_ID).getEntry("icons/ico_import_export.gif"))); //$NON-NLS-1$
 		setNeedsProgressMonitor(true);
 	}

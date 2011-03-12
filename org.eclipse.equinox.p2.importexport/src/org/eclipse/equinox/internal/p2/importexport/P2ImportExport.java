@@ -9,14 +9,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
-import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 
 public interface P2ImportExport {
 
 	IProvisioningAgentProvider getAgentProvider();
-	IProfile getSelfProfile();
-	IInstallableUnit[] getRootIUs();
 
 	void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) throws ProvisionException;
 
