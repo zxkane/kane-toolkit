@@ -6,9 +6,9 @@ public class Messages extends NLS {
 	public static String Column_Id;
 	public static String Column_Name;
 	public static String Column_Version;
-	public static String EXPORTPage_TITLE;
-	public static String EXPORTPage_DESCRIPTION;
-	public static String EXPORTPage_LABEL;
+	public static String ExportPage_Title;
+	public static String ExportPage_Description;
+	public static String ExportPage_Label;
 	public static String ExportPage_DEST_ERRORMESSAGE;
 	public static String ExportPage_ERROR_CONFIG;
 	public static String ExportPage_EXPORT_WARNING;
@@ -20,11 +20,14 @@ public class Messages extends NLS {
 	public static String EXTENSION_P2F;
 	public static String ExportPage_LABEL_EXPORTFILE;
 	public static String ExportPage_SuccessWithProblems;
+	public static String ExportWizard_WizardTitle;
 	public static String ImportPage_DESCRIPTION;
 	public static String ImportPage_DEST_ERROR;
 	public static String ImportPage_DESTINATION_LABEL;
 	public static String ImportPage_FILEDIALOG_TITLE;
+	public static String AbstractImportPage_HigherVersionInstalled;
 	public static String ImportPage_IMPORT_NOTIFICATION;
+	public static String AbstractImportPage_SameVersionInstalled;
 	public static String ImportPage_TITLE;
 	public static String ImportWizard_WINDOWTITLE;
 	public static String Page_BUTTON_BROWSER;

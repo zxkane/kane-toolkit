@@ -11,9 +11,13 @@ import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.viewers.DeferredQueryContentProvider;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUColumnConfig;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
+import org.eclipse.equinox.p2.core.IProvisioningAgent;
+import org.eclipse.equinox.p2.engine.IProfile;
+import org.eclipse.equinox.p2.engine.IProfileRegistry;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -39,6 +43,7 @@ import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Widget;
+import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
 public abstract class AbstractPage extends WizardPage implements Listener {
@@ -46,9 +51,21 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	protected String currentMessage;
 	protected Button destinationBrowseButton;
 	protected Combo destinationNameField;
-	protected P2ImportExport replicator = null;
+	protected P2ImportExport importexportService = null;
 	protected CheckboxTableViewer viewer = null;
 	protected Exception finishException;
+	protected static IProfileRegistry profileRegistry = null;
+	protected static IProvisioningAgent agent = null;
+
+	static {
+		BundleContext context = Platform.getBundle(Constants.Bundle_ID).getBundleContext();
+		ServiceTracker<IProvisioningAgent, IProvisioningAgent> tracker = new ServiceTracker<IProvisioningAgent, IProvisioningAgent>(context, IProvisioningAgent.class, null);
+		tracker.open();
+		agent = tracker.getService();
+		tracker.close();
+		if (agent != null)
+			profileRegistry = (IProfileRegistry) agent.getService(IProfileRegistry.SERVICE_NAME);
+	}
 
 	public AbstractPage(String pageName) {
 		super(pageName);
@@ -57,6 +74,16 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	public AbstractPage(String pageName, String title,
 			ImageDescriptor titleImage) {
 		super(pageName, title, titleImage);
+	}
+
+	protected IProfile getSelfProfile() {
+		if (profileRegistry != null) { 
+			String selfID = System.getProperty("eclipse.p2.profile"); //$NON-NLS-1$
+			if(selfID == null)
+				selfID = IProfileRegistry.SELF;
+			return profileRegistry.getProfile(selfID);
+		}
+		return null;
 	}
 
 	private void createColumns(TableViewer viewer) {
@@ -121,8 +148,10 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		destinationBrowseButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 	}
 
-	private IUColumnConfig[] getColumnConfig() {
-		return new IUColumnConfig[] {new IUColumnConfig(ProvUIMessages.ProvUI_NameColumnTitle, IUColumnConfig.COLUMN_NAME, ILayoutConstants.DEFAULT_PRIMARY_COLUMN_WIDTH), new IUColumnConfig(ProvUIMessages.ProvUI_VersionColumnTitle, IUColumnConfig.COLUMN_VERSION, ILayoutConstants.DEFAULT_SMALL_COLUMN_WIDTH), new IUColumnConfig(ProvUIMessages.ProvUI_IdColumnTitle, IUColumnConfig.COLUMN_ID, ILayoutConstants.DEFAULT_COLUMN_WIDTH)};
+	protected IUColumnConfig[] getColumnConfig() {
+		return new IUColumnConfig[] {new IUColumnConfig(ProvUIMessages.ProvUI_NameColumnTitle, IUColumnConfig.COLUMN_NAME, ILayoutConstants.DEFAULT_PRIMARY_COLUMN_WIDTH), 
+				new IUColumnConfig(ProvUIMessages.ProvUI_VersionColumnTitle, IUColumnConfig.COLUMN_VERSION, ILayoutConstants.DEFAULT_SMALL_COLUMN_WIDTH), 
+				new IUColumnConfig(ProvUIMessages.ProvUI_IdColumnTitle, IUColumnConfig.COLUMN_ID, ILayoutConstants.DEFAULT_COLUMN_WIDTH)};
 	}
 
 	protected void createInstallationTable(final Composite parent) {
@@ -178,7 +207,14 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 				updatePageCompletion();
 			}
 		});
+		ICheckStateProvider provider = getViewerDefaultState();
+		if (provider != null)
+			viewer.setCheckStateProvider(provider);
 		viewer.setInput(getInput());
+	}
+
+	protected ICheckStateProvider getViewerDefaultState() {
+		return null;
 	}
 
 	protected ITableLabelProvider getLabelProvider() {
@@ -272,7 +308,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		ServiceTracker tracker = new ServiceTracker(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
 				P2ImportExport.class.getName(), null);
 		tracker.open();
-		replicator = (P2ImportExport) tracker.getService();
+		importexportService = (P2ImportExport) tracker.getService();
 		tracker.close();
 	}
 

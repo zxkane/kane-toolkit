@@ -9,18 +9,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
-import org.eclipse.equinox.p2.query.IQuery;
-import org.eclipse.equinox.p2.query.IQueryResult;
-import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -33,7 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.MessageBox;
 
-public class ImportPage extends AbstractPage {
+public class ImportPage extends AbstractImportPage {
 
 	private class InstallationContentProvider implements IStructuredContentProvider {
 
@@ -51,6 +46,11 @@ public class ImportPage extends AbstractPage {
 
 	private class InstallationLabelProvider extends LabelProvider implements ITableLabelProvider{
 
+		private IProfile profile = null;
+		public InstallationLabelProvider() {
+			profile = getSelfProfile();
+		}
+
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null;
 		}
@@ -58,8 +58,8 @@ public class ImportPage extends AbstractPage {
 		public String getColumnText(Object element, int columnIndex) {
 			IInstallableUnit iu = (IInstallableUnit) element;
 			switch (columnIndex) {
-			case 0:
-				return getIUProperty(iu, IInstallableUnit.PROP_NAME);
+			case 0:				
+				return getIUNameWithDetail(iu);
 			case 1:
 				return iu.getVersion().toString();
 			case 2:
@@ -68,10 +68,6 @@ public class ImportPage extends AbstractPage {
 				throw new RuntimeException("Should not happen"); //$NON-NLS-1$
 			}
 
-		}
-
-		private String getIUProperty(IInstallableUnit iu, String key) {
-			return iu.getProperty(key, Locale.getDefault().toString());
 		}
 	}
 
@@ -97,30 +93,6 @@ public class ImportPage extends AbstractPage {
 	@Override
 	protected ITableLabelProvider getLabelProvider() {
 		return new InstallationLabelProvider();
-	}
-
-	private void disableInstalled() {
-		IProfile profile = replicator.getSelfProfile();
-		if(profile != null && viewer.getInput() != null) {
-			IInstallableUnit[] units = (IInstallableUnit[])viewer.getInput();
-			List<IQuery<IInstallableUnit>> queries = new ArrayList<IQuery<IInstallableUnit>>(units.length);
-			for(IInstallableUnit iu : units)
-				queries.add(QueryUtil.createIUQuery(iu.getId(), iu.getVersion()));
-			IQueryResult<IInstallableUnit> collector = profile.query(QueryUtil.createCompoundQuery(queries, false), new NullProgressMonitor());
-			if(!collector.isEmpty()) {
-				List<IInstallableUnit> shouldBeGrayed = new ArrayList<IInstallableUnit>();
-				for(Object founded : collector.toArray(IInstallableUnit.class)) {
-					IInstallableUnit installedIU = (IInstallableUnit)founded;
-					for(IInstallableUnit unit : units) {
-						if(installedIU.getId().equals(unit.getId()) &&
-								installedIU.getVersion().compareTo(unit.getVersion()) >= 0)
-							shouldBeGrayed.add(unit);
-					}
-				}
-				viewer.setGrayedElements(shouldBeGrayed.toArray(
-						new IInstallableUnit[shouldBeGrayed.size()]));
-			}
-		}
 	}
 
 	@Override
@@ -167,17 +139,15 @@ public class ImportPage extends AbstractPage {
 			InputStream input = null;
 			try{
 				input = new BufferedInputStream(new FileInputStream(getDestinationValue()));
-				List<FeatureDetail> features = replicator.importP2F(input);
+				List<FeatureDetail> features = importexportService.importP2F(input);
 				List<IInstallableUnit> rootIUs = new ArrayList<IInstallableUnit>(features.size());
 				List<String> repos = new ArrayList<String>(features.size());
 				for (FeatureDetail feature : features) {
 					rootIUs.add(feature.getTopIU());
 					for (URI uri : feature.getReferencedRepositories())
 						repos.add(uri.toString());
-				}
+				}				
 				viewer.setInput(rootIUs.toArray(new IInstallableUnit[rootIUs.size()]));
-				disableInstalled();
-				viewer.refresh();
 				repositories = repos.toArray(new String[repos.size()]);
 			} catch(IOException e) {
 				//TODO
@@ -219,7 +189,7 @@ public class ImportPage extends AbstractPage {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException,
 			InterruptedException {
 				try {
-					replicator.replicate(repositories, units, monitor);
+					importexportService.replicate(repositories, units, monitor);
 				} catch (ProvisionException e) {
 					finishException = e;
 				}	

@@ -28,12 +28,9 @@ import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IEngine;
-import org.eclipse.equinox.p2.engine.IProfile;
-import org.eclipse.equinox.p2.engine.IProfileRegistry;
 import org.eclipse.equinox.p2.engine.IProvisioningPlan;
 import org.eclipse.equinox.p2.engine.PhaseSetFactory;
 import org.eclipse.equinox.p2.engine.ProvisioningContext;
-import org.eclipse.equinox.p2.engine.query.UserVisibleRootQuery;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.p2.metadata.VersionRange;
 import org.eclipse.equinox.p2.planner.IPlanner;
@@ -67,7 +64,8 @@ public class ImportExportImpl implements P2ImportExport {
 					"P2 installation replication", 1000); //$NON-NLS-1$
 			try {
 				IPlanner planner = (IPlanner) agent.getService(IPlanner.SERVICE_NAME);
-				IProfileChangeRequest request = planner.createChangeRequest(getSelfProfile()); 
+				//FIXME
+				IProfileChangeRequest request = planner.createChangeRequest(null); 
 				request.addAll(toBeInstalled);
 				for(IInstallableUnit unit : toBeInstalled)
 					request.setInstallableUnitProfileProperty(unit, "org.eclipse.equinox.p2.type.root", "true"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -88,38 +86,17 @@ public class ImportExportImpl implements P2ImportExport {
 
 	}
 
-	private IProfile selfProfile = null;
 	private IProvisioningAgent agent = null;
 	private IProvisioningAgentProvider provider;
 
 	public void bind(IProvisioningAgent agent) {
 		this.agent = agent;
-		IProfileRegistry registry = (IProfileRegistry) agent.getService(IProfileRegistry.SERVICE_NAME);
-		if(registry != null) {
-			String selfID = System.getProperty("eclipse.p2.profile"); //$NON-NLS-1$
-			if(selfID == null)
-				selfID = IProfileRegistry.SELF;
-			selfProfile = registry.getProfile(selfID);
-		}
 	}
 
 	public void unbind(IProvisioningAgent agent) {
 		if(this.agent == agent) {
 			this.agent = null;
-			selfProfile = null;
 		}
-	}
-
-	public IInstallableUnit[] getRootIUs() {
-		if(selfProfile != null) {
-			IQueryResult<IInstallableUnit> resutl = selfProfile.query(new UserVisibleRootQuery(), new NullProgressMonitor());
-			return resutl.toArray(IInstallableUnit.class);
-		}
-		return null;
-	}
-
-	public IProfile getSelfProfile() {
-		return selfProfile;
 	}
 
 	public void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) throws ProvisionException {
