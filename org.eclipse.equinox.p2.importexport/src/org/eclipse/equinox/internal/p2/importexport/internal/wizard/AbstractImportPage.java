@@ -2,21 +2,32 @@ package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
+import org.eclipse.equinox.internal.p2.ui.ProvUI;
+import org.eclipse.equinox.internal.p2.ui.dialogs.ProvisioningOperationWizard;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.p2.metadata.VersionRange;
 import org.eclipse.equinox.p2.query.IQueryResult;
 import org.eclipse.equinox.p2.query.QueryUtil;
+import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.osgi.util.NLS;
 
 public abstract class AbstractImportPage extends AbstractPage {
 
 	IProfile profile = null;
+	private final ProvisioningOperationWizard wizard;
+	private final ProvisioningUI ui;
 
-	public AbstractImportPage(String pageName) {
+	public AbstractImportPage(String pageName, ProvisioningUI ui, ProvisioningOperationWizard wizard) {
 		super(pageName);
+		this.wizard = wizard;
+		this.ui = ui;
 		profile = getSelfProfile();
+	}
+
+	protected ProvisioningOperationWizard getProvisioningWizard() {
+		return wizard;
 	}
 
 	public String getIUNameWithDetail(IInstallableUnit iu) {
@@ -48,7 +59,7 @@ public abstract class AbstractImportPage extends AbstractPage {
 
 			public boolean isGrayed(Object element) {
 				if (profile != null) {
-					IInstallableUnit iu = (IInstallableUnit) element;
+					IInstallableUnit iu = ProvUI.getAdapter(element, IInstallableUnit.class);
 					IQueryResult<IInstallableUnit> collector = profile.query(QueryUtil.createIUQuery(iu.getId(), new VersionRange(iu.getVersion(), true, null, false)), new NullProgressMonitor());
 					if(!collector.isEmpty()) {
 						return true;
@@ -59,7 +70,7 @@ public abstract class AbstractImportPage extends AbstractPage {
 
 			public boolean isChecked(Object element) {
 				if (profile != null) {
-					IInstallableUnit iu = (IInstallableUnit) element;
+					IInstallableUnit iu = ProvUI.getAdapter(element, IInstallableUnit.class);
 					IQueryResult<IInstallableUnit> collector = profile.query(QueryUtil.createIUQuery(iu.getId(), new VersionRange(iu.getVersion(), true, null, false)), new NullProgressMonitor());
 					if(collector.isEmpty()) {
 						return true;
@@ -68,5 +79,16 @@ public abstract class AbstractImportPage extends AbstractPage {
 				return false;
 			}
 		};
+	}
+
+	@Override
+	protected void doFinish() throws Exception {
+		// do nothing
+	}
+
+
+	@Override
+	public boolean canFlipToNextPage() {
+		return isPageComplete();
 	}
 }

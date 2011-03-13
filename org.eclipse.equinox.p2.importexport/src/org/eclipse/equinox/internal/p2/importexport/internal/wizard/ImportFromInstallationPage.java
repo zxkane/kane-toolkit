@@ -14,18 +14,23 @@ import java.util.concurrent.Future;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.p2.extensionlocation.ExtensionLocationArtifactRepositoryFactory;
 import org.eclipse.equinox.internal.p2.extensionlocation.ExtensionLocationMetadataRepositoryFactory;
+import org.eclipse.equinox.internal.p2.importexport.internal.Constants;
 import org.eclipse.equinox.internal.p2.importexport.internal.ImportExportImpl;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ApplyProfileChangesDialog;
+import org.eclipse.equinox.internal.p2.ui.dialogs.ISelectableIUsPage;
+import org.eclipse.equinox.internal.p2.ui.dialogs.ProvisioningOperationWizard;
 import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUColumnConfig;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
 import org.eclipse.equinox.p2.core.IAgentLocation;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
+import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.engine.IProfileRegistry;
@@ -42,6 +47,7 @@ import org.eclipse.equinox.p2.repository.artifact.spi.ArtifactRepositoryFactory;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepository;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
 import org.eclipse.equinox.p2.repository.metadata.spi.MetadataRepositoryFactory;
+import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.SWT;
@@ -51,15 +57,17 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PlatformUI;
+import org.osgi.util.tracker.ServiceTracker;
 @SuppressWarnings("restriction")
-public class ImportFromInstallationPage extends AbstractImportPage {
+public class ImportFromInstallationPage extends AbstractImportPage implements ISelectableIUsPage {
 
-	protected IProvisioningAgent otherInstanceAgent;
-	private URI[] metaURIs = null;
-	private URI[] artiURIs = null;
+	protected IProvisioningAgent otherInstanceAgent = null;
+	private final URI[] metaURIs = null;
+	private final URI[] artiURIs = null;
+	private IProvisioningAgentProvider agentProvider;
 
-	public ImportFromInstallationPage(String pageName) {
-		super(pageName);
+	public ImportFromInstallationPage(ProvisioningUI ui, ProvisioningOperationWizard wizard) {
+		super("importfrominstancepage", ui, wizard); //$NON-NLS-1$
 		setTitle(Messages.ImportFromInstallationPage_DIALOG_TITLE);
 		setDescription(Messages.ImportFromInstallationPage_DIALOG_DESCRIPTION);
 	}
@@ -173,6 +181,18 @@ public class ImportFromInstallationPage extends AbstractImportPage {
 		return validateDestinationGroup(new NullProgressMonitor());
 	}
 
+	private IProvisioningAgentProvider getAgentProvider() {
+		if (agentProvider == null) {
+			ServiceTracker<IProvisioningAgentProvider, IProvisioningAgentProvider> tracker = 
+				new ServiceTracker<IProvisioningAgentProvider, IProvisioningAgentProvider>(
+						Platform.getBundle(Constants.Bundle_ID).getBundleContext(), IProvisioningAgentProvider.class, null);
+			tracker.open();
+			agentProvider = tracker.getService();
+			tracker.close();
+		}
+		return agentProvider;
+	}
+
 	private boolean validateDestinationGroup(IProgressMonitor monitor) {
 		SubMonitor progress = SubMonitor.convert(monitor, 100);
 
@@ -203,7 +223,6 @@ public class ImportFromInstallationPage extends AbstractImportPage {
 			rt = super.validateDestinationGroup();
 
 		if (rt && otherInstanceAgent == null) {
-			IProvisioningAgent agent = ((ImportExportImpl)importexportService).getAgent();
 			IMetadataRepositoryManager manager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 			IArtifactRepositoryManager artifactManager = (IArtifactRepositoryManager) agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
 
@@ -236,7 +255,10 @@ public class ImportFromInstallationPage extends AbstractImportPage {
 				try {
 					File p2 = new File(destinate, "p2"); //$NON-NLS-1$
 					if (p2.exists()) {
-						otherInstanceAgent = importexportService.getAgentProvider().createAgent(p2.toURI());
+						if (otherInstanceAgent != null && ) {
+
+						}
+						otherInstanceAgent = getAgentProvider().createAgent(p2.toURI());
 						ArtifactRepositoryFactory factory = new ExtensionLocationArtifactRepositoryFactory();
 						factory.setAgent(agent);
 						IArtifactRepository artiRepo = factory.load(new File(destinate).toURI(), 0, progress.newChild(50));
@@ -343,5 +365,20 @@ public class ImportFromInstallationPage extends AbstractImportPage {
 				return text;
 			}
 		};
+	}
+
+	public Object[] getCheckedIUElements() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Object[] getSelectedIUElements() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setCheckedElements(Object[] elements) {
+		// TODO Auto-generated method stub
+
 	}
 }
