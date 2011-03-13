@@ -3,20 +3,35 @@ package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
+import org.eclipse.equinox.internal.p2.ui.ProvUIMessages;
+import org.eclipse.equinox.internal.p2.ui.dialogs.ISelectableIUsPage;
+import org.eclipse.equinox.internal.p2.ui.dialogs.ProvisioningOperationWizard;
 import org.eclipse.equinox.p2.core.ProvisionException;
-import org.eclipse.equinox.p2.engine.IProfile;
+import org.eclipse.equinox.p2.engine.ProvisioningContext;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
-import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.equinox.p2.metadata.VersionRange;
+import org.eclipse.equinox.p2.query.CompoundQueryable;
+import org.eclipse.equinox.p2.query.QueryUtil;
+import org.eclipse.equinox.p2.repository.IRepository;
+import org.eclipse.equinox.p2.repository.artifact.IArtifactRepositoryManager;
+import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
+import org.eclipse.equinox.p2.ui.ProvisioningUI;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -24,11 +39,13 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.MessageBox;
 
-public class ImportPage extends AbstractImportPage {
+public class ImportPage extends AbstractImportPage implements ISelectableIUsPage {
 
 	private class InstallationContentProvider implements IStructuredContentProvider {
 
@@ -46,17 +63,12 @@ public class ImportPage extends AbstractImportPage {
 
 	private class InstallationLabelProvider extends LabelProvider implements ITableLabelProvider{
 
-		private IProfile profile = null;
-		public InstallationLabelProvider() {
-			profile = getSelfProfile();
-		}
-
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null;
 		}
 
 		public String getColumnText(Object element, int columnIndex) {
-			IInstallableUnit iu = (IInstallableUnit) element;
+			IInstallableUnit iu = ((FeatureDetail) element).getTopIU();
 			switch (columnIndex) {
 			case 0:				
 				return getIUNameWithDetail(iu);
@@ -72,9 +84,14 @@ public class ImportPage extends AbstractImportPage {
 	}
 
 	private String[] repositories;
+	private List<FeatureDetail> features;
+	private final List<URI> loadRepos = new ArrayList<URI>();
+	private final Map<FeatureDetail, FeatureDetail[]> newProposedFeature = new HashMap<FeatureDetail, FeatureDetail[]>();
+	private Button contactAll;
+	private Button installLatest;
 
-	public ImportPage(String pageName) {
-		super(pageName);
+	public ImportPage(ProvisioningUI ui, ProvisioningOperationWizard wizard) {
+		super("importpage", ui, wizard); //$NON-NLS-1$
 		setTitle(Messages.ImportPage_TITLE);
 		setDescription(Messages.ImportPage_DESCRIPTION);
 	}
@@ -83,6 +100,23 @@ public class ImportPage extends AbstractImportPage {
 	protected void createContents(Composite composite) {
 		createDestinationGroup(composite);
 		createInstallationTable(composite);
+		createAdditionOptions(composite);
+	}
+
+	private void createAdditionOptions(Composite parent) {
+		Composite composite = new Composite(parent, SWT.BORDER);
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 1;
+		composite.setLayout(layout);
+		composite.setLayoutData(new GridData(
+				GridData.FILL, GridData.FILL, true, false));
+
+		contactAll = new Button(composite, SWT.CHECK);
+		contactAll.setText(ProvUIMessages.AvailableIUsPage_ResolveAllCheckbox);
+
+		installLatest = new Button(composite, SWT.CHECK);
+		installLatest.setText(Messages.ImportPage_InstallLatestVersion);
+		installLatest.setSelection(true);
 	}
 
 	@Override
@@ -111,8 +145,8 @@ public class ImportPage extends AbstractImportPage {
 	}
 
 	@Override
-	protected IInstallableUnit[] getInput() {
-		return new IInstallableUnit[0];
+	protected FeatureDetail[] getInput() {
+		return new FeatureDetail[0];
 	}
 
 	@Override
@@ -128,27 +162,34 @@ public class ImportPage extends AbstractImportPage {
 	@Override
 	public void handleEvent(Event event) {
 		super.handleEvent(event);
-		if(event.widget == viewer.getControl())
-			updatePageCompletion();
+		updatePageCompletion();
 	}
 
 	@Override
-	protected void setDestinationValue(String selectedFileName) {		
+	protected void updatePageCompletion() {
+		super.updatePageCompletion();
+		if (isPageComplete())
+			getProvisioningWizard().operationSelectionsChanged(this);
+	}
+
+	@Override
+	protected void setDestinationValue(String selectedFileName) {
+		String oldValue = getDestinationValue();
 		super.setDestinationValue(selectedFileName);
 		if(validateDestinationGroup()) {
+			// p2f file is changed, update the cached data
+			if (!selectedFileName.equals(oldValue)) {
+				loadRepos.clear();
+				newProposedFeature.clear();
+			}
 			InputStream input = null;
 			try{
 				input = new BufferedInputStream(new FileInputStream(getDestinationValue()));
-				List<FeatureDetail> features = importexportService.importP2F(input);
-				List<IInstallableUnit> rootIUs = new ArrayList<IInstallableUnit>(features.size());
-				List<String> repos = new ArrayList<String>(features.size());
-				for (FeatureDetail feature : features) {
-					rootIUs.add(feature.getTopIU());
-					for (URI uri : feature.getReferencedRepositories())
-						repos.add(uri.toString());
-				}				
-				viewer.setInput(rootIUs.toArray(new IInstallableUnit[rootIUs.size()]));
-				repositories = repos.toArray(new String[repos.size()]);
+				features = importexportService.importP2F(input);	
+				viewer.setInput(features.toArray(new FeatureDetail[features.size()]));
+				input.close();
+			} catch (FileNotFoundException e) {
+				MessageDialog.openError(getShell(), Messages.ImportPage_TITLE, Messages.ImportPage_FILENOTFOUND);
 			} catch(IOException e) {
 				//TODO
 				e.printStackTrace();
@@ -177,30 +218,124 @@ public class ImportPage extends AbstractImportPage {
 		return super.validateOptionsGroup();
 	}
 
-	@Override
-	protected void doFinish() throws Exception{
-		finishException = null;
+	public Object[] getCheckedIUElements() {
 		Object[] checked = viewer.getCheckedElements();
-		final IInstallableUnit[] units = new IInstallableUnit[checked.length];
-		for(int i = 0; i < checked.length; i++)
-			units[i] = (IInstallableUnit) checked[i];
-		getContainer().run(true, false, new IRunnableWithProgress() {
-
-			public void run(IProgressMonitor monitor) throws InvocationTargetException,
-			InterruptedException {
-				try {
-					importexportService.replicate(repositories, units, monitor);
-				} catch (ProvisionException e) {
-					finishException = e;
-				}	
+		List<FeatureDetail> features = new ArrayList<FeatureDetail>(checked.length);
+		for (int i = 0; i < checked.length; i++) {
+			FeatureDetail feature = (FeatureDetail) checked[i];
+			FeatureDetail[] existingFeatures = newProposedFeature.get(feature); 
+			if (existingFeatures == null)
+				features.add(feature);
+			else {
+				FeatureDetail matchPolicy = null;
+				for (FeatureDetail f : existingFeatures) {
+					if (matchPolicy == null)
+						matchPolicy = f;
+					// here use exact match
+					else if (matchPolicy.getTopIU().getVersion().compareTo(f.getTopIU().getVersion()) < 0) {
+						if (installLatest.getSelection()) 
+							matchPolicy = f;
+						else
+							continue;
+					}
+					else
+						matchPolicy = f;
+				}
+				if (matchPolicy != null)
+					features.add(matchPolicy);
 			}
-		});
-		if(finishException != null)
-			throw finishException;
-		MessageBox message = new MessageBox(getContainer().getShell(), SWT.ICON_INFORMATION);
-		message.setMessage(Messages.ImportPage_IMPORT_NOTIFICATION);
-		message.open();
+		}
+		return features.toArray(new FeatureDetail[features.size()]);
 	}
 
+	public Object[] getSelectedIUElements() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
+	public void setCheckedElements(Object[] elements) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public ProvisioningContext getProvisioningContext() {
+		if (agent != null) {
+			Object[] checked = viewer.getCheckedElements();
+			List<URI> referredRepos = new ArrayList<URI>(checked.length);
+			for (Object checkItem : checked) {
+				FeatureDetail feature = (FeatureDetail) checkItem;
+				for (URI uri : feature.getReferencedRepositories()) {
+					referredRepos.add(uri);
+				}
+			}
+			ProvisioningContext context = new ProvisioningContext(agent);
+			if (!contactAll.getSelection()) {
+				context.setArtifactRepositories(referredRepos.toArray(new URI[referredRepos.size()]));
+				context.setMetadataRepositories(referredRepos.toArray(new URI[referredRepos.size()]));
+			}
+			return context;
+		}
+		return null;
+	}
+
+	public boolean hasUnLoadRepo() {
+		for (Object checked : viewer.getCheckedElements()) {
+			FeatureDetail feature = (FeatureDetail) checked;
+			for (URI uri : feature.getReferencedRepositories())
+				if (!loadRepos.contains(uri))
+					return true;
+		}
+		return false;
+	}
+
+	public void recompute(IProgressMonitor monitor) throws InterruptedException {
+		SubMonitor sub = SubMonitor.convert(monitor, Messages.ImportPage_QueryFeaturesJob, 1000);
+		if (agent != null) {
+			IMetadataRepositoryManager metaManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
+			IArtifactRepositoryManager artifactManager = (IArtifactRepositoryManager) agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
+			Object[] checked = viewer.getCheckedElements();
+			sub.setWorkRemaining(100 * checked.length);
+			for (Object item : checked) {
+				FeatureDetail feature = (FeatureDetail) item;
+				if (!newProposedFeature.containsKey(feature)) {
+					if (sub.isCanceled())
+						throw new InterruptedException();
+					SubMonitor sub2 = sub.newChild(100, SubMonitor.SUPPRESS_ALL_LABELS);
+					sub2.setWorkRemaining(feature.getReferencedRepositories().size() * 500 + 100);
+					List<IRepository<IInstallableUnit>> repos = new ArrayList<IRepository<IInstallableUnit>>();
+					for (URI uri : feature.getReferencedRepositories()) {
+						if (!metaManager.contains(uri)) {
+							metaManager.addRepository(uri);
+						}
+						metaManager.setEnabled(uri, true);
+						try {
+							repos.add(metaManager.loadRepository(uri, sub2.newChild(500)));
+						} catch (ProvisionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (OperationCanceledException e) {
+							throw new InterruptedException(e.getLocalizedMessage());
+						}
+						if (!artifactManager.contains(uri)) {
+							artifactManager.addRepository(uri);
+						}
+						artifactManager.setEnabled(uri, true);
+					}
+					if (sub2.isCanceled())
+						throw new InterruptedException();
+					Set<IInstallableUnit> result = new CompoundQueryable<IInstallableUnit>(repos.toArray(new IRepository[repos.size()])).query(
+							QueryUtil.createIUQuery(feature.getTopIU().getId(), new VersionRange(feature.getTopIU().getVersion(), true, null, false)), sub2.newChild(100)).toSet();
+					List<FeatureDetail> existingFeatures = new ArrayList<FeatureDetail>(result.size());
+					for (IInstallableUnit iu : result) {
+						existingFeatures.add(new FeatureDetail(iu, feature.getReferencedRepositories()));
+					}
+					newProposedFeature.put(feature, existingFeatures.toArray(new FeatureDetail[existingFeatures.size()]));
+				} else {
+					if (sub.isCanceled())
+						throw new InterruptedException();
+					sub.worked(100);
+				}
+			}
+		}
+	}
 }

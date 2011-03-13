@@ -25,8 +25,11 @@ public class Messages extends NLS {
 	public static String ImportPage_DEST_ERROR;
 	public static String ImportPage_DESTINATION_LABEL;
 	public static String ImportPage_FILEDIALOG_TITLE;
+	public static String ImportPage_FILENOTFOUND;
 	public static String AbstractImportPage_HigherVersionInstalled;
 	public static String ImportPage_IMPORT_NOTIFICATION;
+	public static String ImportPage_InstallLatestVersion;
+	public static String ImportPage_QueryFeaturesJob;
 	public static String AbstractImportPage_SameVersionInstalled;
 	public static String ImportPage_TITLE;
 	public static String ImportWizard_WINDOWTITLE;

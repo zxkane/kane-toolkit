@@ -1,16 +1,30 @@
 package org.eclipse.equinox.internal.p2.importexport.internal.wizard;
 
+import java.util.Collection;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.internal.p2.importexport.internal.Constants;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
+import org.eclipse.equinox.internal.p2.ui.dialogs.ISelectableIUsPage;
+import org.eclipse.equinox.internal.p2.ui.dialogs.InstallWizard;
+import org.eclipse.equinox.internal.p2.ui.model.IUElementListRoot;
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.operations.InstallOperation;
+import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
+import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 
-public class ImportFromInstallationWizard extends AbstractWizard implements IImportWizard {
+public class ImportFromInstallationWizard extends InstallWizard implements IImportWizard {
 
 	public ImportFromInstallationWizard() {
+		this(ProvisioningUI.getDefaultUI(), null, null, null);
+	}
+
+	public ImportFromInstallationWizard(ProvisioningUI ui, InstallOperation operation, Collection<IInstallableUnit> initialSelections, LoadMetadataRepositoryJob preloadJob) {
+		super(ui, operation, initialSelections, preloadJob);
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
@@ -20,9 +34,8 @@ public class ImportFromInstallationWizard extends AbstractWizard implements IImp
 	}
 
 	@Override
-	public void addPages() {
-		super.addPages();
-		mainPage = new ImportFromInstallationPage("mainPage"); //$NON-NLS-1$
-		addPage(mainPage);
+	protected ISelectableIUsPage createMainPage(IUElementListRoot input,
+			Object[] selections) {
+		return new ImportFromInstallationPage(ui, this);
 	}
 }
