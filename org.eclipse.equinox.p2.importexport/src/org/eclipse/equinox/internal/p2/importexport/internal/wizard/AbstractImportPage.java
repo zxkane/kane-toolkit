@@ -12,6 +12,11 @@ import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.TableItem;
 
 public abstract class AbstractImportPage extends AbstractPage {
 
@@ -28,6 +33,44 @@ public abstract class AbstractImportPage extends AbstractPage {
 
 	protected ProvisioningOperationWizard getProvisioningWizard() {
 		return wizard;
+	}
+
+	protected ProvisioningUI getProvisioningUI() {
+		return ui;
+	}
+
+	@Override
+	protected void createInstallationTable(Composite parent) {
+		super.createInstallationTable(parent);
+		viewer.getTable().addListener(SWT.Selection, new Listener() {
+
+			public void handleEvent(Event event) {
+				if( event.detail == SWT.CHECK ) {
+					if (hasInstalled(ProvUI.getAdapter(event.item.getData(), IInstallableUnit.class))) {
+						viewer.getTable().setRedraw(false);
+						((TableItem)event.item).setChecked(false);
+						viewer.getTable().setRedraw(true);
+					}
+				}				
+			}
+		});
+		/*		viewer.addCheckStateListener(new ICheckStateListener() {
+
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				if (event.getChecked()) {
+					Object element = event.getElement();
+					if (hasInstalled(ProvUI.getAdapter(element, IInstallableUnit.class)))
+						event.getCheckable().setChecked(element, false);
+				}
+
+			}
+		});*/
+	}
+
+	public boolean hasInstalled(IInstallableUnit iu) {
+		IQueryResult<IInstallableUnit> results = profile.query(QueryUtil.createIUQuery(iu.getId(), 
+				new VersionRange(iu.getVersion(), true, null, false)), null);
+		return !results.isEmpty();
 	}
 
 	public String getIUNameWithDetail(IInstallableUnit iu) {
@@ -58,13 +101,6 @@ public abstract class AbstractImportPage extends AbstractPage {
 		return new ICheckStateProvider() {
 
 			public boolean isGrayed(Object element) {
-				if (profile != null) {
-					IInstallableUnit iu = ProvUI.getAdapter(element, IInstallableUnit.class);
-					IQueryResult<IInstallableUnit> collector = profile.query(QueryUtil.createIUQuery(iu.getId(), new VersionRange(iu.getVersion(), true, null, false)), new NullProgressMonitor());
-					if(!collector.isEmpty()) {
-						return true;
-					}
-				}
 				return false;
 			}
 

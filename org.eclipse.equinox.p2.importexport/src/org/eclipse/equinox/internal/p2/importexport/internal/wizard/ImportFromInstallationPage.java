@@ -4,29 +4,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.p2.extensionlocation.ExtensionLocationArtifactRepositoryFactory;
 import org.eclipse.equinox.internal.p2.extensionlocation.ExtensionLocationMetadataRepositoryFactory;
 import org.eclipse.equinox.internal.p2.importexport.internal.Constants;
-import org.eclipse.equinox.internal.p2.importexport.internal.ImportExportImpl;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.ui.ProvUI;
-import org.eclipse.equinox.internal.p2.ui.dialogs.ApplyProfileChangesDialog;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ISelectableIUsPage;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ProvisioningOperationWizard;
 import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
-import org.eclipse.equinox.internal.p2.ui.viewers.IUColumnConfig;
 import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
 import org.eclipse.equinox.p2.core.IAgentLocation;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
@@ -34,13 +28,8 @@ import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.engine.IProfileRegistry;
-import org.eclipse.equinox.p2.engine.IProvisioningPlan;
-import org.eclipse.equinox.p2.engine.PhaseSetFactory;
 import org.eclipse.equinox.p2.engine.ProvisioningContext;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
-import org.eclipse.equinox.p2.operations.ProvisioningSession;
-import org.eclipse.equinox.p2.planner.IPlanner;
-import org.eclipse.equinox.p2.planner.IProfileChangeRequest;
 import org.eclipse.equinox.p2.repository.artifact.IArtifactRepository;
 import org.eclipse.equinox.p2.repository.artifact.IArtifactRepositoryManager;
 import org.eclipse.equinox.p2.repository.artifact.spi.ArtifactRepositoryFactory;
@@ -51,19 +40,19 @@ import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.ui.PlatformUI;
 import org.osgi.util.tracker.ServiceTracker;
-@SuppressWarnings("restriction")
+
 public class ImportFromInstallationPage extends AbstractImportPage implements ISelectableIUsPage {
 
 	protected IProvisioningAgent otherInstanceAgent = null;
-	private final URI[] metaURIs = null;
-	private final URI[] artiURIs = null;
+	private File instancePath = null;
+	private URI[] metaURIs = null;
+	private URI[] artiURIs = null;
 	private IProvisioningAgentProvider agentProvider;
 
 	public ImportFromInstallationPage(ProvisioningUI ui, ProvisioningOperationWizard wizard) {
@@ -76,72 +65,6 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 	protected void createContents(Composite composite) {
 		createDestinationGroup(composite);
 		createInstallationTable(composite);
-	}
-
-	@Override
-	protected void doFinish() throws Exception {
-		Object[] checked = viewer.getCheckedElements();
-		final List<IInstallableUnit> units = new ArrayList<IInstallableUnit>(checked.length);
-		for(int i = 0; i < checked.length; i++)
-			units.add(ProvUI.getAdapter(checked[i], IInstallableUnit.class));
-
-		try {
-			getContainer().run(true, false, new IRunnableWithProgress() {
-				public void run(IProgressMonitor monitor) throws InvocationTargetException,
-				InterruptedException {
-					SubMonitor sub = SubMonitor.convert(monitor, 100);
-
-					IProvisioningAgent agent = ((ImportExportImpl)importexportService).getAgent();
-					IPlanner planner = (IPlanner)agent.getService(IPlanner.SERVICE_NAME);
-					IProfileChangeRequest request = planner.createChangeRequest(getSelfProfile());
-					request.addAll(units);
-					ProvisioningContext context = new ProvisioningContext(agent);
-					context.setArtifactRepositories(artiURIs);
-					context.setMetadataRepositories(metaURIs);
-					IProvisioningPlan plan = planner.getProvisioningPlan(request, context, sub.newChild(10));
-
-					ProvisioningSession session = new ProvisioningSession(agent);
-					final IStatus status = session.performProvisioningPlan(plan, PhaseSetFactory.createDefaultPhaseSet(), context, sub.newChild(90));
-					if (!status.isOK()) {
-						Display.getDefault().asyncExec(new Runnable() {
-
-							String getStatusMessages(IStatus status) {
-								if (status.isMultiStatus()) {
-									StringBuilder sb = new StringBuilder();
-									for(IStatus s: status.getChildren()) {
-										sb.append(getStatusMessages(s));
-										sb.append("\n"); //$NON-NLS-1$
-									}
-									return sb.toString();
-								} else
-									return status.getMessage();
-							}
-
-							public void run() {
-								MessageBox box = new MessageBox(getContainer().getShell(), SWT.ICON_ERROR);
-								box.setMessage(getStatusMessages(status));
-								box.open();
-							}
-						});
-					} else {
-						PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-							public void run() {
-								if (PlatformUI.getWorkbench().isClosing())
-									return;
-								int retCode = ApplyProfileChangesDialog.promptForRestart(ProvUI.getDefaultParentShell(), true);
-								if (retCode == ApplyProfileChangesDialog.PROFILE_RESTART) {
-									PlatformUI.getWorkbench().restart();
-								}
-							}
-						});
-					}
-				}
-			});
-		} catch (InvocationTargetException e) {
-			setErrorMessage(e.getLocalizedMessage());
-		} catch (InterruptedException e) {
-
-		}
 	}
 
 	@Override
@@ -255,10 +178,15 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 				try {
 					File p2 = new File(destinate, "p2"); //$NON-NLS-1$
 					if (p2.exists()) {
-						if (otherInstanceAgent != null && ) {
-
+						if (otherInstanceAgent != null && !p2.equals(instancePath)) {
+							otherInstanceAgent.stop();
+							otherInstanceAgent = null;
+							cleanLocalRepository();
 						}
 						otherInstanceAgent = getAgentProvider().createAgent(p2.toURI());
+						// update cached specified path by users
+						if (otherInstanceAgent != null)
+							instancePath = p2;
 						ArtifactRepositoryFactory factory = new ExtensionLocationArtifactRepositoryFactory();
 						factory.setAgent(agent);
 						IArtifactRepository artiRepo = factory.load(new File(destinate).toURI(), 0, progress.newChild(50));
@@ -267,6 +195,7 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 						metaFatory.setAgent(agent);
 						IMetadataRepository metaRepo = metaFatory.load(new File(destinate).toURI(), 0, progress.newChild(50));
 						metaURIs = new URI[] {metaRepo.getLocation()};
+
 					} else
 						throw new FileNotFoundException();
 				} catch (ProvisionException e) {
@@ -285,7 +214,10 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 			} catch (Exception e) {
 				currentMessage = getInvalidDestinationMessage();
 				rt = false;
+				if (otherInstanceAgent != null)
+					otherInstanceAgent.stop();
 				otherInstanceAgent = null;
+				cleanLocalRepository();
 			} finally {
 				Display.getDefault().asyncExec(new Runnable() {
 					public void run() {
@@ -352,24 +284,57 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 		return file.exists() && file.isDirectory();
 	}
 
+	class ImportFromInstallationLabelProvider extends IUDetailsLabelProvider {
+		@Override
+		public String getColumnText(Object element, int columnIndex) {
+			String text = super.getColumnText(element, columnIndex);
+			// it's the order of label provider
+			if (columnIndex == 0) {
+				IInstallableUnit iu = ProvUI.getAdapter(element, IInstallableUnit.class);
+				return getIUNameWithDetail(iu);
+			}
+			return text;
+		}
+
+		@Override
+		public Color getForeground(Object element) {
+			IInstallableUnit iu = ProvUI.getAdapter(element, IInstallableUnit.class);
+			if (hasInstalled(iu))
+				return Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
+			return super.getForeground(element);
+		}
+	}
+
 	@Override
 	protected ITableLabelProvider getLabelProvider() {
-		return new IUDetailsLabelProvider(null, getColumnConfig(), null) {		
-			@Override
-			public String getColumnText(Object element, int columnIndex) {
-				String text = super.getColumnText(element, columnIndex);
-				if (columnIndex == IUColumnConfig.COLUMN_NAME) {
-					IInstallableUnit iu = ProvUI.getAdapter(element, IInstallableUnit.class);
-					return getIUNameWithDetail(iu);
-				}
-				return text;
-			}
-		};
+		return new ImportFromInstallationLabelProvider();
+	}
+
+	@Override
+	public void dispose() {
+		super.dispose();
+		if (otherInstanceAgent != null) {
+			otherInstanceAgent.stop();
+			otherInstanceAgent = null;
+		}
+		if (getWizard().performCancel())
+			cleanLocalRepository();
+	}
+
+	public void cleanLocalRepository() {
+		if (metaURIs.length > 0) {
+			IProvisioningAgent agent = getProvisioningUI().getSession().getProvisioningAgent();
+			IMetadataRepositoryManager manager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
+			for (URI uri : metaURIs)
+				manager.removeRepository(uri);
+			IArtifactRepositoryManager artifactManager = (IArtifactRepositoryManager) agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
+			for (URI uri : artiURIs)
+				artifactManager.removeRepository(uri);
+		}
 	}
 
 	public Object[] getCheckedIUElements() {
-		// TODO Auto-generated method stub
-		return null;
+		return viewer.getCheckedElements();
 	}
 
 	public Object[] getSelectedIUElements() {
@@ -378,7 +343,13 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 	}
 
 	public void setCheckedElements(Object[] elements) {
-		// TODO Auto-generated method stub
+		new UnsupportedOperationException();
+	}
 
+	public ProvisioningContext getProvisioningContext() {
+		ProvisioningContext context = new ProvisioningContext(getProvisioningUI().getSession().getProvisioningAgent());
+		context.setArtifactRepositories(artiURIs);
+		context.setMetadataRepositories(metaURIs);
+		return context;
 	}
 }

@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
+import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.ProvUIMessages;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ISelectableIUsPage;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ProvisioningOperationWizard;
@@ -32,17 +33,20 @@ import org.eclipse.equinox.p2.repository.artifact.IArtifactRepositoryManager;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 
 public class ImportPage extends AbstractImportPage implements ISelectableIUsPage {
@@ -61,7 +65,7 @@ public class ImportPage extends AbstractImportPage implements ISelectableIUsPage
 
 	}
 
-	private class InstallationLabelProvider extends LabelProvider implements ITableLabelProvider{
+	private class InstallationLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider{
 
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null;
@@ -81,9 +85,18 @@ public class ImportPage extends AbstractImportPage implements ISelectableIUsPage
 			}
 
 		}
+
+		public Color getForeground(Object element) {
+			return null;
+		}
+
+		public Color getBackground(Object element) {
+			if (hasInstalled(ProvUI.getAdapter(element, IInstallableUnit.class)))
+				return Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
+			return null;
+		}
 	}
 
-	private String[] repositories;
 	private List<FeatureDetail> features;
 	private final List<URI> loadRepos = new ArrayList<URI>();
 	private final Map<FeatureDetail, FeatureDetail[]> newProposedFeature = new HashMap<FeatureDetail, FeatureDetail[]>();
@@ -203,21 +216,6 @@ public class ImportPage extends AbstractImportPage implements ISelectableIUsPage
 		return super.validDestination() && target.exists() && target.canRead();
 	}
 
-	@Override
-	protected boolean validateOptionsGroup() {
-		Object[] checked = viewer.getCheckedElements();
-		boolean checkGrayed = false;
-		for(Object obj : checked) {
-			if(viewer.getGrayed(obj)) {
-				viewer.setChecked(obj, false);
-				checkGrayed = true;
-			}
-		}
-		if(checkGrayed)
-			return false;
-		return super.validateOptionsGroup();
-	}
-
 	public Object[] getCheckedIUElements() {
 		Object[] checked = viewer.getCheckedElements();
 		List<FeatureDetail> features = new ArrayList<FeatureDetail>(checked.length);
@@ -254,8 +252,7 @@ public class ImportPage extends AbstractImportPage implements ISelectableIUsPage
 	}
 
 	public void setCheckedElements(Object[] elements) {
-		// TODO Auto-generated method stub
-
+		new UnsupportedOperationException();
 	}
 
 	public ProvisioningContext getProvisioningContext() {
@@ -278,7 +275,7 @@ public class ImportPage extends AbstractImportPage implements ISelectableIUsPage
 		return null;
 	}
 
-	public boolean hasUnLoadRepo() {
+	public boolean hasUnloadedRepo() {
 		for (Object checked : viewer.getCheckedElements()) {
 			FeatureDetail feature = (FeatureDetail) checked;
 			for (URI uri : feature.getReferencedRepositories())

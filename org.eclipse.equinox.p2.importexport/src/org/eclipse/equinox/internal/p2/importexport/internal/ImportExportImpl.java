@@ -7,7 +7,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -19,22 +18,14 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.importexport.FeatureDetail;
 import org.eclipse.equinox.internal.p2.importexport.P2ImportExport;
 import org.eclipse.equinox.internal.p2.importexport.persistence.P2FParser;
 import org.eclipse.equinox.internal.p2.importexport.persistence.P2FWriter;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
-import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
 import org.eclipse.equinox.p2.core.ProvisionException;
-import org.eclipse.equinox.p2.engine.IEngine;
-import org.eclipse.equinox.p2.engine.IProvisioningPlan;
-import org.eclipse.equinox.p2.engine.PhaseSetFactory;
-import org.eclipse.equinox.p2.engine.ProvisioningContext;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.equinox.p2.metadata.VersionRange;
-import org.eclipse.equinox.p2.planner.IPlanner;
-import org.eclipse.equinox.p2.planner.IProfileChangeRequest;
 import org.eclipse.equinox.p2.query.IQueryResult;
 import org.eclipse.equinox.p2.query.QueryUtil;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepository;
@@ -47,47 +38,7 @@ public class ImportExportImpl implements P2ImportExport {
 	public static final int IGNORE_LOCAL_REPOSITORY = 1;
 	public static final int CANNOT_FIND_REPOSITORY = 2;
 
-	private class ReplicateJob extends Job {
-
-		private final Collection<IInstallableUnit> toBeInstalled;
-		private final URI[] uris;
-
-		public ReplicateJob(String name, URI[] uris, Collection<IInstallableUnit> units) {
-			super(name);
-			this.uris = uris;
-			toBeInstalled = units;
-		}
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			SubMonitor progress = SubMonitor.convert(monitor, 
-					"P2 installation replication", 1000); //$NON-NLS-1$
-			try {
-				IPlanner planner = (IPlanner) agent.getService(IPlanner.SERVICE_NAME);
-				//FIXME
-				IProfileChangeRequest request = planner.createChangeRequest(null); 
-				request.addAll(toBeInstalled);
-				for(IInstallableUnit unit : toBeInstalled)
-					request.setInstallableUnitProfileProperty(unit, "org.eclipse.equinox.p2.type.root", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-				ProvisioningContext context = new ProvisioningContext(agent);
-				context.setMetadataRepositories(uris);
-				context.setArtifactRepositories(uris);
-				IProvisioningPlan plan = planner.getProvisioningPlan(request, context, progress.newChild(100));
-				IStatus result = plan.getStatus();
-				if(!result.isOK())
-					return result;
-				IEngine engine = (IEngine) agent.getService(IEngine.SERVICE_NAME);
-				result = engine.perform(plan, PhaseSetFactory.createDefaultPhaseSet(), progress.newChild(900));
-				return result;
-			} finally {
-				progress.done();
-			}
-		}
-
-	}
-
 	private IProvisioningAgent agent = null;
-	private IProvisioningAgentProvider provider;
 
 	public void bind(IProvisioningAgent agent) {
 		this.agent = agent;
@@ -97,44 +48,6 @@ public class ImportExportImpl implements P2ImportExport {
 		if(this.agent == agent) {
 			this.agent = null;
 		}
-	}
-
-	public void replicate(String[] repositories, IInstallableUnit[] rootIUs, IProgressMonitor monitor) throws ProvisionException {
-		SubMonitor subMonitor = SubMonitor.convert(monitor, "Import p2 installation", 1000); //$NON-NLS-1$
-
-		try{
-			List<URI> uris = new ArrayList<URI>(repositories.length);
-			IMetadataRepositoryManager repoManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
-			for(String repository : repositories) {
-				URI uri = URI.create(repository);
-				if(!repoManager.contains(uri)) {
-					repoManager.addRepository(uri);
-					repoManager.loadRepository(uri, subMonitor.newChild(900/repositories.length));
-				}
-				uris.add(uri);
-			}
-			subMonitor.setWorkRemaining(100);
-			List<IInstallableUnit> list = new ArrayList<IInstallableUnit>();
-			for (IInstallableUnit iu : rootIUs)
-				list.add(iu);
-			ReplicateJob job = new ReplicateJob("Install", uris.toArray(new URI[uris.size()]), list); //$NON-NLS-1$
-			job.belongsTo(this);
-			job.schedule();
-		} finally {
-			subMonitor.done();
-		}
-	}
-
-	public void bindProvider(IProvisioningAgentProvider provider) {
-		this.provider = provider;
-	}
-
-	public IProvisioningAgentProvider getAgentProvider() {
-		return provider;
-	}
-
-	public IProvisioningAgent getAgent() {
-		return agent;
 	}
 
 	public List<FeatureDetail> importP2F(InputStream input) throws IOException {
