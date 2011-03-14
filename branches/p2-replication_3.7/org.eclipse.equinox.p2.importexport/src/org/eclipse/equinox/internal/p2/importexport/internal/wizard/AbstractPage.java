@@ -104,7 +104,7 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 
 	public void createControl(Composite parent) {
 		initializeDialogUnits(parent);
-		initializeReplicator();
+		initializeService();
 		Composite composite = new Composite(parent, SWT.NULL);
 		GridLayout layout = new GridLayout(1, true);
 		layout.horizontalSpacing = 0;
@@ -304,11 +304,11 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		}
 	}
 
-	protected void initializeReplicator() {
-		ServiceTracker tracker = new ServiceTracker(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
+	protected void initializeService() {
+		ServiceTracker<P2ImportExport, P2ImportExport> tracker = new ServiceTracker<P2ImportExport, P2ImportExport>(Platform.getBundle(Constants.Bundle_ID).getBundleContext(), 
 				P2ImportExport.class.getName(), null);
 		tracker.open();
-		importexportService = (P2ImportExport) tracker.getService();
+		importexportService = tracker.getService();
 		tracker.close();
 	}
 

@@ -24,7 +24,7 @@ public class FeatureDetail implements IAdaptable{
 		return referredRepo;
 	}
 
-	public Object getAdapter(Class adapter) {
+	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
 		if (IInstallableUnit.class.equals(adapter))
 			return iu;
 		return null;
