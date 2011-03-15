@@ -145,10 +145,7 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 		} else
 			rt = super.validateDestinationGroup();
 
-		if (rt && otherInstanceAgent == null) {
-			IMetadataRepositoryManager manager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
-			IArtifactRepositoryManager artifactManager = (IArtifactRepositoryManager) agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
-
+		if (rt) {
 			try {
 				String destinate;
 				if (Display.findDisplay(Thread.currentThread()) == null) {
@@ -178,15 +175,20 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 				try {
 					File p2 = new File(destinate, "p2"); //$NON-NLS-1$
 					if (p2.exists()) {
-						if (otherInstanceAgent != null && !p2.equals(instancePath)) {
-							otherInstanceAgent.stop();
-							otherInstanceAgent = null;
-							cleanLocalRepository();
+						boolean createAgent = true;
+						if (otherInstanceAgent != null) {
+							// don't create agent again if the selection is not changed
+							if (!p2.equals(instancePath)) {
+								otherInstanceAgent.stop();
+								otherInstanceAgent = null;
+								// update cached specified path by users
+								instancePath = p2;
+								cleanLocalRepository();
+							} else
+								createAgent = false;
 						}
-						otherInstanceAgent = getAgentProvider().createAgent(p2.toURI());
-						// update cached specified path by users
-						if (otherInstanceAgent != null)
-							instancePath = p2;
+						if (createAgent)
+							otherInstanceAgent = getAgentProvider().createAgent(p2.toURI());
 						ArtifactRepositoryFactory factory = new ExtensionLocationArtifactRepositoryFactory();
 						factory.setAgent(agent);
 						IArtifactRepository artiRepo = factory.load(new File(destinate).toURI(), 0, progress.newChild(50));
@@ -200,6 +202,8 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 						throw new FileNotFoundException();
 				} catch (ProvisionException e) {
 					if (otherInstanceAgent != null) {
+						IMetadataRepositoryManager manager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
+						IArtifactRepositoryManager artifactManager = (IArtifactRepositoryManager) agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
 						IProfile profile = ((IProfileRegistry)otherInstanceAgent.getService(IProfileRegistry.SERVICE_NAME)).getProfiles()[0];
 						IAgentLocation location = (IAgentLocation) otherInstanceAgent.getService(IAgentLocation.SERVICE_NAME);
 						URI engineDataArea = location.getDataArea("org.eclipse.equinox.p2.engine"); //$NON-NLS-1$
@@ -243,7 +247,6 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 		final String selectedFileName = dialog.open();
 
 		if (selectedFileName != null) {
-			otherInstanceAgent = null;
 			setDestinationValue(selectedFileName);
 			try {
 				getContainer().run(true, false, new IRunnableWithProgress() {
@@ -322,7 +325,7 @@ public class ImportFromInstallationPage extends AbstractImportPage implements IS
 	}
 
 	public void cleanLocalRepository() {
-		if (metaURIs.length > 0) {
+		if (metaURIs != null && metaURIs.length > 0) {
 			IProvisioningAgent agent = getProvisioningUI().getSession().getProvisioningAgent();
 			IMetadataRepositoryManager manager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 			for (URI uri : metaURIs)

@@ -6,6 +6,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.internal.p2.importexport.P2ImportExport;
 import org.eclipse.equinox.internal.p2.importexport.internal.Constants;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
+import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.ProvUIMessages;
 import org.eclipse.equinox.internal.p2.ui.dialogs.ILayoutConstants;
 import org.eclipse.equinox.internal.p2.ui.viewers.DeferredQueryContentProvider;
@@ -14,9 +15,11 @@ import org.eclipse.equinox.internal.p2.ui.viewers.IUDetailsLabelProvider;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.engine.IProfileRegistry;
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -24,10 +27,14 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -56,6 +63,76 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 	protected Exception finishException;
 	protected static IProfileRegistry profileRegistry = null;
 	protected static IProvisioningAgent agent = null;
+
+	class TableViewerComparator extends ViewerComparator {
+		private int sortColumn = 0;
+		private int lastSortColumn = 0;
+		private boolean ascending = false;
+		private boolean lastAscending = false;
+
+		@Override
+		public int compare(Viewer viewer, Object e1, Object e2) {
+			IInstallableUnit iu1 = ProvUI.getAdapter(e1, IInstallableUnit.class);
+			IInstallableUnit iu2 = ProvUI.getAdapter(e2, IInstallableUnit.class);
+			if (iu1 != null && iu2 != null) {
+				if (viewer instanceof TableViewer) {
+					TableViewer tableViewer = (TableViewer) viewer;
+					IBaseLabelProvider baseLabel = tableViewer.getLabelProvider();
+					if (baseLabel instanceof ITableLabelProvider) {
+						ITableLabelProvider tableProvider = (ITableLabelProvider) baseLabel;
+						String e1p = tableProvider.getColumnText(e1, getSortColumn());
+						String e2p = tableProvider.getColumnText(e2, getSortColumn());
+						int result = getComparator().compare(e1p, e2p);
+						// Secondary column sort
+						if (result == 0) {
+							e1p = tableProvider.getColumnText(e1, lastSortColumn);
+							e2p = tableProvider.getColumnText(e2, lastSortColumn);
+							result = getComparator().compare(e1p, e2p);
+							return lastAscending ? result : (-1) * result;						
+						}
+						return isAscending() ? result : (-1) * result;
+					}
+				}
+				// we couldn't determine a secondary sort, call it equal
+				return 0;
+			}
+			return super.compare(viewer, e1, e2);
+		}
+
+		/**
+		 * @return Returns the sortColumn.
+		 */
+		public int getSortColumn() {
+			return sortColumn;
+		}
+
+		/**
+		 * @param sortColumn
+		 *            The sortColumn to set.
+		 */
+		public void setSortColumn(int sortColumn) {
+			if (this.sortColumn != sortColumn) {
+				lastSortColumn = this.sortColumn;
+				lastAscending = this.ascending;
+				this.sortColumn = sortColumn;
+			}
+		}
+
+		/**
+		 * @return Returns the ascending.
+		 */
+		public boolean isAscending() {
+			return ascending;
+		}
+
+		/**
+		 * @param ascending
+		 *            The ascending to set.
+		 */
+		public void setAscending(boolean ascending) {
+			this.ascending = ascending;
+		}
+	}
 
 	static {
 		BundleContext context = Platform.getBundle(Constants.Bundle_ID).getBundleContext();
@@ -93,11 +170,30 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 			column.getColumn().setText(titles[i]);
 			column.getColumn().setResizable(true);
 			column.getColumn().setMoveable(true);
+			if (Messages.Column_Name.equals(titles[i]))
+				updateTableSorting(i);
+			final int columnIndex = i;
+			column.getColumn().addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					updateTableSorting(columnIndex);
+				}
+			});
 		}
+	}
 
-		Table table = viewer.getTable();
-		table.setHeaderVisible(true);
-		table.setLinesVisible(false);
+	protected void updateTableSorting(int columnIndex) {
+		TableViewerComparator comparator = (TableViewerComparator) viewer.getComparator();
+		// toggle direction if it's the same column
+		if (columnIndex == comparator.getSortColumn()) {
+			comparator.setAscending(!comparator.isAscending());
+		}
+		comparator.setSortColumn(columnIndex);
+		viewer.getTable().setSortColumn(
+				viewer.getTable().getColumn(columnIndex));
+		viewer.getTable().setSortDirection(
+				comparator.isAscending() ? SWT.UP : SWT.DOWN);
+		viewer.refresh(false);
 	}
 
 	protected abstract void createContents(Composite composite);
@@ -156,14 +252,15 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 
 	protected void createInstallationTable(final Composite parent) {
 		viewer = CheckboxTableViewer.newCheckList(parent, SWT.MULTI | SWT.BORDER);
-		final Table table = viewer.getTable();
+		final Table table = viewer.getTable();		
+		table.setHeaderVisible(true);
+		table.setLinesVisible(false);
+		viewer.setComparator(new TableViewerComparator());
 		createColumns(viewer);
-		viewer.getControl().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
-		viewer.getControl().setSize(300, 200);
 		viewer.setContentProvider(getContentProvider());
 		viewer.setLabelProvider(getLabelProvider());
 		parent.addControlListener(new ControlAdapter() {
-			private final int[] columnRate = new int[]{4, 2, 4};
+			private final int[] columnRate = new int[]{6, 2, 2};
 			@Override
 			public void controlResized(ControlEvent e) {
 				Rectangle area = parent.getClientArea();
@@ -210,6 +307,8 @@ public abstract class AbstractPage extends WizardPage implements Listener {
 		ICheckStateProvider provider = getViewerDefaultState();
 		if (provider != null)
 			viewer.setCheckStateProvider(provider);
+		viewer.getControl().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		viewer.getControl().setSize(300, 200);
 		viewer.setInput(getInput());
 	}
 

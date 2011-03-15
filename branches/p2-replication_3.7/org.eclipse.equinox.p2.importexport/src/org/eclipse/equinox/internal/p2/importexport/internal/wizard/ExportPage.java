@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.equinox.internal.p2.importexport.internal.Messages;
 import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.internal.p2.ui.model.ProfileElement;
@@ -57,42 +58,48 @@ public class ExportPage extends AbstractPage {
 				target.createNewFile();
 			stream = new BufferedOutputStream(new FileOutputStream(target));
 			final OutputStream out = stream;
-			getContainer().run(true, false, new IRunnableWithProgress() {
+			getContainer().run(true, true, new IRunnableWithProgress() {
 
 				public void run(IProgressMonitor monitor) throws InvocationTargetException,
 				InterruptedException {
-					IInstallableUnit[] units = new IInstallableUnit[checked.length];
-					for(int i = 0; i < units.length; i++)
-						units[i] = ProvUI.getAdapter(checked[i], IInstallableUnit.class);
-					IStatus status = importexportService.exportP2F(out, units, monitor);
-					if (status.isMultiStatus()) {
-						final StringBuilder sb = new StringBuilder();
-						boolean info = true;
-						for (IStatus child : status.getChildren()) {
-							if (child.isMultiStatus()) {
-								for (IStatus grandchild : child.getChildren())
-									sb.append(grandchild.getMessage()).append("\n"); //$NON-NLS-1$
-							} else if (child.isOK())
-								sb.insert(0, Messages.ExportPage_SuccessWithProblems);
-							else {
-								info = false;
-								sb.insert(0, Messages.ExportPage_Fail);
-								sb.append(status.getMessage());
+					try {
+						IInstallableUnit[] units = new IInstallableUnit[checked.length];
+						for(int i = 0; i < units.length; i++)
+							units[i] = ProvUI.getAdapter(checked[i], IInstallableUnit.class);
+						IStatus status = importexportService.exportP2F(out, units, monitor);
+						if (status.isMultiStatus()) {
+							final StringBuilder sb = new StringBuilder();
+							boolean info = true;
+							for (IStatus child : status.getChildren()) {
+								if (child.isMultiStatus()) {
+									for (IStatus grandchild : child.getChildren())
+										sb.append(grandchild.getMessage()).append("\n"); //$NON-NLS-1$
+								} else if (child.isOK())
+									sb.insert(0, Messages.ExportPage_SuccessWithProblems);
+								else {
+									info = false;
+									sb.insert(0, Messages.ExportPage_Fail);
+									sb.append(status.getMessage());
+								}
 							}
+							final boolean isInfo = info;
+							Display.getDefault().asyncExec(new Runnable() {
+								public void run() {
+									String title = Messages.ExportPage_Title;
+									if (isInfo == true)
+										MessageDialog.openInformation(getShell(), title, sb.toString());
+									else
+										MessageDialog.openWarning(getShell(), title, sb.toString());
+								}
+							});
 						}
-						final boolean isInfo = info;
-						Display.getDefault().asyncExec(new Runnable() {
-							public void run() {
-								String title = Messages.ExportPage_Title;
-								if (isInfo == true)
-									MessageDialog.openInformation(getShell(), title, sb.toString());
-								else
-									MessageDialog.openWarning(getShell(), title, sb.toString());
-							}
-						});
+					} catch (OperationCanceledException e) {
+						throw new InterruptedException(e.getMessage());
 					}
-				}
+				} 
 			});
+		} catch (InterruptedException e) {
+			// do nothing for cancelled by users
 		} finally {
 			if(stream != null) {
 				try {

@@ -15,6 +15,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
@@ -94,6 +95,8 @@ public class ImportExportImpl implements P2ImportExport {
 		MultiStatus queryRepoResult = new MultiStatus(Constants.Bundle_ID, 0, null, null);
 		for (IInstallableUnit iu : ius) {
 			List<URI> referredRepos = new ArrayList<URI>(1);
+			if (sub2.isCanceled())
+				throw new OperationCanceledException();
 			SubMonitor sub3 = sub2.newChild(100);
 			sub3.setWorkRemaining(repos.size() * 100);
 			for (IMetadataRepository repo : repos) {
@@ -130,6 +133,8 @@ public class ImportExportImpl implements P2ImportExport {
 		if (monitor == null)
 			monitor = new NullProgressMonitor();
 		SubMonitor sub = SubMonitor.convert(monitor, Messages.Replicator_SaveJobName, 100);
+		if (sub.isCanceled())
+			throw new OperationCanceledException();
 		try {
 			P2FWriter writer = new P2FWriter(output, null);
 			writer.write(features);
