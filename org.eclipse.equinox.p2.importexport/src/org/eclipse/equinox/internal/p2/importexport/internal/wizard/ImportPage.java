@@ -87,12 +87,12 @@ public class ImportPage extends AbstractImportPage implements ISelectableIUsPage
 		}
 
 		public Color getForeground(Object element) {
+			if (hasInstalled(ProvUI.getAdapter(element, IInstallableUnit.class)))
+				return Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
 			return null;
 		}
 
 		public Color getBackground(Object element) {
-			if (hasInstalled(ProvUI.getAdapter(element, IInstallableUnit.class)))
-				return Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
 			return null;
 		}
 	}
@@ -285,12 +285,29 @@ public class ImportPage extends AbstractImportPage implements ISelectableIUsPage
 		return false;
 	}
 
+	class GetCheckedElement implements Runnable {
+		Object[] checkedElements = null;
+		public void run() {
+			checkedElements = viewer.getCheckedElements();
+		}
+	}
+
+	public Object[] getChecked() {
+		if (Display.findDisplay(Thread.currentThread()) != null)
+			return viewer.getCheckedElements();
+		else {
+			GetCheckedElement get = new GetCheckedElement();
+			Display.getDefault().syncExec(get);
+			return get.checkedElements;
+		}
+	}
+
 	public void recompute(IProgressMonitor monitor) throws InterruptedException {
 		SubMonitor sub = SubMonitor.convert(monitor, Messages.ImportPage_QueryFeaturesJob, 1000);
 		if (agent != null) {
 			IMetadataRepositoryManager metaManager = (IMetadataRepositoryManager) agent.getService(IMetadataRepositoryManager.SERVICE_NAME);
 			IArtifactRepositoryManager artifactManager = (IArtifactRepositoryManager) agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
-			Object[] checked = viewer.getCheckedElements();
+			Object[] checked = getChecked();
 			sub.setWorkRemaining(100 * checked.length);
 			for (Object item : checked) {
 				FeatureDetail feature = (FeatureDetail) item;

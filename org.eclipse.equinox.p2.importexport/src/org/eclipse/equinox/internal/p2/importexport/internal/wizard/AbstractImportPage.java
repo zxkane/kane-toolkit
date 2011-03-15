@@ -54,17 +54,6 @@ public abstract class AbstractImportPage extends AbstractPage {
 				}				
 			}
 		});
-		/*		viewer.addCheckStateListener(new ICheckStateListener() {
-
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				if (event.getChecked()) {
-					Object element = event.getElement();
-					if (hasInstalled(ProvUI.getAdapter(element, IInstallableUnit.class)))
-						event.getCheckable().setChecked(element, false);
-				}
-
-			}
-		});*/
 	}
 
 	public boolean hasInstalled(IInstallableUnit iu) {
