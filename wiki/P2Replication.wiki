@@ -3,6 +3,8 @@
 
 = Introduction =
 
+*This feature has been contributed to p2 itself, you can find it in Eclipse Indigo(3.7) M7+ now!*
+
 It's a tool to help quickly replicate the p2 installation to other Eclipse instance.
 Eclipse provisioning goes into p2 world from Eclipse 3.4. The classical way to install features/plug-ins is NOT recommended that simply copy them into features/plugins folder. And p2 dev team don't consider it's necessary to support installing features/plugins into external folder.
 So there is a lot of manual efforts to 'replicate' the same plug-ins in different Eclipse instance, different workstations or different platforms.
