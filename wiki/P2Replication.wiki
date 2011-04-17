@@ -16,6 +16,8 @@ Currently this tool also supports importing from another existing Eclipse instan
 
 == How to install ==
 
+- built-in feature since Eclipse Indigo(3.7) M7
+
 - install it from online repository(recommended)
          - [http://kane-toolkit.googlecode.com/svn/trunk/p2-replication/repository/3.5/ For Eclipse Galileo]
 
